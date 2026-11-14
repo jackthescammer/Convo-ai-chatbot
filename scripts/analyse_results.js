@@ -90,21 +90,15 @@ L.push("");
 // 2. charts
 L.push("### 2. Progress by version");
 L.push("");
-L.push("```mermaid");
-L.push("xychart-beta");
-L.push('    title "Corrections matching our answer (%), higher is better"');
-L.push(`    x-axis [${versions.join(", ")}]`);
-L.push('    y-axis "Percent" 0 --> 100');
-L.push(`    bar [${versions.map(v => pct(S[v].matching, S[v].nm)).join(", ")}]`);
-L.push("```");
-L.push("");
-L.push("```mermaid");
-L.push("xychart-beta");
-L.push('    title "Correct sentences wrongly fixed (%), lower is better"');
-L.push(`    x-axis [${versions.join(", ")}]`);
-L.push('    y-axis "Percent" 0 --> 100');
-L.push(`    bar [${versions.map(v => pct(S[v].falseFix, S[v].nok)).join(", ")}]`);
-L.push("```");
+// text bar charts: render the same everywhere (GitHub cuts off mermaid charts)
+const bar = p => "█".repeat(Math.round(p / 10)) + "░".repeat(10 - Math.round(p / 10));
+L.push("| Version | Corrections matching our answer (higher is better) | Correct sentences wrongly fixed (lower is better) |");
+L.push("|---|---|---|");
+L.push(`| Baseline | \`${bar(0)}\` 0% | \`${bar(0)}\` 0% |`);
+for (const v of versions) {
+  const m = pct(S[v].matching, S[v].nm), f = pct(S[v].falseFix, S[v].nok);
+  L.push(`| ${v === best ? "**" + v + "**" : v} | \`${bar(m)}\` ${m}% | \`${bar(f)}\` ${f}% |`);
+}
 L.push("");
 L.push("| Version | Caught | Matching | Wrongly fixed | Gap: caught but fixed wrongly |");
 L.push("|---|---|---|---|---|");

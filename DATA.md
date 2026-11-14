@@ -153,21 +153,15 @@ The baseline gets the 3 correct sentences "right" by never doing anything, but i
 
 ### 2. Progress by version
 
-```mermaid
-xychart-beta
-    title "Corrections matching our answer (%), higher is better"
-    x-axis [v1, v2, v3, v4, v5, v6]
-    y-axis "Percent" 0 --> 100
-    bar [71, 57, 57, 86, 43, 86]
-```
-
-```mermaid
-xychart-beta
-    title "Correct sentences wrongly fixed (%), lower is better"
-    x-axis [v1, v2, v3, v4, v5, v6]
-    y-axis "Percent" 0 --> 100
-    bar [67, 67, 0, 67, 33, 33]
-```
+| Version | Corrections matching our answer (higher is better) | Correct sentences wrongly fixed (lower is better) |
+|---|---|---|
+| Baseline | `░░░░░░░░░░` 0% | `░░░░░░░░░░` 0% |
+| v1 | `███████░░░` 71% | `███████░░░` 67% |
+| v2 | `██████░░░░` 57% | `███████░░░` 67% |
+| v3 | `██████░░░░` 57% | `░░░░░░░░░░` 0% |
+| v4 | `█████████░` 86% | `███████░░░` 67% |
+| v5 | `████░░░░░░` 43% | `███░░░░░░░` 33% |
+| **v6** | `█████████░` 86% | `███░░░░░░░` 33% |
 
 | Version | Caught | Matching | Wrongly fixed | Gap: caught but fixed wrongly |
 |---|---|---|---|---|
