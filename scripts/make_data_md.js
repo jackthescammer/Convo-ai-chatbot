@@ -26,6 +26,8 @@ const table = list => ["| ID | Split | Learner says | Right answer(s) | Type | M
   ...list.map(r => `| ${r.id} | ${r.split} | ${r.learner} | ${r.correct.split("|").map(esc).join(" / ")} | ${r.category} | ${esc(r.intended_meaning)} | ${esc(r.explanation)} |`)].join("\n");
 const VERSIONS_PATH = require("path").join(require("path").dirname(csvPath), "..", "results", "VERSIONS.md");
 const versions = fs.existsSync(VERSIONS_PATH) ? fs.readFileSync(VERSIONS_PATH, "utf8").replace(/^# Version history\s*/, "") : "No results yet.";
+const ANALYSIS_PATH = require("path").join(require("path").dirname(csvPath), "..", "results", "ANALYSIS.md");
+const analysis = fs.existsSync(ANALYSIS_PATH) ? fs.readFileSync(ANALYSIS_PATH, "utf8") : "No analysis yet. Run: node scripts/analyse_results.js";
 const md = `# Convo AI: test data
 
 **Recorded by Ethan**
@@ -64,6 +66,10 @@ Version-by-version scores on the tune split are in [\`results/VERSIONS.md\`](res
 (Copied from [\`results/VERSIONS.md\`](results/VERSIONS.md).)
 
 ${versions}
+
+## Data analysis
+
+${analysis}
 
 ## Sentences with a mistake (${mist.length})
 
