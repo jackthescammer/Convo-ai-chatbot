@@ -4,7 +4,7 @@ Bump PROMPT_VERSION whenever any prompt below changes; evaluation results are
 logged against it.
 """
 
-PROMPT_VERSION = "v5"
+PROMPT_VERSION = "v6"
 
 CHARACTER_NAME = "小林"
 
@@ -161,13 +161,17 @@ def build_review_prompt(level):
 
 
 def build_verify_prompt():
-    """Second, yes/no check run only when the checker wants to change a sentence."""
+    """Second check, run only when the checker wants to change a sentence.
+
+    Shows the learner's sentence (A) next to the proposed fix (B) and asks which is better.
+    """
     return "\n".join(
         [
-            "You are a native Mandarin speaker. You will see one sentence a customer said in a café.",
-            "Question: is this sentence already correct, natural Chinese that a native speaker could say? "
-            "Ignore punctuation. Short, simple sentences are fine.",
-            'Reply with ONE JSON object only: {"correct": true} or {"correct": false}',
+            "You are a native Mandarin speaker. A customer in a café wrote sentence A. "
+            "A teacher suggested sentence B instead.",
+            "Which one is more correct and natural Chinese? Ignore punctuation. "
+            "If they are equally good, answer A.",
+            'Reply with ONE JSON object only: {"better": "A"} or {"better": "B"}',
         ]
     )
 

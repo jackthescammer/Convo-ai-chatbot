@@ -131,7 +131,7 @@ def review_sentence(backend, sentence, level="A2", *, temperature=0.0, max_retri
         raw = backend.generate(messages, max_new_tokens=max_new_tokens, temperature=temperature)
         payload, problems = validate_review(extract_json(raw), sentence)
         if payload:
-            if payload.has_error and _verified_correct(backend, sentence, max_new_tokens):
+            if payload.has_error and _verified_correct(backend, sentence, payload.corrected, max_new_tokens):
                 # A separate yes/no check says the original was already fine: keep it unchanged.
                 return SentenceReview(original=sentence, corrected=sentence, english=payload.english,
                                       guard="verified_correct")
@@ -147,16 +147,16 @@ def review_sentence(backend, sentence, level="A2", *, temperature=0.0, max_retri
     return SentenceReview(original=sentence, corrected=sentence, valid=False, problems=problems)
 
 
-def _verified_correct(backend, sentence, max_new_tokens=60):
-    """True only if the model clearly answers that the original sentence is already correct.
+def _verified_correct(backend, sentence, corrected, max_new_tokens=60):
+    """True only if the model clearly prefers the learner's original (A) over the fix (B).
 
     Any unclear or invalid answer keeps the checker's original decision.
     """
     raw = backend.generate([{"role": "system", "content": build_verify_prompt()},
-                            {"role": "user", "content": sentence}],
+                            {"role": "user", "content": f"A: {sentence}\nB: {corrected}"}],
                            max_new_tokens=min(max_new_tokens, 60), temperature=0.0)
     obj = extract_json(raw)
-    return isinstance(obj, dict) and obj.get("correct") is True
+    return isinstance(obj, dict) and str(obj.get("better", "")).strip().upper() == "A"
 
 
 def _stats_text(reviews):

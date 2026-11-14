@@ -38,7 +38,7 @@ class Render(unittest.TestCase):
 class ReviewTest(unittest.TestCase):
     def test_retry_then_ok(self):
         answers = iter(["nonsense", review_json(True, "我要一杯茶。", "measure_word", "Use 杯.", "A tea."),
-                        '{"correct": false}'])
+                        '{"better": "B"}'])
         r = review_sentence(FakeBackend(lambda m: next(answers)), "我要一个茶。")
         self.assertTrue(r.valid and r.has_error)
 
@@ -50,14 +50,19 @@ class ReviewTest(unittest.TestCase):
         return FakeBackend(handler)
 
     def test_verify_step_keeps_sentence_judged_correct(self):
-        r = review_sentence(self.verify_backend('{"correct": true}'), "我要买单。")
+        r = review_sentence(self.verify_backend('{"better": "A"}'), "我要买单。")
         self.assertFalse(r.has_error)
         self.assertEqual((r.corrected, r.guard), ("我要买单。", "verified_correct"))
 
     def test_verify_step_keeps_correction_when_judged_wrong_or_unclear(self):
-        for verdict in ('{"correct": false}', "not sure", '{"correct": "yes"}'):
+        for verdict in ('{"better": "B"}', "not sure", '{"correct": true}'):
             r = review_sentence(self.verify_backend(verdict), "我要买单。")
             self.assertTrue(r.has_error, verdict)
+
+    def test_verify_step_sees_both_versions(self):
+        backend = self.verify_backend('{"better": "B"}')
+        review_sentence(backend, "我要买单。")
+        self.assertEqual(backend.calls[-1][1]["content"], "A: 我要买单。\nB: 我要付钱。")
 
     def test_verify_step_not_called_when_no_error(self):
         backend = FakeBackend(lambda m: review_json(False, "我要买单。"))
