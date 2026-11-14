@@ -26,6 +26,8 @@ const table = list => ["| ID | Split | Learner says | Right answer(s) | Type | M
   ...list.map(r => `| ${r.id} | ${r.split} | ${r.learner} | ${r.correct.split("|").map(esc).join(" / ")} | ${r.category} | ${esc(r.intended_meaning)} | ${esc(r.explanation)} |`)].join("\n");
 const md = `# Convo AI: test data
 
+**Recorded by Ethan**
+
 This is the quiz we use to measure Convo. It is **test data, not training data**: we never train or fine-tune the model. We give Qwen 2.5 3B Instruct each learner sentence and check whether it corrects it properly.
 
 - **Source file:** [\`data/test_cases.csv\`](data/test_cases.csv). This page is generated from it, so the two always match.
