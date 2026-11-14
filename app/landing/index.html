@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convo AI: learn Mandarin by talking</title>
+  <meta name="description" content="Convo is an AI conversation partner for beginner Mandarin learners. Have a real conversation, then get a report on what to fix.">
+  <meta name="theme-color" content="#FFFFEB">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Figtree:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav" data-nav>
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="Convo AI, back to top">
+        <span class="brand-mark" data-mascot="idle" data-size="34"></span>
+        <span class="brand-word">Convo</span>
+      </a>
+      <nav class="nav-links" aria-label="Page sections">
+        <a href="#how">How it works</a>
+        <a href="#levels">Levels</a>
+        <a href="#report">Your report</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn-primary btn-small" href="demo.html"><span class="hide-sm">Try the café demo</span><span class="show-sm">Try the demo</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="wrap hero-copy">
+        <h1 id="hero-title">Learn Mandarin by talking, <span class="h1-line">not memorising.</span></h1>
+        <p class="lede">Convo is an AI conversation partner for A1–A2 Mandarin learners. Order a drink, answer its questions, cope with a surprise, then get a report on exactly what to fix.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="demo.html">Try the café demo</a>
+          <a class="text-link" href="#report">See a sample report</a>
+        </div>
+      </div>
+
+      <!-- Flow ribbon: English goes into Convo, Mandarin comes out (driven by app.js) -->
+      <div class="flow" data-flow>
+        <p class="sr-only">Animation: English sentences flow into Convo and come out the other side as Mandarin. For example, “How much is it?” comes out as <span lang="zh-Hans">多少钱？</span></p>
+        <div class="flow-canvas">
+          <svg class="flow-svg" viewBox="0 0 1600 400" aria-hidden="true" focusable="false">
+            <path id="flow-in" class="flow-line" d="M-40 40C140 40 260 320 400 300C470 290 540 230 580 170C630 95 590 40 520 40C440 40 400 100 420 170C440 240 560 300 680 300L800 300"/>
+            <path id="flow-out" class="flow-ribbon" d="M800 300C960 300 1060 296 1200 250C1340 204 1460 190 1640 196"/>
+            <text class="flow-text flow-en" data-flow-en><textPath href="#flow-in"></textPath></text>
+            <text class="flow-text flow-zh" data-flow-zh lang="zh-Hans"><textPath href="#flow-out"></textPath></text>
+          </svg>
+          <button type="button" class="flow-pill" data-flow-toggle data-state="playing" aria-label="Pause the animation">
+            <span class="flow-mascot" data-mascot="idle" data-size="100%" data-flow-mascot></span>
+            <span class="flow-state" aria-hidden="true">
+              <svg class="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.2"/></svg>
+              <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z"/></svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <div class="stage" data-stage>
+          <div class="stage-mascot" data-mascot="idle" data-size="132" data-stage-mascot></div>
+
+          <div class="stage-bar" data-hint-scope>
+            <p class="stage-title">Sample conversation <span class="stage-sub">Ordering at a café, A2, Standard</span></p>
+            <div class="stage-controls">
+              <div class="layer-toggle" role="group" aria-label="Show in conversation">
+                <button type="button" class="chip" data-layer-toggle="hanzi" aria-pressed="true"><span lang="zh-Hans">汉字</span></button>
+                <button type="button" class="chip" data-layer-toggle="pinyin" aria-pressed="true">Pinyin</button>
+                <button type="button" class="chip" data-layer-toggle="english" aria-pressed="true">English</button>
+              </div>
+              <button type="button" class="icon-btn" data-play aria-label="Pause conversation">
+                <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.2"/></svg>
+                <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z"/></svg>
+                <svg class="i-replay" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 3.8v4.6h4.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <p class="toggle-hint" data-toggle-hint aria-live="polite"></p>
+          </div>
+
+          <div class="stage-body">
+            <div class="chat" data-chat aria-label="Sample conversation between Convo and a learner"></div>
+            <aside class="rail" aria-labelledby="rail-title">
+              <h2 class="rail-title" id="rail-title">Saved for your report</h2>
+              <p class="rail-intro">Convo doesn't stop to correct you. It keeps notes for afterwards.</p>
+              <ol class="notes" data-notes></ol>
+              <div class="rail-done" data-done hidden>
+                <p><strong>Report ready.</strong> Three sentences to look at, one left alone.</p>
+                <a class="text-link" href="#report">Read the report</a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <h2 class="h2" id="how-title">Talk first. Learn from it after.</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num" aria-hidden="true">1</span>
+            <h3>Choose your level</h3>
+            <p>A1 or A2, Easy to Challenging, and whether you see characters, pinyin, English or all three.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">2</span>
+            <h3>Talk to Convo</h3>
+            <p>Convo plays the barista. It asks follow-up questions, throws in the odd surprise and stays in character when you slip up.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">3</span>
+            <h3>Read your report</h3>
+            <p>Every sentence worth fixing, with the correction, pinyin, English and a short explanation of why.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Levels -->
+    <section class="section section-tight" id="levels" aria-labelledby="levels-title">
+      <div class="wrap levels">
+        <div class="levels-copy" data-hint-scope>
+          <h2 class="h2" id="levels-title">Same question, three levels.</h2>
+          <p>Pick A1 or A2, then choose how hard Convo should push. The barista's first question changes with you.</p>
+          <div class="layer-toggle layer-toggle-light" role="group" aria-label="Show on this page">
+            <span class="layer-label">Show</span>
+            <button type="button" class="chip" data-layer-toggle="hanzi" aria-pressed="true"><span lang="zh-Hans">汉字</span></button>
+            <button type="button" class="chip" data-layer-toggle="pinyin" aria-pressed="true">Pinyin</button>
+            <button type="button" class="chip" data-layer-toggle="english" aria-pressed="true">English</button>
+          </div>
+          <p class="toggle-hint" data-toggle-hint aria-live="polite"></p>
+        </div>
+
+        <div class="levels-demo">
+          <div class="tabs" role="tablist" aria-label="Conversation difficulty">
+            <button type="button" role="tab" id="tab-easy" aria-controls="panel-level" aria-selected="false" tabindex="-1" data-level="easy">Easy</button>
+            <button type="button" role="tab" id="tab-standard" aria-controls="panel-level" aria-selected="true" data-level="standard">Standard</button>
+            <button type="button" role="tab" id="tab-challenging" aria-controls="panel-level" aria-selected="false" tabindex="-1" data-level="challenging">Challenging</button>
+          </div>
+          <div class="level-panel" id="panel-level" role="tabpanel" aria-labelledby="tab-standard" tabindex="0">
+            <div class="level-speaker">
+              <span class="avatar" data-mascot="talking" data-size="40"></span>
+              <span>Convo, as the barista</span>
+            </div>
+            <p class="layered layered-xl" data-level-line>
+              <span class="py">Nǐ hǎo, xiǎng hē diǎn shénme? Yào rè de háishi bīng de?</span>
+              <span class="zh" lang="zh-Hans">你好，想喝点什么？要热的还是冰的？</span>
+              <span class="en">Hi, what can I get you? Hot or iced?</span>
+            </p>
+            <p class="level-note" data-level-note>Natural pace, with follow-up questions you have to answer.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Report -->
+    <section class="section section-dawn" id="report" aria-labelledby="report-title">
+      <div class="wrap report-layout">
+        <div class="report-copy">
+          <h2 class="h2" id="report-title">After the conversation, the details.</h2>
+          <p>Every conversation ends with a report written for you. It starts with how it went, then goes through the sentences worth another look.</p>
+          <ul class="report-list">
+            <li>An overall read on the conversation</li>
+            <li>Your sentence, the better version, pinyin and English</li>
+            <li>A plain explanation of each mistake</li>
+            <li>Patterns that keep coming up, and what to try next</li>
+          </ul>
+          <div class="report-mascot" data-mascot="report" data-size="150"></div>
+        </div>
+
+        <article class="report" aria-label="Sample report">
+          <header class="report-head">
+            <h3>Ordering at a café</h3>
+            <p class="report-meta"><span class="badge">Sample</span> A2, Standard</p>
+          </header>
+
+          <p class="report-summary">You ordered, coped with a sold-out item and paid without switching to English. Three sentences are worth another look.</p>
+
+          <div class="fix">
+            <div class="fix-head"><h4>Questions that already have a question word</h4><span class="tag tag-grammar">Grammar</span></div>
+            <dl class="fix-rows">
+              <dt>You said</dt>
+              <dd class="said layered"><span class="py">Duōshao qián ma?</span><span class="zh" lang="zh-Hans">多少钱<mark>吗</mark>？</span></dd>
+              <dt>Better</dt>
+              <dd class="better layered"><span class="py">Duōshao qián?</span><span class="zh" lang="zh-Hans">多少钱？</span><span class="en">How much is it?</span></dd>
+              <dt>Why</dt>
+              <dd class="why">多少 already makes it a question, so adding 吗 asks it twice.</dd>
+            </dl>
+          </div>
+
+          <div class="fix">
+            <div class="fix-head"><h4>是 before adjectives</h4><span class="tag tag-grammar">Grammar</span></div>
+            <dl class="fix-rows">
+              <dt>You said</dt>
+              <dd class="said layered"><span class="py">Zhèlǐ shì hěn piàoliang.</span><span class="zh" lang="zh-Hans">这里<mark>是</mark>很漂亮。</span></dd>
+              <dt>Better</dt>
+              <dd class="better layered"><span class="py">Zhèlǐ hěn piàoliang.</span><span class="zh" lang="zh-Hans">这里很漂亮。</span><span class="en">It's really nice here.</span></dd>
+              <dt>Why</dt>
+              <dd class="why">Adjectives act as the verb in Chinese. Link them with 很, not 是.</dd>
+            </dl>
+          </div>
+
+          <div class="fix">
+            <div class="fix-head"><h4>Measure words for drinks</h4><span class="tag tag-natural">More natural</span></div>
+            <dl class="fix-rows">
+              <dt>You said</dt>
+              <dd class="said layered"><span class="py">Wǒ yào yí ge nátiě.</span><span class="zh" lang="zh-Hans">我要一<mark>个</mark>拿铁。</span></dd>
+              <dt>Better</dt>
+              <dd class="better layered"><span class="py">Wǒ yào yì bēi nátiě.</span><span class="zh" lang="zh-Hans">我要一杯拿铁。</span><span class="en">I'd like a latte.</span></dd>
+              <dt>Why</dt>
+              <dd class="why">个 is understood, but drinks usually take 杯 (cup). The barista used it in their reply.</dd>
+            </dl>
+          </div>
+
+          <div class="fix fix-ok">
+            <div class="fix-head"><h4>Correct as it was</h4><span class="tag tag-ok">Left alone</span></div>
+            <p class="layered ok-line"><span class="py">Bīng de, yào yànmài nǎi.</span><span class="zh" lang="zh-Hans">冰的，要燕麦奶。</span><span class="en">Iced, with oat milk.</span></p>
+            <p class="why">Short and natural. Nothing to change.</p>
+          </div>
+
+          <footer class="report-foot">
+            <div>
+              <h4>Pattern to watch</h4>
+              <p>Adding 吗 to questions that already use 什么, 哪儿 or 多少.</p>
+            </div>
+            <div>
+              <h4>Try next</h4>
+              <p>Challenging difficulty. The barista will suggest drinks you didn't ask for.</p>
+            </div>
+          </footer>
+        </article>
+      </div>
+    </section>
+
+    <!-- Principles -->
+    <section class="section section-fathom" aria-labelledby="principles-title">
+      <div class="wrap">
+        <h2 class="h2" id="principles-title">Built to keep you talking.</h2>
+        <div class="principles">
+          <div class="principle">
+            <h3>It stays in character.</h3>
+            <p>Convo is the barista, not a teacher. It won't stop the conversation to correct you, and it handles mistakes the way a patient person would.</p>
+          </div>
+          <div class="principle">
+            <h3>It corrects afterwards.</h3>
+            <p>Mistakes are saved quietly and explained in your report. Meanwhile, Convo's replies use the correct form, so you hear it in context.</p>
+          </div>
+          <div class="principle">
+            <h3>It leaves correct sentences alone.</h3>
+            <p>If what you said is right, it isn't marked wrong just to look thorough. Only real mistakes and genuinely more natural phrasings make the report.</p>
+          </div>
+        </div>
+        <p class="model-note">Convo runs on Qwen2.5-3B-Instruct, a small open model, so its corrections aren't taken on trust. Before launch they'll be measured against a test set of learner sentences with known mistakes, including correct ones it should leave alone.</p>
+      </div>
+    </section>
+
+    <!-- Next -->
+    <section class="next" aria-label="Coming next">
+      <div class="wrap next-inner">
+        <span class="next-mascot" data-mascot="listening" data-size="64"></span>
+        <p><strong>Coming next: say it out loud.</strong> Voice input and spoken replies are on the way, then more everyday conversations beyond the café.</p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-layout">
+        <h2 class="h2" id="faq-title">Good questions.</h2>
+        <div class="faq">
+          <details>
+            <summary>Do I need to know some Chinese already?</summary>
+            <p>A little. Convo is built for A1–A2 learners: you know greetings, numbers and some everyday words. If you're near the start, choose Easy and keep pinyin and English switched on.</p>
+          </details>
+          <details>
+            <summary>Will Convo correct me in the middle of a conversation?</summary>
+            <p>No. It replies the way a real barista would, often using the correct form so you hear it. Corrections wait for your report at the end.</p>
+          </details>
+          <details>
+            <summary>Is the conversation scripted?</summary>
+            <p>No. Replies are generated as you go, so the conversation follows what you actually say. The conversation on this page is a fixed sample so you can see how it works.</p>
+          </details>
+          <details>
+            <summary>Can I choose what I see?</summary>
+            <p>Yes. Show characters, pinyin, English or any combination, and change it whenever you like. The toggles on this page work the same way.</p>
+          </details>
+          <details>
+            <summary>Can I speak instead of typing?</summary>
+            <p>Not yet. Convo starts with text. Voice input and spoken replies are the next things being built.</p>
+          </details>
+          <details>
+            <summary>Which AI model is behind it?</summary>
+            <p>Qwen2.5-3B-Instruct, an open model. It's small, so its corrections will be measured against real learner mistakes before launch rather than assumed to be right.</p>
+          </details>
+          <details>
+            <summary>Why only one conversation for now?</summary>
+            <p>Starting with one everyday situation makes it possible to get it right before adding more. Ordering a drink is first; more scenarios follow.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Close -->
+    <section class="close" aria-labelledby="close-title">
+      <div class="wrap close-inner">
+        <span class="close-mascot" data-mascot="idle" data-size="180"></span>
+        <h2 class="h2" id="close-title">Say <span lang="zh-Hans">你好</span> to Convo.</h2>
+        <p>Order a drink in Mandarin, then read your report at the end.</p>
+        <a class="btn btn-primary" href="demo.html">Try the café demo</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="Convo AI, back to top">
+          <span class="brand-mark" data-mascot="idle" data-size="34"></span>
+          <span class="brand-word">Convo</span>
+        </a>
+        <p>Learn. Speak. Connect.</p>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="#how">How it works</a>
+        <a href="#levels">Levels</a>
+        <a href="#report">Your report</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <p class="footer-fine">The conversation and report on this page are samples. © 2026 Convo AI.</p>
+    </div>
+  </footer>
+</body>
+</html>

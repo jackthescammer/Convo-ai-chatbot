@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T21:00:00Z",
+  "title": "Design System: Convo AI",
+  "extensions": {
+    "colorMeta": {
+      "convo-yellow": { "role": "primary", "displayName": "Convo Yellow", "canonical": "#FFD83D", "tonalRamp": ["#3D3000", "#6B5300", "#9C7A00", "#C99F06", "#E9B10C", "#FFD83D", "#FFE98A", "#FFF6CC"] },
+      "dawn": { "role": "secondary", "displayName": "Dawn Lavender", "canonical": "#F0D7FF", "tonalRamp": ["#2E1A3D", "#4A2A6B", "#6E4699", "#9670BF", "#BE9BE0", "#E3C2F7", "#F0D7FF", "#FAF0FF"] },
+      "fathom": { "role": "secondary", "displayName": "Fathom Green", "canonical": "#034F46", "tonalRamp": ["#011F1B", "#023A33", "#034F46", "#1F6B61", "#4A8E84", "#7FB3AA", "#B7D6D0", "#E3F0EE"] },
+      "pulse": { "role": "tertiary", "displayName": "Pulse", "canonical": "#7F1C34", "tonalRamp": ["#2E0A13", "#55132A", "#7F1C34", "#A53A50", "#C9687A", "#E39CA8", "#F4CCD3", "#FFE3DC"] },
+      "flare": { "role": "tertiary", "displayName": "Flare", "canonical": "#FF6C4C", "tonalRamp": ["#4A1408", "#7F2510", "#B33A1E", "#E5532F", "#FF6C4C", "#FF9A82", "#FFC6B8", "#FFE9E3"] },
+      "lumen": { "role": "neutral", "displayName": "Lumen", "canonical": "#FFFFEB", "tonalRamp": ["#3A3A30", "#66665A", "#959585", "#BDBDAA", "#E4E4D0", "#F2F2DD", "#FFFFEB", "#FFFFF7"] },
+      "vast": { "role": "neutral", "displayName": "Vast", "canonical": "#1A1A1A", "tonalRamp": ["#1A1A1A", "#333333", "#4D4D4D", "#666666", "#808080", "#A6A6A6", "#CCCCCC", "#EEEEEE"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headline only, balanced over two lines." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings, sentence case with a full stop." },
+      "title": { "displayName": "Title", "purpose": "Step, principle and report headings." },
+      "body": { "displayName": "Body", "purpose": "Running text under 65ch." },
+      "label": { "displayName": "Label", "purpose": "Tags, toolbar titles and controls; sentence case." },
+      "hanzi": { "displayName": "Hanzi", "purpose": "Chinese characters, always the largest layer of a layered line." },
+      "pinyin": { "displayName": "Pinyin", "purpose": "Tone-marked romanisation above the characters; Noto Sans for full tone-mark coverage." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Entrances of messages and notes, button press." },
+      { "name": "duration-state", "value": "160ms", "purpose": "Colour and background changes on controls." },
+      { "name": "duration-message", "value": "320ms", "purpose": "A chat message arriving (fade and 8px rise)." },
+      { "name": "duration-note", "value": "420ms", "purpose": "A note sliding into the report rail (fade and 12px slide)." }
+    ],
+    "breakpoints": [
+      { "name": "phone-narrow", "value": "420px" },
+      { "name": "phone", "value": "760px" },
+      { "name": "tablet", "value": "1040px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action on a screen, in Convo yellow.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Try the café demo</a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; min-height: 3.25rem; padding: 0 1.75rem; border-radius: 999px; background: #FFD83D; color: #1A1A1A; font-family: Figtree, system-ui, sans-serif; font-weight: 700; font-size: 1.0625rem; letter-spacing: -0.01em; text-decoration: none; transition: background-color 160ms ease, transform 160ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: #FFCE14; } .ds-btn-primary:active { background: #E9B10C; transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 3px solid #1A1A1A; outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Link",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "Secondary action beside a primary button.",
+      "html": "<a class=\"ds-text-link\" href=\"#\">See a sample report</a>",
+      "css": ".ds-text-link { color: #1A1A1A; font-family: Figtree, system-ui, sans-serif; font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; text-decoration-color: #E9B10C; transition: text-decoration-color 160ms ease; } .ds-text-link:hover { text-decoration-color: #1A1A1A; } .ds-text-link:focus-visible { outline: 3px solid #1A1A1A; outline-offset: 3px; border-radius: 6px; }"
+    },
+    {
+      "name": "Layer Toggle",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Switches 汉字, pinyin and English layers; at least one stays on.",
+      "html": "<div class=\"ds-layers\" role=\"group\" aria-label=\"Show\"><button class=\"ds-chip\" aria-pressed=\"true\">汉字</button><button class=\"ds-chip\" aria-pressed=\"false\">Pinyin</button><button class=\"ds-chip\" aria-pressed=\"true\">English</button></div>",
+      "css": ".ds-layers { display: inline-flex; gap: 0.25rem; padding: 0.25rem; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(26, 26, 26, 0.15); } .ds-chip { min-height: 2.5rem; padding: 0 1rem; border: 0; border-radius: 999px; background: transparent; color: rgba(26, 26, 26, 0.72); font-family: Figtree, 'Noto Sans SC', system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; cursor: pointer; transition: background-color 160ms ease, color 160ms ease; } .ds-chip:hover { color: #1A1A1A; background: rgba(26, 26, 26, 0.08); } .ds-chip[aria-pressed='true'] { background: #1A1A1A; color: #FFFFEB; } .ds-chip:focus-visible { outline: 3px solid #1A1A1A; outline-offset: 3px; }"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "chip-pressed",
+      "description": "Pill tabs, used for difficulty levels.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button role=\"tab\" class=\"ds-tab\" aria-selected=\"false\">Easy</button><button role=\"tab\" class=\"ds-tab\" aria-selected=\"true\">Standard</button><button role=\"tab\" class=\"ds-tab\" aria-selected=\"false\">Challenging</button></div>",
+      "css": ".ds-tabs { display: inline-flex; gap: 0.25rem; padding: 0.25rem; background: #FFFFEB; border-radius: 999px; } .ds-tab { min-height: 2.75rem; padding: 0 1.25rem; border: 0; border-radius: 999px; background: transparent; color: rgba(26, 26, 26, 0.72); font-family: Figtree, system-ui, sans-serif; font-weight: 600; cursor: pointer; transition: background-color 160ms ease, color 160ms ease; } .ds-tab:hover { color: #1A1A1A; } .ds-tab[aria-selected='true'] { background: #1A1A1A; color: #FFFFEB; } .ds-tab:focus-visible { outline: 3px solid #1A1A1A; outline-offset: 3px; }"
+    },
+    {
+      "name": "Chat Bubbles",
+      "kind": "custom",
+      "refersTo": "bubble-convo",
+      "description": "Layered conversation lines: Convo on white at left, the learner on Vast at right.",
+      "html": "<div class=\"ds-chat\"><div class=\"ds-bubble ds-bubble-convo\"><span class=\"ds-py\">Hǎo de, yì bēi nátiě. Rè de háishi bīng de?</span><span class=\"ds-zh\">好的，一杯拿铁。热的还是冰的？</span><span class=\"ds-en\">Sure, one latte. Hot or iced?</span></div><div class=\"ds-bubble ds-bubble-you\"><span class=\"ds-py\">Bīng de, yào yànmài nǎi.</span><span class=\"ds-zh\">冰的，要燕麦奶。</span><span class=\"ds-en\">Iced, with oat milk.</span></div></div>",
+      "css": ".ds-chat { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; background: #FFFFEB; border-radius: 1.75rem; } .ds-bubble { display: flex; flex-direction: column; gap: 0.125rem; max-width: 85%; padding: 0.75rem 1.125rem; border-radius: 1.375rem; } .ds-bubble-convo { align-self: flex-start; background: #FFFFFF; border: 1px solid rgba(26, 26, 26, 0.08); border-top-left-radius: 0.375rem; color: #1A1A1A; } .ds-bubble-you { align-self: flex-end; background: #1A1A1A; color: #FFFFEB; border-top-right-radius: 0.375rem; } .ds-py { font-family: 'Noto Sans', system-ui, sans-serif; font-size: 0.875rem; opacity: 0.75; } .ds-zh { font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 1.3125rem; font-weight: 500; line-height: 1.45; } .ds-en { font-family: Figtree, system-ui, sans-serif; font-size: 0.875rem; opacity: 0.75; }"
+    },
+    {
+      "name": "Report Note",
+      "kind": "card",
+      "refersTo": "tag-grammar",
+      "description": "A saved correction: tag, struck-through original, arrow, better version.",
+      "html": "<div class=\"ds-note\"><span class=\"ds-tag ds-tag-grammar\">Grammar</span><span class=\"ds-from\">多少钱吗</span><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 8h9M8.5 4.5 12 8l-3.5 3.5\" fill=\"none\" stroke=\"rgba(26,26,26,.5)\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-to\">多少钱</span></div><div class=\"ds-note\"><span class=\"ds-tag ds-tag-ok\">Left alone</span><span>冰的，要燕麦奶。 Correct as it is.</span></div>",
+      "css": ".ds-note { display: flex; align-items: center; flex-wrap: wrap; gap: 0.375rem 0.75rem; padding: 0.625rem 0.875rem; margin-bottom: 0.625rem; background: #FFFFFF; border: 1px solid rgba(26, 26, 26, 0.08); border-radius: 1.125rem; font-family: Figtree, 'Noto Sans SC', system-ui, sans-serif; font-size: 0.9375rem; color: #1A1A1A; } .ds-tag { display: inline-flex; padding: 0.125rem 0.625rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; } .ds-tag-grammar { background: #FFE3DC; color: #7F1C34; } .ds-tag-ok { background: #CEF5CA; color: #114E0B; } .ds-from { color: #7F1C34; text-decoration: line-through; text-decoration-color: #FF6C4C; text-decoration-thickness: 2px; font-size: 1.0625rem; } .ds-to { color: #034F46; font-weight: 500; font-size: 1.0625rem; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "button-primary",
+      "description": "Sticky Lumen bar: brand, pill links, yellow action.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\">Convo</a><span class=\"ds-links\"><a href=\"#\">How it works</a><a href=\"#\">Levels</a><a href=\"#\">Your report</a><a href=\"#\">FAQ</a></span><a class=\"ds-nav-cta\" href=\"#\">Try the café demo</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 2rem; padding: 0.875rem 1.5rem; background: #FFFFEB; border-bottom: 1px solid rgba(26, 26, 26, 0.15); font-family: Figtree, system-ui, sans-serif; } .ds-brand { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.04em; color: #1A1A1A; text-decoration: none; } .ds-links { display: flex; gap: 0.25rem; margin-left: auto; } .ds-links a { padding: 0.5rem 0.875rem; border-radius: 999px; color: #1A1A1A; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: background-color 160ms ease; } .ds-links a:hover { background: rgba(26, 26, 26, 0.08); } .ds-nav-cta { min-height: 2.75rem; display: inline-flex; align-items: center; padding: 0 1.25rem; border-radius: 999px; background: #FFD83D; color: #1A1A1A; font-weight: 700; font-size: 0.9375rem; text-decoration: none; } .ds-nav-cta:hover { background: #FFCE14; } .ds-nav a:focus-visible { outline: 3px solid #1A1A1A; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Patient Friend",
+    "overview": "Convo should feel like talking to a friend who happens to speak Mandarin: warm, sunny and never lecturing. Yellow brings the energy and belongs to Convo alone, carried by the mascot and every primary action. Around it, Wispr Flow's palette keeps things calm: a cream-yellow Lumen ground, Vast ink, lavender Dawn panels where conversations and reports live, and one deep Fathom green for statements of principle.\n\nThe conversation is always the focus. Chinese characters are set large and plainly, with pinyin above and English below as optional layers the learner switches on or off. Mistakes are handled kindly: nothing interrupts the exchange, and corrections arrive afterwards in a report that shows what was said, what's better, and why. Correct sentences are visibly left alone.\n\nSurfaces are flat and soft: big rounded panels, pill controls, no shadows. Motion belongs to the mascot and to things that just happened (a message arriving, a note being saved), never to decoration.",
+    "keyCharacteristics": [
+      "One brand colour, Convo yellow, reserved for the mascot, primary buttons and the brand mark.",
+      "Lavender Dawn panels hold conversation and feedback; Fathom green appears once per page at most.",
+      "Every Chinese line can show 汉字, pinyin and English, each switchable.",
+      "Flat, rounded, shadowless surfaces; depth comes from tonal layering.",
+      "The yellow mascot reacts to events and never idles."
+    ],
+    "rules": [
+      { "name": "The Yellow Belongs To Convo Rule", "body": "Yellow appears only on the mascot, the brand mark, primary actions and a few small markers. It never becomes a section background or a decorative wash.", "section": "colors" },
+      { "name": "The Two Fields Rule", "body": "Conversation and feedback sit on Dawn; principles sit on Fathom. A page uses Fathom at most once.", "section": "colors" },
+      { "name": "The Red Is Never Text Rule", "body": "Flare marks mistakes with lines; the mistaken words themselves are Pulse.", "section": "colors" },
+      { "name": "The Layer Order Rule", "body": "A layered line always reads pinyin, then 汉字, then English, top to bottom, and any layer can be switched off without breaking the line.", "section": "typography" },
+      { "name": "The No Eyebrow Rule", "body": "Headings carry themselves: no small labels above them. Tags sit beside headings, never on top.", "section": "typography" },
+      { "name": "The Flat Friend Rule", "body": "Surfaces never float. If something needs to stand forward, give it a lighter or darker tone, not a shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Convo Yellow (#FFD83D) for the mascot, the brand mark and primary actions.",
+      "Do show Chinese as layered lines (pinyin, 汉字, English) that respect the learner's layer toggles.",
+      "Do mark mistakes with Pulse text plus a Flare line, and corrections with Fathom text, always labelled in words too.",
+      "Do include a \"Left alone\" example wherever corrections are shown, so learners see that correct sentences aren't flagged.",
+      "Do label demonstration content as a sample.",
+      "Do drive mascot state changes from events (a reply, a surprise, the end of a conversation)."
+    ],
+    "donts": [
+      "Don't use box shadows or floating cards; layer tones instead.",
+      "Don't put small labels or eyebrows above headings, or set labels in all caps.",
+      "Don't set Flare (#FF6C4C) as text; its contrast on Lumen is too low.",
+      "Don't let the mascot bob, float or jitter while idle.",
+      "Don't theme screens around the café; it's the first scenario, not the look.",
+      "Don't set pinyin in Figtree; it lacks the tone-marked vowels and breaks words into mixed fonts."
+    ]
+  }
+}

@@ -1,0 +1,408 @@
+<title>Convo Mascot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@500&display=swap">
+<style>
+  /* Layout: lavender stage beside its controls (stacks under 900px), then the catalogue on a deep green panel.
+     Brand (CLAUDE.md): Convo yellow for the mascot and primary actions; Wispr Flow neutrals elsewhere.
+     One light scheme by design: the brand defines a single palette. */
+  :root {
+    color-scheme: light;
+    --yellow: #FFD83D;
+    --yellow-shade: #E9B10C;
+    --lumen: #FFFFEB;
+    --vast: #1A1A1A;
+    --dawn: #F0D7FF;
+    --fathom: #034F46;
+    --muted: #5C5C52;
+    --line: #E4E4CC;
+    --card: #FFFFF7;
+    --chip: #F3F3D6;
+    --font-display: 'Fredoka', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+    --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-han: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--lumen);
+    color: var(--vast);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 28px 64px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 32px; line-height: 1; }
+  .brand i { width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); box-shadow: inset -3px -3px 0 var(--yellow-shade); }
+  .brand span { color: var(--muted); font-weight: 500; }
+  header p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+  .studio { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .studio { grid-template-columns: minmax(0, 1fr); } }
+
+  .stage {
+    --convo-mascot-surface: #E5C2FA;
+    --convo-mascot-surface-edge: #D6A9F2;
+    --convo-mascot-wall: var(--lumen);
+    --convo-mascot-wall-edge: #D6A9F2;
+    background: var(--dawn);
+    border-radius: 24px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 16px);
+  }
+  @media (max-width: 900px) { .stage { position: static; } }
+  .stage-box { width: min(100%, 360px); aspect-ratio: 1; max-width: 100%; display: grid; place-items: center; margin-top: 12px; }
+  .stage-box svg { width: 100%; height: 100%; }
+  .now { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; justify-content: center; }
+  .now b { font-family: var(--font-display); font-weight: 600; font-size: 22px; }
+  .now small { color: var(--muted); font-size: 13px; }
+  .line {
+    min-height: 4.2em;
+    width: 100%;
+    background: rgba(255, 255, 235, 0.7);
+    border-radius: 14px;
+    padding: 10px 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .line .han { font-family: var(--font-han); font-size: 18px; }
+  .line .py { color: var(--muted); font-size: 13px; }
+  .line .who { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+  .controls { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .panel h2 { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips + h3 { margin-top: 4px; }
+  h3 { margin: 0; font-size: 13px; font-weight: 600; }
+  button.chip {
+    font: 500 13px/1 var(--font-ui);
+    color: var(--vast);
+    background: var(--chip);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  button.chip:hover { border-color: var(--line); }
+  button.chip[aria-pressed="true"] { background: var(--vast); color: var(--lumen); }
+  button:focus-visible, input:focus-visible + .switch { outline: 2px solid var(--fathom); outline-offset: 2px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  label.toggle { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; font-size: 14px; }
+  label.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .switch { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background 160ms; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--card); transition: transform 160ms; }
+  label.toggle input:checked + .switch { background: var(--fathom); }
+  label.toggle input:checked + .switch::after { transform: translateX(14px); }
+  .play {
+    font: 600 14px/1 var(--font-ui);
+    background: var(--yellow);
+    color: var(--vast);
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  .play:hover { background: #FFE15F; }
+  .play:active { background: var(--yellow-shade); }
+  .hint { margin: 0; color: var(--muted); font-size: 13px; }
+  code { font-size: 12.5px; background: var(--chip); border-radius: 6px; padding: 1px 6px; }
+
+  .catalogue {
+    background: var(--fathom);
+    color: var(--lumen);
+    border-radius: 28px;
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .catalogue > h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 26px; }
+  .catalogue > p { margin: -16px 0 0; color: rgba(255, 255, 235, 0.72); max-width: 62ch; }
+  .group { display: flex; flex-direction: column; gap: 10px; }
+  .group h3 {
+    align-self: flex-start;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--vast);
+    background: var(--dawn);
+    border-radius: 999px;
+    padding: 4px 14px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .card {
+    --convo-mascot-surface: var(--chip);
+    --convo-mascot-surface-edge: var(--line);
+    --convo-mascot-wall: var(--card);
+    --convo-mascot-wall-edge: var(--line);
+    background: var(--lumen);
+    border: 2px solid transparent;
+    border-radius: 18px;
+    padding: 10px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font: inherit;
+    color: var(--vast);
+    text-align: center;
+  }
+  .card:hover { border-color: var(--yellow); }
+  .card:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  .card .box { width: 100%; aspect-ratio: 1; max-width: 100%; display: grid; place-items: center; overflow: hidden; border-radius: 12px; }
+  .card .box svg { width: 92%; height: 92%; }
+  .card b { font-weight: 600; font-size: 14px; }
+  .card span { color: var(--muted); font-size: 12px; line-height: 1.35; }
+  footer { color: var(--muted); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><i aria-hidden="true"></i>Convo <span>mascot</span></div>
+    <p>Every pose from the character sheet, animated. Each state plays its own motion; the body never bobs or jitters in place. State changes, gestures and the gaze react to what happens in the conversation.</p>
+  </header>
+
+  <section class="studio" aria-label="Playground">
+    <div class="stage">
+      <div class="stage-box" id="stage"></div>
+      <div class="now"><b id="now-state">idle</b><small id="now-use"></small></div>
+      <div class="line" id="line" aria-live="polite">
+        <span class="who">Conversation turn</span>
+        <span class="py">Press “Play a conversation turn” to see the states a turn moves through.</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="panel">
+        <h2>Conversation</h2>
+        <button class="play" id="play" type="button">Play a conversation turn</button>
+        <p class="hint">Each line is an event: the learner writes, the model checks, the reply arrives, the conversation ends. The sample lines come from the first scenario.</p>
+      </div>
+      <div class="panel" id="states"><h2>State</h2></div>
+      <div class="panel">
+        <h2>Face</h2>
+        <div class="chips" id="faces"></div>
+      </div>
+      <div class="panel">
+        <h2>Gesture</h2>
+        <div class="chips" id="gestures"></div>
+        <p class="hint">A gesture plays once, for an event such as a correct answer.</p>
+        <div class="row">
+          <label class="toggle"><input type="checkbox" id="follow"><span class="switch"></span>Follow pointer</label>
+          <label class="toggle"><input type="checkbox" id="muted"><span class="switch"></span>Muted</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="catalogue" aria-label="All states">
+    <h2>Every state</h2>
+    <p>Grouped as on the character sheet. Select one to show it on the stage.</p>
+    <div id="groups" class="catalogue-groups" style="display:flex;flex-direction:column;gap:26px"></div>
+  </section>
+
+  <footer>Engine: <code>convo-mascot.js</code> (no dependencies). React: <code>&lt;ConvoMascot state="thinking" /&gt;</code>.</footer>
+</div>
+
+<script type="module">
+  import { createConvoMascot, stateGroups, faceNames, gestureNames } from './convo-mascot.js';
+
+  const USES = {
+    idle: 'Waiting for the learner', wave: 'Onboarding greeting', curious: 'New scenario unlocked',
+    giggle: 'Playful reply', thinking: 'Checking a sentence', walking: 'Moving to the next step',
+    resting: 'Break between sessions', happy: 'Correct answer', surprised: 'Unexpected twist in the scene',
+    sad: 'Connection lost', angry: 'Too many retries', sleeping: 'Session idle',
+    love: 'Streak kept', reading: 'Loading the lesson', typing: 'Writing your report',
+    running: 'Timed challenge', jumping: 'Level up', peeking: 'Hint available', phone: 'Reminder notification',
+    heart: 'Saved to favourites', chatting: 'Reply being generated', star: 'New word learned',
+    report: 'Learning report', back: 'Offline', cool: 'Perfect score', chill: 'Free practice',
+    celebrate: 'Conversation complete', peekaboo: 'Empty state', listening: 'Mic open (Phase 2)',
+    talking: 'Speaking the reply (Phase 3)',
+  };
+  const GROUP_LABEL = {
+    general: 'General poses', emotions: 'Emotions', actions: 'Actions',
+    interactions: 'Interactions', special: 'Special poses', conversation: 'Conversation',
+  };
+
+  const nowState = document.getElementById('now-state');
+  const nowUse = document.getElementById('now-use');
+  const stage = createConvoMascot(document.getElementById('stage'), {
+    state: 'idle',
+    size: '100%',
+    ariaLabel: 'Convo mascot, playground',
+    onStateChange(s) {
+      nowState.textContent = s;
+      nowUse.textContent = USES[s] || '';
+      for (const b of document.querySelectorAll('#states button')) b.setAttribute('aria-pressed', String(b.dataset.state === s));
+    },
+  });
+  nowUse.textContent = USES.idle;
+
+  let script = null;
+  function go(state) {
+    stopScript();
+    stage.setState(state);
+  }
+
+  /* State chips */
+  const statesPanel = document.getElementById('states');
+  for (const [group, list] of Object.entries(stateGroups)) {
+    const h = document.createElement('h3');
+    h.textContent = GROUP_LABEL[group];
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    for (const s of list) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.dataset.state = s;
+      b.textContent = s;
+      b.setAttribute('aria-pressed', String(s === 'idle'));
+      b.addEventListener('click', () => go(s));
+      chips.append(b);
+    }
+    statesPanel.append(h, chips);
+  }
+
+  /* Faces */
+  const facesEl = document.getElementById('faces');
+  for (const f of ['auto', ...faceNames]) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = f;
+    b.setAttribute('aria-pressed', String(f === 'auto'));
+    b.addEventListener('click', () => {
+      stage.setFace(f === 'auto' ? null : f);
+      for (const x of facesEl.children) x.setAttribute('aria-pressed', String(x === b));
+    });
+    facesEl.append(b);
+  }
+
+  /* Gestures */
+  const gesturesEl = document.getElementById('gestures');
+  for (const g of gestureNames) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = g;
+    b.addEventListener('click', () => stage.poke(g));
+    gesturesEl.append(b);
+  }
+
+  document.getElementById('follow').addEventListener('change', (e) => stage.update({ followPointer: e.target.checked }));
+  document.getElementById('muted').addEventListener('change', (e) => stage.update({ muted: e.target.checked }));
+
+  /* A conversation turn: each step is an event the app would react to. */
+  const line = document.getElementById('line');
+  function say(who, han, py) {
+    line.innerHTML = '';
+    const w = document.createElement('span');
+    w.className = 'who';
+    w.textContent = who;
+    line.append(w);
+    if (han) {
+      const h = document.createElement('span');
+      h.className = 'han';
+      h.lang = 'zh-Hans';
+      h.textContent = han;
+      line.append(h);
+    }
+    if (py) {
+      const p = document.createElement('span');
+      p.className = 'py';
+      p.textContent = py;
+      line.append(p);
+    }
+  }
+  const STEPS = [
+    ['wave', 1600, 'Character greets you', '你好！', 'Nǐ hǎo! · Hello!', 'bounce'],
+    ['listening', 2400, 'You write', '你好，我要一杯拿铁。', 'Nǐ hǎo, wǒ yào yì bēi nátiě. · Hi, I’d like a latte.'],
+    ['thinking', 1500, 'Model checks your sentence', '', 'No corrections needed.'],
+    ['chatting', 1500, 'Reply is being written', '', ''],
+    ['talking', 2800, 'Character replies', '好的！大杯还是中杯？', 'Hǎo de! Dà bēi háishi zhōng bēi? · Sure! Large or medium?'],
+    ['listening', 2000, 'You write', '大杯，谢谢。', 'Dà bēi, xièxie. · Large, thanks.'],
+    ['happy', 1800, 'Correct', '', 'Natural and correct. Nothing to fix.', 'nod'],
+    ['celebrate', 2600, 'Conversation complete', '', '2 turns · 0 corrections · report ready'],
+    ['report', 2400, 'Learning report', '', 'Open the report to see more natural alternatives.'],
+  ];
+  const playBtn = document.getElementById('play');
+  function stopScript() {
+    if (script) {
+      clearTimeout(script);
+      script = null;
+      playBtn.textContent = 'Play a conversation turn';
+    }
+  }
+  playBtn.addEventListener('click', () => {
+    if (script) {
+      stopScript();
+      stage.setState('idle');
+      return;
+    }
+    playBtn.textContent = 'Stop';
+    let i = 0;
+    const step = () => {
+      if (i >= STEPS.length) {
+        script = null;
+        playBtn.textContent = 'Play a conversation turn';
+        stage.setState('idle');
+        return;
+      }
+      const [state, ms, who, han, py, gesture] = STEPS[i++];
+      stage.setState(state);
+      if (gesture) stage.poke(gesture);
+      say(who, han, py);
+      script = setTimeout(step, ms);
+    };
+    step();
+  });
+
+  /* Catalogue */
+  const groupsEl = document.getElementById('groups');
+  for (const [group, list] of Object.entries(stateGroups)) {
+    const g = document.createElement('div');
+    g.className = 'group';
+    const h = document.createElement('h3');
+    h.textContent = GROUP_LABEL[group];
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    for (const s of list) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'card';
+      card.setAttribute('aria-label', `Show ${s} on the stage`);
+      const box = document.createElement('div');
+      box.className = 'box';
+      const name = document.createElement('b');
+      name.textContent = s;
+      const use = document.createElement('span');
+      use.textContent = USES[s] || '';
+      card.append(box, name, use);
+      createConvoMascot(box, { state: s, size: '92%', ariaLabel: `Convo mascot, ${s}` });
+      card.addEventListener('click', () => {
+        go(s);
+        if (matchMedia('(max-width: 900px)').matches) document.getElementById('stage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      grid.append(card);
+    }
+    g.append(h, grid);
+    groupsEl.append(g);
+  }
+</script>
