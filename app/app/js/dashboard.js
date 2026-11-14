@@ -17,20 +17,12 @@ function greeting(name) {
   return name ? `${part}, ${name}.` : `${part}.`;
 }
 
-function lede(reports, resume) {
-  if (resume) return 'Your conversation is still open. Pick up where you left off.';
-  if (!reports.length) return 'Your first conversation takes about five minutes. The report comes straight after.';
-  const n = reports.length;
-  return `You've finished ${n} conversation${n === 1 ? '' : 's'}, the last one ${relativeDay(reports[0].createdAt)}. Ready for another?`;
-}
-
 function continueCard(s, resume, progress) {
   return `
   <article class="card-continue" aria-labelledby="continue-title">
     <span class="continue-mascot" data-mascot="${resume ? 'listening' : 'idle'}" data-size="116"></span>
     <div class="continue-copy">
       <h2 class="continue-title" id="continue-title">Ordering at a café</h2>
-      <p class="continue-desc">Order a drink, answer the barista's questions and pay. Something unexpected may come up.</p>
       <ol class="continue-goals" aria-label="Goals">
         ${GOALS.map((g) => {
           const done = resume && progress.goals[g.id];
@@ -165,7 +157,6 @@ export function render(root) {
     </aside>` : ''}
     <header class="page-head">
       <h1 class="page-title">${esc(greeting(p.name.trim()))}</h1>
-      <p class="page-lede">${esc(lede(reports, resume))}</p>
     </header>
 
     <div class="dash-grid">

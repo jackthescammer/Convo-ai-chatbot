@@ -60,7 +60,7 @@ export function render(root, { arg }) {
         <h1 class="h2" id="report-page-title">How it went.</h1>
         <p class="report-when">${esc(r.scenario)} · ${esc(r.level)} · ${esc(diff)} · ${esc(formatDate(r.createdAt))}</p>
         <dl class="assess">
-          <div><dt>Goals</dt><dd>${goalsDone} of ${(r.goals || []).length} reached</dd></div>
+          ${(r.goals || []).length ? `<div><dt>Goals</dt><dd>${goalsDone} of ${r.goals.length} reached</dd></div>` : ''}
           ${r.assessment.map((a) => `<div><dt>${esc(a.label)}</dt><dd>${esc(a.value)}</dd></div>`).join('')}
         </dl>
         <div class="report-actions">
@@ -82,9 +82,9 @@ export function render(root, { arg }) {
 
         <p class="report-summary">${esc(r.summary)}</p>
 
-        <ul class="report-goals" aria-label="Goals">
-          ${(r.goals || []).map((g) => `<li class="${g.done ? 'is-done' : ''}"><span class="goal-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>${esc(g.label)}<span class="sr-only">${g.done ? ', reached' : ', not reached'}</span></li>`).join('')}
-        </ul>
+        ${(r.goals || []).length ? `<ul class="report-goals" aria-label="Goals">
+          ${r.goals.map((g) => `<li class="${g.done ? 'is-done' : ''}"><span class="goal-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>${esc(g.label)}<span class="sr-only">${g.done ? ', reached' : ', not reached'}</span></li>`).join('')}
+        </ul>` : ''}
 
         ${r.fixes.map(fixBlock).join('')}
 
@@ -112,6 +112,7 @@ export function render(root, { arg }) {
         ${transcript(r.transcript || [])}
 
         ${r.placeholder ? `<p class="report-caveat">Written by the placeholder model. It only checks for three common mistakes and its replies didn't respond to what you wrote. The connected model writes the full report.</p>` : ''}
+        ${!r.placeholder && r.caveat ? `<p class="report-caveat">${esc(r.caveat)}${r.model ? ` Model: ${esc(r.model)}.` : ''}</p>` : ''}
       </article>
     </div>
   </section>`;

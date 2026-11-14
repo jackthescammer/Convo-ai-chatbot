@@ -2,7 +2,7 @@ import { esc, layered, bindLayerToggles, layerChips, setLayer, LAYERS } from './
 import { mountMascots, switchControl, APP_ICONS, REASONS } from './kit.js';
 import { getSettings, saveSettings, listReports, clearAll } from './store.js';
 import { getPrefs, savePrefs, resetPrefs } from './prefs.js';
-import { MODEL_INFO } from './model.js';
+import { MODEL_INFO, DEFAULT_MODEL_URL, setModelUrl, checkModel } from './model.js';
 import { resetSession, hasActiveSession } from './talk.js';
 
 const SECTIONS = [
@@ -39,7 +39,6 @@ function template(s, p) {
   <div class="page settings">
     <header class="page-head">
       <h1 class="page-title">Settings.</h1>
-      <p class="page-lede">Changes save as you make them, on this device only. There's no account.</p>
     </header>
 
     <div class="settings-layout">
@@ -54,10 +53,9 @@ function template(s, p) {
             <div class="setting-row setting-row-stack">
               <div class="setting-text">
                 <label class="setting-label" for="pref-name">What should Convo call you?</label>
-                <p class="setting-help" id="pref-name-help">Used in the greeting on your dashboard. Optional.</p>
               </div>
               <input class="text-input" id="pref-name" type="text" maxlength="30" autocomplete="given-name"
-                value="${esc(p.name)}" placeholder="Your first name" aria-describedby="pref-name-help">
+                value="${esc(p.name)}" placeholder="Your first name">
             </div>
           </div>
         </section>
@@ -68,14 +66,12 @@ function template(s, p) {
             <div class="setting-row">
               <div class="setting-text">
                 <p class="setting-label">Go through setup again</p>
-                <p class="setting-help">Convo asks why you're learning, how much you know, what to show and how hard to push. Your reports stay.</p>
               </div>
               <a class="btn-line" href="./#/hello">${APP_ICONS.restart}Start setup</a>
             </div>
             <div class="setting-row">
               <div class="setting-text">
                 <p class="setting-label">Not sure of your level?</p>
-                <p class="setting-help">Read two things the barista might say and choose which you could answer. Your level updates to match.</p>
               </div>
               <a class="btn-line" href="./#/check?from=settings">${APP_ICONS.chat}Check my level</a>
             </div>
@@ -102,7 +98,6 @@ function template(s, p) {
             <div class="setting-row setting-row-stack">
               <div class="setting-text">
                 <p class="setting-label" id="lbl-reasons">Why you're learning</p>
-                <p class="setting-help">From setup. Helps Convo pick what to practise next.</p>
               </div>
               <div class="reason-chips" role="group" aria-labelledby="lbl-reasons">
                 ${REASONS.map((r) => `<button type="button" class="chip" data-reason="${r.id}" aria-pressed="${s.reasons.includes(r.id)}">${esc(r.label)}</button>`).join('')}
@@ -111,7 +106,6 @@ function template(s, p) {
             <div class="setting-row setting-row-stack">
               <div class="setting-text">
                 <p class="setting-label">Weekly goal</p>
-                <p class="setting-help">How many conversations you'd like to have each week. Shown on your dashboard.</p>
               </div>
               ${seg('weeklyGoal', [[1, '1'], [3, '3'], [5, '5'], [7, 'Every day']], p.weeklyGoal, 'Conversations a week')}
             </div>
@@ -125,7 +119,6 @@ function template(s, p) {
             <div class="setting-row setting-row-stack">
               <div class="setting-text">
                 <p class="setting-label">Show in conversations</p>
-                <p class="setting-help">Switch layers on or off. You can also change them during a conversation.</p>
               </div>
               ${layerChips('Show in conversations')}
               <p class="toggle-hint" data-toggle-hint aria-live="polite"></p>
@@ -133,7 +126,6 @@ function template(s, p) {
             <div class="setting-row setting-row-stack">
               <div class="setting-text">
                 <p class="setting-label">Chinese text size</p>
-                <p class="setting-help">For characters in conversations and reports.</p>
               </div>
               ${seg('zhSize', [['standard', 'Standard'], ['large', 'Large']], p.zhSize, 'Chinese text size')}
             </div>
@@ -147,10 +139,10 @@ function template(s, p) {
         <section class="set-group" id="set-conversation" aria-labelledby="h-conversation">
           <h2 class="set-title" id="h-conversation">Conversation</h2>
           <div class="set-card">
-            ${switchControl({ id: 'showNotes', label: 'Show notes while I talk', help: 'Convo saves corrections as you go. Turn this off to see them only in your report.', on: p.showNotes })}
-            ${switchControl({ id: 'showHelp', label: 'Show "Help me reply"', help: 'Suggested phrases you can tap into the reply box and change.', on: p.showHelp })}
-            ${switchControl({ id: 'enterToSend', label: 'Enter sends my reply', help: 'When off, Enter starts a new line and the send button sends.', on: p.enterToSend })}
-            ${switchControl({ id: 'calmMascot', label: 'Calm mascot', help: 'Convo holds one pose for each moment instead of animating. Reduced motion settings on your device always do this.', on: p.calmMascot })}
+            ${switchControl({ id: 'showNotes', label: 'Show notes while I talk', on: p.showNotes })}
+            ${switchControl({ id: 'showHelp', label: 'Show "Help me reply"', on: p.showHelp })}
+            ${switchControl({ id: 'enterToSend', label: 'Enter sends my reply', on: p.enterToSend })}
+            ${switchControl({ id: 'calmMascot', label: 'Calm mascot', on: p.calmMascot })}
           </div>
         </section>
 
@@ -185,11 +177,23 @@ function template(s, p) {
           <h2 class="set-title" id="h-about">About</h2>
           <div class="set-card">
             <dl class="stat-rows about-rows">
-              <div><dt>Conversation model</dt><dd>${MODEL_INFO.connected ? esc(MODEL_INFO.name) : 'Placeholder, not connected'}</dd></div>
+              <div><dt>Conversation model</dt><dd data-model-name>${MODEL_INFO.connected ? esc(MODEL_INFO.name) : 'Placeholder, not connected'}</dd></div>
+              ${MODEL_INFO.connected ? '<div><dt>Live model</dt><dd data-model-status>Checking the link…</dd></div>' : ''}
               <div><dt>Where your data lives</dt><dd>This browser only</dd></div>
               <div><dt>Scenarios</dt><dd>Ordering at a café</dd></div>
             </dl>
-            ${MODEL_INFO.connected ? '' : `<p class="set-note">Replies in this demo come from a placeholder: they follow a fixed order and don't respond to what you write. The real model (Qwen2.5-3B-Instruct) runs separately.</p>`}
+            ${MODEL_INFO.connected ? '' : `<p class="set-note">Replies come from the placeholder: they follow a fixed order and don't respond to what you write. Clear the link below to use the live model (Qwen2.5-3B-Instruct).</p>`}
+            <div class="setting-row setting-row-stack">
+              <div class="setting-text">
+                <label class="setting-label" for="model-url">Live model link</label>
+                <p class="setting-help">The model runs on Google Colab, which gives it a new link each time it's started. Paste the newest link here. Type <code>placeholder</code> for placeholder replies, or leave it empty for the built-in link.</p>
+              </div>
+              <form class="model-link" data-model-form>
+                <input class="text-input" id="model-url" type="text" inputmode="url" spellcheck="false" autocomplete="off"
+                  value="${esc(MODEL_INFO.url || 'placeholder')}" placeholder="${esc(DEFAULT_MODEL_URL)}">
+                <button type="submit" class="btn-line">Use this link</button>
+              </form>
+            </div>
             <p class="about-links"><a class="text-link" href="../landing/index.html">Convo home page ${APP_ICONS.external}</a></p>
           </div>
         </section>
@@ -238,6 +242,29 @@ export function render(root, { arg }) {
       saveSettings({ reasons });
       saved();
     });
+  });
+
+  if (MODEL_INFO.connected) {
+    checkModel().then(({ ok, name }) => {
+      const nameEl = q('[data-model-name]');
+      const statusEl = q('[data-model-status]');
+      if (!nameEl || !statusEl) return; // left Settings before the check finished
+      nameEl.textContent = name;
+      statusEl.textContent = ok ? 'Online' : "Can't reach it. Colab may be off, or the link below may be old.";
+    });
+  }
+
+  // The model is chosen when the page loads, so a new link reloads the app (any open conversation ends).
+  q('[data-model-form]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!setModelUrl(q('#model-url').value)) {
+      saved("That isn't a link. Paste the whole https:// link.");
+      return;
+    }
+    const next = new URL(location.href);
+    next.searchParams.delete('model'); // a ?model= in the address would win over the saved link
+    if (next.href === location.href) location.reload();
+    else location.replace(next.href);
   });
 
   let nameTimer;

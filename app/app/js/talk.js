@@ -130,7 +130,8 @@ async function writeReport(s) {
     difficulty: s.settings.difficulty,
     model: MODEL_INFO.name,
     placeholder: !MODEL_INFO.connected,
-    goals: GOALS.map((g) => ({ label: g.label, done: Boolean(s.goals[g.id]) })),
+    // Only a model that reports goals gets them in the report (none are guessed).
+    goals: MODEL_INFO.provides.goals ? GOALS.map((g) => ({ label: g.label, done: Boolean(s.goals[g.id]) })) : [],
     transcript: s.history.map((h) => (h.who === 'ai' ? { who: 'ai', ...h.line } : { who: 'you', zh: h.text })),
     notes: s.notes,
     ...r,
@@ -142,6 +143,8 @@ async function writeReport(s) {
 
 /* ---------- Screen ---------- */
 const DIFF = { easy: 'Easy', standard: 'Standard', challenging: 'Challenging' };
+// The live model's name is filled in once its server answers, so this is re-read after each reply.
+const railFoot = () => (MODEL_INFO.connected ? `Replies by ${MODEL_INFO.name}.` : MODEL_INFO.detail);
 
 function template(s) {
   const meta = `${s.settings.level} · ${DIFF[s.settings.difficulty]}`;
@@ -157,7 +160,7 @@ function template(s) {
         <div class="talk-controls">
           ${layerChips('Show in conversation')}
           <button type="button" class="btn-quiet notes-btn" data-rail-toggle aria-expanded="false" aria-controls="talk-rail">
-            ${ICONS.notes}<span>Notes</span><span class="count" data-note-count>0</span>
+            ${ICONS.notes}<span>Notes</span><span class="count" data-note-count${MODEL_INFO.provides.notes ? '' : ' hidden'}>0</span>
           </button>
         </div>
         <div class="talk-end">
@@ -178,7 +181,7 @@ function template(s) {
               <div class="suggest-list" role="group" aria-labelledby="suggest-title" data-suggest-list></div>
             </div>
             <form class="composer-row" data-form>
-              <button type="button" class="help-btn" data-help aria-expanded="false" aria-controls="talk-suggest">
+              <button type="button" class="help-btn" data-help aria-expanded="false" aria-controls="talk-suggest"${MODEL_INFO.provides.suggestions ? '' : ' hidden'}>
                 ${ICONS.help}<span class="help-label">Help me reply</span>
               </button>
               <label class="sr-only" for="talk-input">Your reply</label>
@@ -199,19 +202,22 @@ function template(s) {
             </div>
             <button type="button" class="rail-close" data-rail-close aria-label="Close notes">${ICONS.close}</button>
           </div>
-          <section class="rail-block" aria-labelledby="goals-title">
+          ${MODEL_INFO.provides.goals ? `<section class="rail-block" aria-labelledby="goals-title">
             <h2 class="rail-title" id="goals-title">Goals</h2>
             <ol class="goals" data-goals>
               ${GOALS.map((g) => `<li class="goal" data-goal="${g.id}"><span class="goal-mark">${ICONS.check}</span><span class="goal-label">${esc(g.label)}</span><span class="sr-only" data-goal-state>, not done yet</span></li>`).join('')}
             </ol>
-          </section>
-          <section class="rail-block" aria-labelledby="notes-title">
+          </section>` : ''}
+          ${MODEL_INFO.provides.notes ? `<section class="rail-block" aria-labelledby="notes-title">
             <h2 class="rail-title" id="notes-title">Saved for your report</h2>
-            <p class="rail-intro">Convo doesn't stop to correct you. It keeps notes for afterwards.</p>
             <ol class="notes" data-notes></ol>
             <p class="notes-hidden">Notes are hidden until your report. <a class="text-link" href="#/settings/conversation">Show them while I talk</a></p>
-          </section>
-          <p class="rail-foot">${MODEL_INFO.connected ? `Replies by ${esc(MODEL_INFO.name)}.` : esc(MODEL_INFO.detail)}</p>
+          </section>` : `<section class="rail-block" aria-labelledby="notes-title">
+            <h2 class="rail-title" id="notes-title">Your report</h2>
+            <p class="rail-note">Convo doesn't stop the conversation to correct you. When you end it, each sentence you wrote is checked, with a better version and why.</p>
+            <ol class="notes" data-notes hidden></ol>
+          </section>`}
+          <p class="rail-foot" data-rail-foot>${esc(railFoot())}</p>
         </aside>
       </div>
     </div>
@@ -364,6 +370,8 @@ export function render(root) {
   function ready() {
     syncInput();
     helpBtn.disabled = !s.suggestions.length;
+    const foot = q('[data-rail-foot]');
+    if (foot) foot.textContent = railFoot();
   }
 
   function syncInput() {

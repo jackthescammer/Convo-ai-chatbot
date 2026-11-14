@@ -113,7 +113,6 @@ body[data-route="talk"] .shell { --side-w: var(--side-w-compact); }
   font-family: var(--font-display); font-weight: 400;
   font-size: clamp(2.25rem, 3.6vw, 3.25rem); line-height: 1; letter-spacing: -0.02em;
 }
-.continue-desc { margin-top: 0.75rem; max-width: 40ch; font-size: 1.125rem; color: var(--ink-72); }
 .continue-goals { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.625rem 1.25rem; }
 .continue-goals li { display: flex; align-items: center; gap: 0.625rem; font-weight: 500; font-size: 0.9375rem; }
 .card-continue .goal-mark { border-color: rgba(74, 42, 107, 0.28); }
@@ -468,10 +467,12 @@ html.hide-hanzi .layered-sm .py { font-size: 0.9375rem; }
 .notes-hidden { display: none; font-size: 0.875rem; color: var(--ink-72); }
 .notes-hidden .text-link { font-size: 0.875rem; }
 html[data-hide-notes] .talk-rail .notes,
-html[data-hide-notes] .talk-rail .rail-intro,
 html[data-hide-notes] .notes-btn .count { display: none; }
 html[data-hide-notes] .notes-hidden { display: block; }
 .rail-foot { margin-top: auto; padding-top: 0.875rem; border-top: 1px solid var(--ink-15); font-size: 0.8125rem; line-height: 1.5; color: var(--ink-72); }
+.rail-note { margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--ink-72); }
+.model-link { display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%; }
+.model-link .text-input { flex: 1 1 16rem; width: auto; }
 
 /* ---------- Report ---------- */
 .report-page { padding-block: clamp(2rem, 5vw, 4rem); margin-top: clamp(0.5rem, 1.2vw, 1rem); margin-bottom: clamp(2rem, 5vw, 4rem); }

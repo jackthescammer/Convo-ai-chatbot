@@ -13,7 +13,7 @@ export function rows(reports) {
       </span>
       <span class="rr-tags">
         ${fixes ? `<span class="tag tag-grammar">${fixes} to look at</span>` : '<span class="tag tag-ok">Nothing flagged</span>'}
-        <span class="rr-goals">${goals} of ${(r.goals || []).length} goals</span>
+        ${(r.goals || []).length ? `<span class="rr-goals">${goals} of ${r.goals.length} goals</span>` : ''}
       </span>
       <span class="rr-arrow">${APP_ICONS.arrow}</span>
     </a></li>`;
@@ -26,7 +26,6 @@ export function render(root) {
   <div class="page">
     <header class="page-head">
       <h1 class="page-title">Your reports.</h1>
-      <p class="page-lede">Every finished conversation, newest first. They're kept on this device only. You can export them from Settings.</p>
     </header>
     ${reports.length ? rows(reports) : `
       <div class="empty">
