@@ -5,11 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Café demo: Convo AI</title>
   <meta name="theme-color" content="#FFFFEB">
-  <!-- The landing page's "Try the café demo" links point here; the demo app lives in /app. -->
-  <meta http-equiv="refresh" content="0; url=../app/">
-  <script>location.replace('../app/' + location.hash);</script>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .demo-head { padding-block: clamp(1.5rem, 4vw, 3rem) 1rem; }
+    .demo-head h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; margin: 0 0 0.75rem; }
+    .demo-head p { color: var(--ink-72); max-width: 44rem; margin: 0 0 0.5rem; }
+    .demo-frame { width: 100%; height: min(860px, 82vh); border: 0; border-radius: var(--r-lg); background: var(--white); box-shadow: 0 0 0 1px var(--ink-08); }
+    .demo-offline { display: none; padding: 1.25rem 1.5rem; border-radius: var(--r-md); background: var(--white); box-shadow: 0 0 0 1px var(--ink-15); }
+    .demo-foot { padding-block: 1rem 3rem; color: var(--ink-72); font-size: 0.9375rem; }
+    .demo-foot a { color: inherit; }
+  </style>
 </head>
 <body>
-  <p><a href="../app/">Open the café demo</a></p>
+  <main class="wrap">
+    <header class="demo-head">
+      <p><a href="/">← Convo</a></p>
+      <h1>Order a coffee in Mandarin.</h1>
+      <p>This is the real Convo model (Qwen2.5-3B-Instruct, prompt version v6), running live. Pick your level, chat with 小林 the barista, then end the conversation to get your report.</p>
+      <p>It's a prototype running on a free GPU, so replies take a few seconds and corrections can be wrong.</p>
+    </header>
+
+    <!-- LIVE MODEL LINK: Google Colab gives a new link each time the app is relaunched.
+         Paste the newest "Running on public URL" here. -->
+    <iframe id="convo-live" class="demo-frame"
+            src="https://5f7a349c0472618d7c.gradio.live/?__theme=light"
+            title="Convo café demo (live model)" allow="clipboard-write"></iframe>
+
+    <div id="convo-offline" class="demo-offline">
+      <p><strong>The live model is offline right now.</strong> It runs on a free Google Colab GPU that we start by hand, so it isn't always on.</p>
+      <p>You can still <a href="/app/">click through the app design</a> (it uses placeholder replies, not the model), or see the code and test results on <a href="https://github.com/jackthescammer/Convo-ai-chatbot">GitHub</a>.</p>
+    </div>
+
+    <p class="demo-foot">Want to see the full app design? <a href="/app/">Open the designed app</a> (placeholder replies, not the live model).</p>
+  </main>
+  <script>
+    // If the live link can't be reached, show the offline note instead of an empty frame.
+    (function () {
+      var frame = document.getElementById('convo-live');
+      var offline = document.getElementById('convo-offline');
+      var url = frame.src.split('?')[0];
+      fetch(url + 'config', { mode: 'no-cors' }).catch(function () {
+        frame.style.display = 'none';
+        offline.style.display = 'block';
+      });
+    })();
+  </script>
 </body>
 </html>
