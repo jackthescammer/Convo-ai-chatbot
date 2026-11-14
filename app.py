@@ -45,21 +45,7 @@ def _make_chatbot(**kwargs):
         return gr.Chatbot(**kwargs)
 
 
-def build_app(backend, transcriber=None):
-    """`transcriber` (optional, see convo/speech.py) adds a microphone: speak, check the text, send."""
-
-    def heard(audio_path, current):
-        """Speech -> editable text. The learner checks it and presses Enter to send."""
-        if not audio_path:
-            return current, None
-        t = transcriber.transcribe(audio_path)
-        if not t.text:
-            gr.Warning("Sorry, I didn't catch that. Try again, a little closer to the mic.")
-            return current, None
-        if not t.has_chinese:
-            gr.Info("That didn't sound like Chinese. Check the text before sending.")
-        return t.text, None
-
+def build_app(backend):
     def start(level, difficulty, display):
         if not display:
             gr.Warning("Pick at least one display option; showing Chinese characters.")
@@ -106,24 +92,18 @@ def build_app(backend, transcriber=None):
             chatbot = _make_chatbot(height=420, elem_id="chat", label="小林 · café waiter")
             msg = gr.Textbox(placeholder="Type your reply in Chinese, then press Enter",
                              show_label=False, autofocus=True)
-            if transcriber is not None:
-                mic = gr.Audio(sources=["microphone"], type="filepath",
-                               label="Or say it in Chinese. What I heard appears above: check it, then press Enter.")
             end_btn = gr.Button("End conversation and get my report")
 
         with gr.Column(visible=False) as report_view:
             report_md = gr.Markdown(elem_id="report")
             again_btn = gr.Button("Start a new conversation", variant="primary")
 
-        speech = f" · speech: {transcriber.name} (transcription, not a pronunciation score)" if transcriber else ""
-        gr.Markdown(f"<small>Model: {backend.name} · prompts {PROMPT_VERSION}{speech} · "
+        gr.Markdown(f"<small>Model: {backend.name} · prompts {PROMPT_VERSION} · "
                     "Prototype: answers can be wrong.</small>")
 
         start_btn.click(start, [level, difficulty, display],
                         [conv_state, chatbot, onboarding, chat_view, report_view])
         msg.submit(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state])
-        if transcriber is not None:
-            mic.stop_recording(heard, [mic, msg], [msg, mic])
         end_btn.click(finish, [conv_state], [report_md, chat_view, report_view])
         again_btn.click(restart, None, [conv_state, chatbot, onboarding, chat_view, report_view])
     if launch_extras:  # Gradio 6: pass css/theme at launch time
@@ -138,6 +118,5 @@ def build_app(backend, transcriber=None):
 
 if __name__ == "__main__":
     from convo.backends import load_backend
-    from convo.speech import load_transcriber
 
-    build_app(load_backend(), load_transcriber()).launch()
+    build_app(load_backend()).launch()
