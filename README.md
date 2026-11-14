@@ -17,11 +17,11 @@ The long-term vision is a full platform with many scenarios, voice and text, and
 ## What we added
 This is our own idea, not a suggested project. What we added:
 - **Our own user:** an immigrant at A2 level who needs everyday Chinese, practising one real situation: ordering at a cafe.
-- **Our own data:** a test set of 49 cafe sentences a learner might say (`test_sentences.csv`). 32 contain a common beginner mistake (measure words, 不 vs 没, word order and others) and 17 are correct. We wrote the first draft with help from Claude, and TODO (name) checked and corrected every sentence as a Chinese speaker.
+- **Our own data:** a test set of 42 cafe sentences a learner might say (`data/test_cases.csv`, shown in full in [DATA.md](DATA.md)). 28 contain a common beginner mistake (word order, extra words, measure words, question structure and others) and 14 are correct. We wrote them with help from Claude, and Nelson and Ferrell checked and corrected every sentence.
 - **Our own question:** can a small, free, open-source model (Qwen 2.5 3B) catch beginner mistakes, explain them, and stay in character as a waiter, without "correcting" sentences that were already right?
 
 ## How it works
-- **Data:** our 49 learner sentences (32 with a mistake, 17 correct), each with the correct version (or several, where more than one answer is right) and the mistake type. We used 10 to tune the prompt and kept the other 39 as a held-out test set. We didn't change the prompt after scoring the test set.
+- **Data:** our 42 learner sentences (28 with a mistake, 14 correct), each with the correct version (or several, where more than one answer is right) and the mistake type. We used 10 to tune the prompt and kept the other 32 as a held-out test set. We didn't change the prompt after scoring the test set.
 - **Model:** Qwen 2.5 3B Instruct (open-source, run in Google Colab). We used a prompt that tells it to play a waiter, reply in Chinese and correct mistakes gently.
 - **Why this model:** small enough for a free GPU, and it supports Chinese.
 
@@ -31,7 +31,7 @@ This is our own idea, not a suggested project. What we added:
 | Baseline (always replies "sounds good!", never corrects) | 0 | 0 | n/a |
 | Convo (Qwen 2.5 3B) | TODO | TODO | TODO |
 
-All numbers are on held-out sentences we did not use to tune the prompt. A Chinese speaker judged the corrections: TODO who.
+All numbers are on held-out sentences we did not use to tune the prompt. Nelson and Ferrell checked the test sentences. TODO: who judged the corrections by hand.
 
 **Where it fails:** TODO: paste 2-3 wrong examples, with the model's output next to the correct one, and explain why we think it failed.
 

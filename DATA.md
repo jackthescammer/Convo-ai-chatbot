@@ -5,7 +5,7 @@ This is the quiz we use to measure Convo. It is **test data, not training data**
 - **Source file:** [`data/test_cases.csv`](data/test_cases.csv). This page is generated from it, so the two always match.
 - **Scenario:** an A2-level immigrant ordering at a café, in Mandarin Chinese (simplified characters).
 - **How we made it:** our team wrote the sentences with help from Claude (an AI assistant), based on common beginner mistakes, then revised them after review (we removed sentences that are natural in real speech, and added extra right answers where more than one is correct).
-- **Checked by a Chinese speaker:** 0 of 42 sentences. **Not all sentences have been checked yet. Treat unchecked rows with caution.**
+- **Checked by a Chinese speaker:** 42 of 42 sentences. 
 
 ## Summary
 
