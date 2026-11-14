@@ -4,7 +4,7 @@ Bump PROMPT_VERSION whenever any prompt below changes; evaluation results are
 logged against it.
 """
 
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v3"
 
 CHARACTER_NAME = "小林"
 
@@ -139,6 +139,15 @@ def build_review_prompt(level):
             'Sentence: 请问，有没有靠窗的位子？',
             '{"has_error": false, "corrected": "请问，有没有靠窗的位子？", "category": "none", '
             '"explanation": "", "english": "Excuse me, is there a seat by the window?"}',
+            'Sentence: 我们要结账。',
+            '{"has_error": false, "corrected": "我们要结账。", "category": "none", '
+            '"explanation": "", "english": "We would like to pay the bill."}',
+            'Sentence: 不要冰，谢谢。',
+            '{"has_error": false, "corrected": "不要冰，谢谢。", "category": "none", '
+            '"explanation": "", "english": "No ice, thanks."}',
+            'Sentence: 我们周末再来这家店吃饭。',
+            '{"has_error": false, "corrected": "我们周末再来这家店吃饭。", "category": "none", '
+            '"explanation": "", "english": "We will come back to this restaurant at the weekend."}',
         ]
     )
 

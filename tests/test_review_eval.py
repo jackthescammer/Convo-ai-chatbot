@@ -8,6 +8,7 @@ from convo import Settings
 from convo.evaluation import (CONVERSATION_SCRIPTS, export_for_human_review, load_cases, log_result,
                               run_conversation_eval, run_correction_eval, summarise_human_review)
 from convo.prompts import CATEGORIES, PROMPT_VERSION, build_review_prompt
+from convo.structured import normalise
 from convo.render import format_turn
 from convo.review import build_report, review_sentence
 from fakes import FakeBackend, review_json, turn_json
@@ -88,7 +89,17 @@ class ReviewPromptTest(unittest.TestCase):
         for needle in ("Assume the sentence is correct", "When in doubt", "Never add, remove or swap",
                        "has_error false", "changing as little as possible"):
             self.assertIn(needle, p)
-        self.assertEqual(PROMPT_VERSION, "v2")
+        self.assertRegex(PROMPT_VERSION, r"^v\d+$")
+
+    def test_review_prompt_examples_are_not_quiz_sentences(self):
+        import re
+        p = build_review_prompt("A2")
+        examples = re.findall(r"Sentence: (.+)", p)
+        self.assertGreaterEqual(len(examples), 5)
+        quiz = {normalise(c["learner"]) for c in load_cases()} | {
+            normalise(a) for c in load_cases() for a in c["accepted"]}
+        for e in examples:
+            self.assertNotIn(normalise(e), quiz, e)
 
 
 class DatasetTest(unittest.TestCase):
