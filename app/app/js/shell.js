@@ -1,7 +1,7 @@
 /* The app after setup: dashboard, conversation, reports and settings.
    Setup (onboarding) is a separate page, app/index.html, which hands off to this one.
 
-   Routes: #/home  #/talk  #/reports  #/report/:id  #/settings[/section] */
+   Routes: #/home  #/talk  #/reports  #/progress  #/report/:id  #/settings[/section] */
 
 import { applyLayers, poke } from './ui.js';
 import { mountMascots, APP_ICONS } from './kit.js';
@@ -9,6 +9,7 @@ import { getSettings, onSettings, describeSettings } from './store.js';
 import { applyPrefs, onPrefs } from './prefs.js';
 import * as dashboard from './dashboard.js';
 import * as reportList from './history.js';
+import * as progress from './progress.js';
 import * as talk from './talk.js';
 import * as report from './report.js';
 import * as settings from './settings.js';
@@ -17,6 +18,7 @@ const ROUTES = {
   home: { render: (root) => dashboard.render(root), title: 'Home', nav: 'home' },
   talk: { render: (root) => talk.render(root), title: 'Ordering at a café', nav: 'talk' },
   reports: { render: (root) => reportList.render(root), title: 'Your reports', nav: 'reports' },
+  progress: { render: (root) => progress.render(root), title: 'Your progress', nav: 'progress' },
   report: { render: (root, arg) => report.render(root, { arg }), title: 'Your report', nav: 'reports' },
   settings: { render: (root, arg) => settings.render(root, { arg }), title: 'Settings', nav: 'settings' },
 };

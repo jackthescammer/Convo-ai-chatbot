@@ -62,6 +62,7 @@ const svg = (body) => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" 
 export const APP_ICONS = {
   home: svg('<path d="M4 10.5L12 4l8 6.5"/><path d="M6 9v10h12V9"/><path d="M10 19v-5h4v5"/>'),
   reports: svg('<path d="M7 4h10a1 1 0 0 1 1 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 0 1 1-1z"/><path d="M9.5 9h5M9.5 12.5h5"/>'),
+  progress: svg('<path d="M4 19.5h16"/><path d="M7 16v-4M12 16V7M17 16v-6.5"/>'),
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2L5.5 5.5"/>'),
   chat: svg('<path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M8.5 10.5h7"/>'),
   download: svg('<path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/>'),
