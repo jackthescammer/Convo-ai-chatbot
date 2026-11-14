@@ -9,6 +9,7 @@ Never delete or edit old rows; add a new row per version.
 | Baseline | n/a | Waiter that never corrects anything | 0/7 | n/a | 0/3 | n/a | n/a |
 | v1 | 2026-11-14 | First prompt | 6/7 | 4/7 (57%) | 2/3 (67%) | 30/30 | 6/6 |
 | v2 | 2026-11-14 | Stronger rule: don't change sentences that are already correct (v1 wrongly fixed 2 of 3) | 6/7 | 4/7 (57%) | 2/3 (67%) | 30/30 | 6/6 |
+| v3 | 2026-11-14 | Added 3 worked examples of correct sentences left unchanged (false corrections were 2/3 in v1 and v2) | 5/7 | 4/7 (57%) | **0/3 (0%)** | 30/30 | 6/6 |
 
 Targets we set: correction accuracy at least 85%, false-correction rate at most 10%.
 
@@ -48,6 +49,18 @@ Same totals as v1, but on **different sentences**, so the rule moved errors arou
 - **Missed:** 我要一杯面包。 is no longer flagged at all. 我想吃一杯咖啡。 is flagged but fixed to 我想要一杯咖啡 instead of 喝.
 - **Explanations:** all 8 are in Chinese (v1: 7 of 8), not the English an A2 learner needs.
 - **Takeaway:** stronger wording alone doesn't stop a 3B model over-correcting. It sometimes says a sentence is correct and still "fixes" it.
+
+## v3 notes
+
+Code commit `d65e8dd`. Only the sentence-checker prompt changed: three worked examples of **correct** café sentences answered with no error and left unchanged (我们要结账。, 不要冰，谢谢。, 我们周末再来这家店吃饭。). None of them are quiz sentences, and a unit test checks this. The waiter prompt didn't change, so the conversation transcripts are identical to v2's.
+
+- **Better:** no correct sentence was changed (0/3, down from 2/3). 我要买单。 and 我明天再来这里喝咖啡。 are now left alone.
+- **Worse:** 我想吃一杯咖啡。 (吃 → 喝) is no longer flagged, so mistakes caught fell from 6/7 to 5/7. v2 had flagged it but with a wrong fix, so corrections matching stayed at 4/7.
+- **Still wrong:** 我要一杯面包。 was called a mistake but returned unchanged, so it counts as no correction. 我喝咖啡在家。 was "fixed" to 我回家喝咖啡。, which changes the meaning.
+- **Explanations:** all 5 in Chinese, not English.
+- **Takeaway:** examples worked where a written rule didn't, but the model is now more cautious. Next: add worked examples of real word-choice and measure-word mistakes (not quiz sentences), keeping false corrections at 0/3; then fix the English explanations.
+
+Raw files: `20261114-113909_corrections_Qwen_Qwen2.5-3B-Instruct_v3_tune.json`, `20261114-114114_conversation_Qwen_Qwen2.5-3B-Instruct_v3_na.json`. Run by Claude in Colab (sections 1, 2, 3 and 5; the test split was not run). The files were copied out of Colab as text and checked against the SHA-256 hashes Colab printed.
 
 ## Test-split runs
 

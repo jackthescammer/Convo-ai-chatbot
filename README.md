@@ -21,24 +21,45 @@ This is our own idea, not a suggested project. What we added:
 - **Our own question:** can a small, free, open-source model (Qwen 2.5 3B) catch beginner mistakes, explain them, and stay in character as a waiter, without "correcting" sentences that were already right?
 
 ## How it works
-- **Data:** our 42 learner sentences (28 with a mistake, 14 correct), each with the correct version (or several, where more than one answer is right) and the mistake type. We used 10 to tune the prompt and kept the other 32 as a held-out test set. We didn't change the prompt after scoring the test set.
+- **Data:** our 42 learner sentences (28 with a mistake, 14 correct), each with the correct version (or several, where more than one answer is right) and the mistake type. We used 10 to tune the prompt and kept the other 32 as a held-out test set. Every prompt change was chosen using the 10 tune sentences only.
 - **Model:** Qwen 2.5 3B Instruct (open-source, run in Google Colab). We used a prompt that tells it to play a waiter, reply in Chinese and correct mistakes gently.
 - **Why this model:** small enough for a free GPU, and it supports Chinese.
 
 ## Results
-| | Mistakes caught | Correct sentences wrongly "fixed" | Corrections judged right |
-|---|---|---|---|
-| Baseline (always replies "sounds good!", never corrects) | 0 | 0 | n/a |
-| Convo (Qwen 2.5 3B) | TODO | TODO | TODO |
 
-All numbers are on held-out sentences we did not use to tune the prompt. Nelson and Ferrell checked the test sentences. TODO: who judged the corrections by hand.
+### Improving the prompt (tune sentences: 7 with a mistake, 3 correct)
+We changed one thing per version and measured it on the 10 tune sentences. Full details and raw result files: [results/VERSIONS.md](results/VERSIONS.md) and [results/](results/).
 
-**Where it fails:** TODO: paste 2-3 wrong examples, with the model's output next to the correct one, and explain why we think it failed.
+| Version | What changed | Mistakes caught | Corrections matching our answer | Correct sentences wrongly "fixed" | Waiter stayed in character | Remembered the order |
+|---|---|---|---|---|---|---|
+| Baseline | Never corrects anything | 0/7 | n/a | 0/3 | n/a | n/a |
+| v1 | First prompt | 6/7 | 4/7 | 2/3 | 30/30 | 6/6 |
+| v2 | Stronger written rule: don't change correct sentences | 6/7 | 4/7 | 2/3 | 30/30 | 6/6 |
+| v3 | Added worked examples of correct sentences left unchanged | 5/7 | 4/7 | **0/3** | 30/30 | 6/6 |
+
+**Is it improving?** Partly. The biggest problem in v1 and v2 was over-correcting: changing sentences that were already right (2 of 3). A written rule (v2) didn't fix it, but worked examples (v3) did: **0 of 3** correct sentences were changed. The trade-off is that v3 became more cautious and missed one more mistake (5/7 caught instead of 6/7), and corrections matching our answer stayed at 4/7. The waiter stayed in character and remembered the order in every test conversation in all versions. With only 10 tune sentences, one sentence moves a score a lot, so we treat small changes with caution.
+
+### Final score (held-out test sentences)
+TODO: run once on the 32 test sentences when the prompt is final, and report it here next to the baseline.
+
+Note: the test sentences were also run once early, with v1 (19/21 mistakes flagged, 3/21 corrections matching, 6/11 correct sentences wrongly "fixed"). We did not use those results to choose any prompt change; we report them here for honesty.
+
+Nelson and Ferrell checked all the quiz sentences. TODO: who judged the corrections by hand.
+
+**Where it fails (v3, tune sentences):**
+- 我想吃一杯咖啡 (should be 喝, "drink") → not flagged. It misses word-choice mistakes.
+- 我要一杯面包 (should be 一个/一块面包) → the model said there was a mistake but returned the sentence unchanged. It struggles with measure words.
+- 我喝咖啡在家 (should be 我在家喝咖啡) → "fixed" to 我回家喝咖啡, which changes the meaning to "go home to drink coffee".
+- Explanations come out in Chinese, although we ask for English, which an A2 learner needs. This happened in every version so far.
+
+We think a 3B model follows examples better than written rules, which is why v3 worked for over-correcting, but it hasn't seen examples of the mistakes it misses.
 
 ## Limitations
 - Text only. Voice (Whisper) and spoken replies (TTS) are not built.
 - One scenario and one level.
-- TODO: anything else honest, e.g. small test set.
+- Small quiz: 10 tune and 32 test sentences, so scores move a lot with one sentence.
+- Explanations are in Chinese instead of English so far.
+- The test sentences were run once early (v1), before we fixed our rule of running them only at the end.
 
 ## What we'd do next
 1. Add Whisper so learners can speak.
