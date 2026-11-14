@@ -43,6 +43,7 @@ Never delete or edit old rows; add a new row per version.
 |---|---|---|---|---|---|---|---|
 | Baseline | n/a | Waiter that never corrects anything | 0/7 | n/a | 0/3 | n/a | n/a |
 | v1 | 2026-11-14 | First prompt | 6/7 | 4/7 (57%) | 2/3 (67%) | 30/30 | 6/6 |
+| v2 | 2026-11-14 | Stronger rule: don't change sentences that are already correct (v1 wrongly fixed 2 of 3) | 6/7 | 4/7 (57%) | 2/3 (67%) | 30/30 | 6/6 |
 
 Targets we set: correction accuracy at least 85%, false-correction rate at most 10%.
 
@@ -72,6 +73,20 @@ Targets we set: correction accuracy at least 85%, false-correction rate at most 
 ## Repeat runs
 
 - **2026-11-14, v1 run again** (files `20261114-110918_…_v1_tune.json`, `20261114-111144_…_v1_na.json`). This was meant to be the v2 run, but Colab's `git pull` was refused (local result files clashed with newly committed ones), so the old v1 prompt ran. The results were **identical** to the first v1 run on every sentence and every conversation turn, which confirms runs are repeatable at temperature 0. It is not a new version, so it has no row in the table. The notebook now downloads a fresh copy of the code each time and prints the prompt version, so this can't happen silently again.
+
+## v2 notes
+
+Same totals as v1, but on **different sentences**, so the rule moved errors around rather than removing them.
+- **Fixed:** 我要一杯拿铁，不要糖。 is now left alone. 你们有没有茶吗？ → 你们有没有茶？ (exact match).
+- **New over-correction:** 我明天再来这里喝咖啡。 → 我明天再来喝咖啡。, while its own explanation says the original is correct. 我要买单。 → 我买单。 still happens.
+- **Got worse:** 我喝咖啡在家。 → 我要喝咖啡在家。 (v1 fixed this correctly).
+- **Missed:** 我要一杯面包。 is no longer flagged at all. 我想吃一杯咖啡。 is flagged but fixed to 我想要一杯咖啡 instead of 喝.
+- **Explanations:** all 8 are in Chinese (v1: 7 of 8), not the English an A2 learner needs.
+- **Takeaway:** stronger wording alone doesn't stop a 3B model over-correcting. It sometimes says a sentence is correct and still "fixes" it.
+
+## Test-split runs
+
+- **2026-11-14, v1 on the test split** (file `20261114-105738_…_v1_test.json`): the test split was run once during the first Colab run, before we had settled our rule of only running it at the end. Result: 19/21 mistakes flagged, 3/21 corrections matching (14%), 6/11 false corrections. We are not using these test results to choose prompt changes (all changes are based on the tune split only). The final test run will be reported alongside this one.
 
 
 ## Sentences with a mistake (28)

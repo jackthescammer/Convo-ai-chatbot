@@ -1,0 +1,201 @@
+{
+  "kind": "corrections",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "prompt_version": "v2",
+  "split": "tune",
+  "timestamp": "20261114-111956",
+  "rows": [
+    {
+      "id": "01",
+      "learner": "我要一杯面包。",
+      "expected": "我要一个面包。 | 我要一块面包。",
+      "category_expected": "measure_word",
+      "has_mistake": true,
+      "flagged": false,
+      "model_fix": "",
+      "category_model": "none",
+      "explanation_model": "",
+      "valid": true,
+      "guard": "no_change",
+      "fix_exact": false
+    },
+    {
+      "id": "04",
+      "learner": "你们有没有茶吗？",
+      "expected": "你们有没有茶？ | 你们有茶吗？",
+      "category_expected": "question_structure",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "你们有没有茶？",
+      "category_model": "other",
+      "explanation_model": "句子结构正确，且为自然表达方式。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "08",
+      "learner": "我喝咖啡在家。",
+      "expected": "我在家喝咖啡。",
+      "category_expected": "word_order",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我要喝咖啡在家。",
+      "category_model": "vocabulary",
+      "explanation_model": "正确的表达应该是使用动词短语‘我要’来表示请求或意愿，而不是直接说‘我喝’。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "12",
+      "learner": "这个蛋糕太很甜了。",
+      "expected": "这个蛋糕太甜了。",
+      "category_expected": "extra_word",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "这个蛋糕太甜了。",
+      "category_model": "vocabulary",
+      "explanation_model": "“很”在这里是多余的，形容词“甜”不需要加上程度副词“很”。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "16",
+      "learner": "我没有钱现金。",
+      "expected": "我没有现金。",
+      "category_expected": "extra_word",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我没有现金。",
+      "category_model": "vocabulary",
+      "explanation_model": "现金应该用“现金”而不是“钱现金”。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "24",
+      "learner": "我要一杯拿铁，不要糖。",
+      "expected": "我要一杯拿铁，不要糖。",
+      "category_expected": "none",
+      "has_mistake": false,
+      "flagged": false,
+      "model_fix": "",
+      "category_model": "none",
+      "explanation_model": "",
+      "valid": true,
+      "guard": "no_change",
+      "fix_exact": false
+    },
+    {
+      "id": "27",
+      "learner": "我要买单。",
+      "expected": "我要买单。",
+      "category_expected": "none",
+      "has_mistake": false,
+      "flagged": true,
+      "model_fix": "我买单。",
+      "category_model": "vocabulary",
+      "explanation_model": "在请求别人买单时，正确的表达应该是 '请你买单' 或者 '我来买单'。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "33",
+      "learner": "我明天再来这里喝咖啡。",
+      "expected": "我明天再来这里喝咖啡。",
+      "category_expected": "none",
+      "has_mistake": false,
+      "flagged": true,
+      "model_fix": "我明天再来喝咖啡。",
+      "category_model": "other",
+      "explanation_model": "句子结构正确，但可以更自然地说成：我明天再来这里喝咖啡。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "36",
+      "learner": "我想吃一杯咖啡。",
+      "expected": "我想喝一杯咖啡。",
+      "category_expected": "vocabulary",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我想要一杯咖啡。",
+      "category_model": "vocabulary",
+      "explanation_model": "在请求服务时，应该使用 '我想要' 而不是 '我想吃'。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "40",
+      "learner": "我希望获得一杯咖啡。",
+      "expected": "我想要一杯咖啡。 | 我要一杯咖啡。",
+      "category_expected": "unnatural",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我想要一杯咖啡。",
+      "category_model": "vocabulary",
+      "explanation_model": "希望表达为想要时，应使用 '想要' 而不是 '希望'。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    }
+  ],
+  "metrics": {
+    "n_cases": 10,
+    "n_mistake_cases": 7,
+    "n_correct_cases": 3,
+    "baseline_mistakes_caught": 0,
+    "baseline_false_corrections": 0,
+    "mistakes_flagged": 6,
+    "detection_recall": 0.8571,
+    "correction_accuracy_strict": 0.5714,
+    "false_correction_rate": 0.6667,
+    "false_corrections": 2,
+    "valid_output_rate": 1.0,
+    "targets": {
+      "correction_accuracy": 0.85,
+      "false_correction_rate": 0.1,
+      "character_consistency": 0.9,
+      "context_retention": 0.9,
+      "explanation_accuracy": 0.8
+    },
+    "by_category": {
+      "measure_word": {
+        "n": 1,
+        "flagged": 0,
+        "exact": 0
+      },
+      "question_structure": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 1
+      },
+      "word_order": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 0
+      },
+      "extra_word": {
+        "n": 2,
+        "flagged": 2,
+        "exact": 2
+      },
+      "vocabulary": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 0
+      },
+      "unnatural": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 1
+      }
+    }
+  }
+}
