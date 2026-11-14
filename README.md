@@ -4,7 +4,7 @@
 **Team:** Nelson, Ethan and Ferrell
 
 ## The problem
-Many immigrants learn Chinese vocabulary and grammar but freeze in real conversations, like ordering at a cafe. Apps built on memorisation and scripted dialogues don't give them practice at responding to a real person. TODO: name one real person or persona (e.g. "an A2 learner who just moved to a Chinese-speaking city").
+Many immigrants learn Chinese vocabulary and grammar but freeze in real conversations, like ordering at a cafe. Apps built on memorisation and scripted dialogues don't give them practice at responding to a real person. An example stakeholder would be an A2 learner who just moved to a Chinese-speaking city.
 
 ## What we built
 A text conversation partner for Chinese learners.
