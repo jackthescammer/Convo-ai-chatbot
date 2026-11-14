@@ -1,45 +1,371 @@
-# Project context for Claude
+CLAUDE.md — Convo AI
 
-Veritas AI International High School Hackathon 2026. Track: Languages. Project: Convo AI.
-Team of 3 high school students in Australia, mostly beginners. Explain things simply, one step at a time.
-Deadline: Sun Nov 15, 11:59 PM US Eastern (Mon Nov 16 afternoon in Australia). Submit a first version early, then resubmit.
+1. Project Overview
 
-## What we're building
-`Convo-AI.md` is the pitch: the long-term vision is a full language-learning platform with many
-scenarios, voice and text, and grading. That is NOT what we are building this weekend.
+Convo AI is an AI-powered language-learning platform that develops conversational fluency through realistic, interactive conversations with AI characters.
 
-This weekend we build only Phase 1, a small tested slice:
-- Language: Chinese. Scenario: ordering at a cafe. User: an immigrant at A2 level.
-- An AI waiter (Qwen 2.5 3B Instruct, open-source, run in Google Colab on the free GPU) replies
-  in character in Chinese and gently corrects the learner's mistakes, with a short explanation.
-- No API keys: Gemini API keys don't work for us in Australia. Everything runs in Colab.
+Instead of memorising vocabulary or completing repetitive exercises, users learn by communicating in realistic situations.
 
-## How we test it (this is what judges score)
-- Test set: 30-50 learner sentences we write ourselves, most with a known mistake, some correct.
-  Each has the correct version and the mistake type. A Chinese speaker checks them.
-- Use ~10 sentences to tune the prompt; keep the rest untouched for the final score (held-out test data).
-- Baseline: a reply that always says "sounds good!" and never corrects (catches 0 mistakes).
-- Report: mistakes caught, correct sentences wrongly "fixed", and how many corrections a Chinese
-  speaker judged right. Show 2-3 failures side by side (model output vs correct) and explain why.
+Core principle: Learn by having conversations, not memorising language.
 
-## Later phases (only if Phase 1 is finished and written up)
-- Phase 2: Whisper (openai/whisper-small) for speech input. Record on a phone and upload audio files.
-- Phase 3: TTS for spoken replies.
+2. MVP Scope
 
-## Who owns what (don't edit another person's file without asking)
-- README.md: Ethan (the write-up). Do not edit it unless he asks.
-- The notebook: one person edits at a time, to avoid merge conflicts.
-- Convo-AI.md: the pitch. Keep the vision vs. "what we built this weekend" split honest.
+Start with a narrowly focused MVP.
 
-## Rules (from the hackathon brief)
-- AI must do the main job. Cite every dataset, model, tutorial and AI tool (with links) in the README.
-- Report honest results, including weak ones. Always show the baseline next to the model.
-- Never claim features we didn't build. The full platform is the vision, not the demo.
-- Use only our own writing and voices, or public data. No other people's messages or voices without permission.
-- Every teammate must understand the whole project and be able to explain it to judges.
-- If something won't load or run within ~30 minutes, switch approach instead of getting stuck.
-- Keep it simple: no new libraries or features unless needed.
+Component
 
-## Submission checklist
-Public GitHub repo (jackthescammer/Convo-ai-chatbot), notebook saved WITH outputs visible,
-README filled in (no TODOs left), credits listed, all links open in an incognito window.
+Specification
+
+Language
+
+Mandarin Chinese
+
+Script
+
+Simplified Chinese
+
+Level
+
+A1–A2
+
+Scenario
+
+Ordering at a café
+
+Interaction
+
+Text initially
+
+AI model
+
+Qwen2.5-3B-Instruct
+
+Target users:
+
+Students learning Mandarin.
+
+Tourists preparing to travel.
+
+Immigrants learning practical communication.
+
+Do not introduce additional languages or scenarios until the MVP is validated.
+
+3. Core Features
+
+A. Personalisation
+
+Allow users to select:
+
+Proficiency: A1 or A2.
+
+Display preference: Chinese, Pinyin, English translations or a combination.
+
+Conversation difficulty: Easy, Standard or Challenging.
+
+B. Scenario Selection
+
+Initially, provide one scenario: Ordering at a Chinese café.
+
+The user interacts with an AI character playing a café employee.
+
+C. AI Conversations
+
+The AI should:
+
+Respond naturally to user messages.
+
+Ask relevant follow-up questions.
+
+Maintain conversation context.
+
+Adapt vocabulary and complexity to the user's level.
+
+Introduce occasional unexpected situations.
+
+Remain in character.
+
+Handle grammatical mistakes without breaking the conversation.
+
+Conversations must be dynamic, not predetermined scripts.
+
+D. Post-Conversation Feedback
+
+After each conversation, generate a personalised report containing:
+
+Overall conversational assessment.
+
+Grammar corrections.
+
+Vocabulary improvements.
+
+More natural expressions.
+
+Explanations of mistakes.
+
+Recurring weaknesses.
+
+Suggested improvements.
+
+Include the original sentence, corrected sentence, Pinyin and English translation where relevant.
+
+Avoid unnecessary corrections of grammatically valid sentences.
+
+4. Technical Architecture
+
+AI Model
+
+Use Qwen2.5-3B-Instruct as the initial model.
+
+The model handles:
+
+Character simulation.
+
+Dynamic conversations.
+
+Difficulty adaptation.
+
+Grammar correction.
+
+Feedback generation.
+
+Keep the model integration modular so alternative models can be tested without rewriting the application.
+
+Main Components
+
+Frontend
+
+Onboarding.
+
+Scenario selection.
+
+Conversation interface.
+
+Learning report.
+
+Backend
+
+Conversation management.
+
+AI model integration.
+
+Prompt construction.
+
+Conversation history.
+
+Feedback generation.
+
+AI Layer
+
+Character system prompt.
+
+Learner proficiency context.
+
+Conversation history.
+
+Feedback instructions.
+
+5. Development Phases
+
+Phase 1 — Text Conversation
+
+Build:
+
+Basic application interface.
+
+User onboarding.
+
+Café scenario.
+
+AI character.
+
+Dynamic text conversations.
+
+Context retention.
+
+Post-conversation feedback.
+
+Evaluation framework.
+
+Goal: A complete, functional text-based language-learning experience.
+
+Phase 2 — Speech Recognition
+
+Integrate Whisper.
+
+Build:
+
+Microphone input.
+
+Audio recording.
+
+Mandarin speech transcription.
+
+Display of recognised text.
+
+Ability to edit transcription.
+
+Integration with the conversation engine.
+
+Note: Speech transcription accuracy is not equivalent to pronunciation assessment.
+
+Phase 3 — Text-to-Speech
+
+Integrate a Mandarin TTS solution.
+
+Build:
+
+Spoken AI responses.
+
+Natural Mandarin pronunciation.
+
+Audio playback and replay.
+
+Synchronisation between text and speech.
+
+6. Evaluation Framework
+
+Build a reproducible test dataset of 30–50 Mandarin learner sentences containing known mistakes.
+
+Include:
+
+Incorrect word order.
+
+Incorrect measure words.
+
+Missing particles.
+
+Incorrect vocabulary.
+
+Incorrect question structures.
+
+Grammatically correct but unnatural expressions.
+
+Correct sentences that should not be corrected.
+
+Each test case should contain:
+
+Original sentence.
+
+Intended meaning.
+
+Error category.
+
+Expected correction.
+
+Explanation.
+
+Evaluation Metrics
+
+Metric
+
+Initial Target
+
+Correction accuracy
+
+≥85%
+
+False correction rate
+
+≤10%
+
+Character consistency
+
+≥90%
+
+Context retention
+
+≥90%
+
+Explanation accuracy
+
+≥80%
+
+Also test complete conversations to evaluate naturalness, context retention and difficulty adaptation.
+
+Record results for every model or prompt revision. Use human review to validate subjective metrics.
+
+These targets are goals, not assumed model capabilities.
+
+7. AI Behaviour
+
+The AI's primary role is a café employee, not a language tutor.
+
+Its system prompt must define:
+
+Character identity.
+
+Café scenario.
+
+Mandarin language.
+
+A1–A2 proficiency.
+
+Vocabulary complexity.
+
+Correction behaviour.
+
+Conversational objectives.
+
+The AI should prioritise natural conversation while subtly modelling correct Mandarin.
+
+Use structured outputs where appropriate to separate:
+
+Character response.
+
+Translation.
+
+Corrections.
+
+Conversation state.
+
+Validate generated outputs before displaying them.
+
+8. Design Direction
+
+Create a modern, minimal and sophisticated interface.
+
+Prioritise:
+
+Clear visual hierarchy.
+
+Simple navigation.
+
+Readable Chinese characters.
+
+Optional Pinyin and translations.
+
+Clean conversation interface.
+
+Easy-to-understand feedback reports.
+
+Keep the conversation as the primary focus.
+
+9. Development Instructions
+
+Act as a senior full-stack and AI engineer.
+
+Before implementing:
+
+Inspect the existing repository.
+
+Understand its architecture and framework.
+
+Identify the required components.
+
+Establish a clear implementation plan.
+
+Throughout development:
+
+Write modular, maintainable code.
+
+Avoid unnecessary dependencies.
+
+Test functionality as it is implemented.
+
+Do not hardcode conversations.
+
+Do not assume the model is accurate without testing.
+
+Do not silently substitute AI models.
+
+Document important limitations.
