@@ -45,7 +45,26 @@ def _make_chatbot(**kwargs):
         return gr.Chatbot(**kwargs)
 
 
-def build_app(backend):
+def build_app(backend, pinyin="auto"):
+    """`pinyin`: a PinyinConverter, None to turn pinyin typing off, or "auto" to load the default."""
+    if pinyin == "auto":
+        from convo.pinyin_input import load_pinyin_converter
+        pinyin = load_pinyin_converter()
+
+    def convert_pinyin(text):
+        """Pinyin box -> candidate list, the top candidate in the message box, and a note."""
+        cands, problem = pinyin.candidates(text)
+        if problem:
+            note = f"*'{problem}' isn't pinyin yet: keep typing, or check the spelling.*"
+            return gr.Radio(choices=[], value=None, visible=False), gr.Textbox(), note
+        if not cands:
+            return gr.Radio(choices=[], value=None, visible=False), gr.Textbox(), ""
+        return (gr.Radio(choices=cands, value=cands[0], visible=True), gr.Textbox(value=cands[0]),
+                "*Check the characters, then press **Send**.*")
+
+    def clear_pinyin():
+        return gr.Textbox(value=""), gr.Radio(choices=[], value=None, visible=False), ""
+
     def start(level, difficulty, display):
         if not display:
             gr.Warning("Pick at least one display option; showing Chinese characters.")
@@ -92,6 +111,14 @@ def build_app(backend):
             chatbot = _make_chatbot(height=420, elem_id="chat", label="小林 · café waiter")
             msg = gr.Textbox(placeholder="Type your reply in Chinese, then press Enter",
                              show_label=False, autofocus=True)
+            if pinyin is not None:
+                send_btn = gr.Button("Send", variant="primary")
+                with gr.Accordion("No Chinese keyboard? Type in pinyin", open=True):
+                    pin_in = gr.Textbox(placeholder="e.g. wo yao yi bei kafei (tones optional)",
+                                        show_label=False)
+                    pin_pick = gr.Radio(choices=[], label="Which characters do you mean?",
+                                        visible=False)
+                    pin_note = gr.Markdown("")
             end_btn = gr.Button("End conversation and get my report")
 
         with gr.Column(visible=False) as report_view:
@@ -103,7 +130,13 @@ def build_app(backend):
 
         start_btn.click(start, [level, difficulty, display],
                         [conv_state, chatbot, onboarding, chat_view, report_view])
-        msg.submit(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state])
+        sent = msg.submit(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state])
+        if pinyin is not None:
+            pin_in.input(convert_pinyin, [pin_in], [pin_pick, msg, pin_note])
+            pin_pick.input(lambda choice: choice or "", [pin_pick], [msg])
+            sent.then(clear_pinyin, None, [pin_in, pin_pick, pin_note])
+            send_btn.click(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state]).then(
+                clear_pinyin, None, [pin_in, pin_pick, pin_note])
         end_btn.click(finish, [conv_state], [report_md, chat_view, report_view])
         again_btn.click(restart, None, [conv_state, chatbot, onboarding, chat_view, report_view])
     if launch_extras:  # Gradio 6: pass css/theme at launch time
