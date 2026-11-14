@@ -97,6 +97,24 @@ class DatasetTest(unittest.TestCase):
                        "question_structure", "unnatural", "none"):
             self.assertIn(needed, {c["category"] for c in cases})
 
+    def test_multiple_answers_are_well_formed(self):
+        multi = [c for c in load_cases() if len(c["accepted"]) > 1]
+        self.assertGreaterEqual(len(multi), 4)
+        for c in multi:
+            self.assertEqual(c["accepted"][0], c["correct"])
+            self.assertEqual(len(set(c["accepted"])), len(c["accepted"]), c["id"])
+            self.assertNotIn(c["learner"], c["accepted"], c["id"])  # a "fix" must change something
+        for c in load_cases():
+            if not c["has_mistake"]:
+                self.assertEqual(c["accepted"], [c["learner"]], c["id"])
+
+    def test_removed_and_updated_sentences(self):
+        learners = {c["learner"] for c in load_cases()}
+        self.assertNotIn("我要一个咖啡。", learners)      # natural in real speech
+        self.assertNotIn("咖啡很好喝了。", learners)
+        self.assertNotIn("这里的咖啡比那里好喝很多。", learners)
+        self.assertIn("这里的咖啡比那里好喝多了。", learners)
+
     def test_splits(self):
         tune, test = load_cases(split="tune"), load_cases(split="test")
         self.assertEqual(len(tune) + len(test), len(load_cases()))
@@ -131,6 +149,14 @@ class CorrectionEvalTest(unittest.TestCase):
         self.assertEqual(m["valid_output_rate"], 1.0)
         self.assertEqual(m["baseline_mistakes_caught"], 0)
         self.assertEqual(m["by_category"]["measure_word"]["exact"], 1)
+
+    def test_any_accepted_answer_counts(self):
+        case = {"id": "9", "learner": "我中文说不好。", "correct": "我中文说得不好。", "category": "other",
+                "has_mistake": True, "accepted": ["我中文说得不好。", "我中文说得不太好。"]}
+        for fix, expected in [("我中文说得不太好。", True), ("我中文说得不好！", True), ("我说中文很好。", False)]:
+            res = run_correction_eval(FakeBackend(lambda m, f=fix: review_json(True, f, "other", "why")), [case])
+            self.assertEqual(res["rows"][0]["fix_exact"], expected, fix)
+        self.assertEqual(res["rows"][0]["expected"], "我中文说得不好。 | 我中文说得不太好。")
 
     def test_invalid_outputs_reduce_valid_rate(self):
         res = run_correction_eval(FakeBackend(lambda m: "no json"), self.cases)

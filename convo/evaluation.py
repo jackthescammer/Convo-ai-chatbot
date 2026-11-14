@@ -11,8 +11,9 @@ Run from the repo root:
     python -m convo.evaluation corrections --split test      # final score, don't tune after
     python -m convo.evaluation conversation
 
-Strict automatic scores are a LOWER BOUND: a correction worded differently from our
-answer counts as a miss. Fill in the human_* columns of the exported CSV and run
+Where a sentence has more than one right answer, data/test_cases.csv lists them all in the
+`correct` column separated by "|"; a correction matching ANY of them counts as exact.
+Strict automatic scores are still a LOWER BOUND: a correct fix we didn't list counts as a miss. Fill in the human_* columns of the exported CSV and run
 `summarise_human_review` for the numbers that count (explanation accuracy needs a person).
 """
 
@@ -45,6 +46,10 @@ def load_cases(path=DATA_PATH, split=None):
     with open(path, newline="", encoding="utf-8") as f:
         cases = list(csv.DictReader(f))
     for c in cases:
+        # `correct` may list several right answers separated by "|" (e.g. "我要一个面包。|我要一块面包。").
+        options = [a.strip() for a in c["correct"].split("|") if a.strip()]
+        c["accepted"] = options
+        c["correct"] = options[0]          # the main answer
         c["has_mistake"] = c["learner"] != c["correct"]
     if split in (None, "all"):
         return cases
@@ -62,13 +67,15 @@ def run_correction_eval(backend, cases, level="A2"):
     rows = []
     for c in cases:
         r = review_sentence(backend, c["learner"], level)
+        accepted = c.get("accepted") or [c["correct"]]
+        accepted_norm = {normalise(a) for a in accepted}
         rows.append({
-            "id": c["id"], "learner": c["learner"], "expected": c["correct"],
+            "id": c["id"], "learner": c["learner"], "expected": " | ".join(accepted),
             "category_expected": c["category"], "has_mistake": c["has_mistake"],
             "flagged": r.has_error, "model_fix": r.corrected if r.has_error else "",
             "category_model": r.category, "explanation_model": r.explanation,
             "valid": r.valid, "guard": r.guard,
-            "fix_exact": r.has_error and normalise(r.corrected) == normalise(c["correct"]),
+            "fix_exact": r.has_error and normalise(r.corrected) in accepted_norm,
         })
     mistakes = [r for r in rows if r["has_mistake"]]
     correct = [r for r in rows if not r["has_mistake"]]
