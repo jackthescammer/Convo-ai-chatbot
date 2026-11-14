@@ -1,0 +1,11 @@
+# Upload only the public site: the landing page, the demo app and the mascot engine they import.
+# Everything else (CLAUDE.md, DESIGN.md, PRODUCT.md, .claude, .impeccable) stays local.
+/*
+!/landing
+!/app
+!/mascot
+!/vercel.json
+/landing/README.md
+/app/README.md
+/mascot/*
+!/mascot/convo-mascot.js

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Convo</title>
+  <meta name="description" content="Practise Mandarin by talking to Convo, then read a report on what to fix.">
+  <meta name="theme-color" content="#FFFFEB">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Figtree:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500&display=swap">
+  <!-- Tokens and shared components come from the landing page; home.css adds the app screens. -->
+  <link rel="stylesheet" href="../landing/styles.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="icon" href="../landing/assets/favicon.svg" type="image/svg+xml">
+  <script type="module" src="js/shell.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#view">Skip to content</a>
+
+  <div class="shell" data-chrome>
+    <aside class="side" aria-label="Convo">
+      <a class="brand" href="#/home" data-brand-for="side" aria-label="Convo, home">
+        <span class="brand-mark" data-mascot="idle" data-size="34" data-brand="side"></span>
+        <span class="brand-word">Convo</span>
+        <span class="badge brand-badge">Demo</span>
+      </a>
+      <nav class="side-nav" aria-label="Main">
+        <a href="#/home" data-nav="home" title="Home"><span data-app-icon="home"></span><span class="side-label">Home</span></a>
+        <a href="#/reports" data-nav="reports" title="Reports"><span data-app-icon="reports"></span><span class="side-label">Reports</span></a>
+        <a href="#/settings" data-nav="settings" title="Settings"><span data-app-icon="settings"></span><span class="side-label">Settings</span></a>
+      </nav>
+      <a class="btn btn-primary side-cta" href="#/talk" data-nav="talk" title="Conversation"><span data-app-icon="chat"></span><span class="side-label" data-cta-label>Start a conversation</span></a>
+      <a class="side-level" href="#/settings/learning"><span class="sr-only">Level and difficulty: </span><span data-level-label>A2 · Standard</span></a>
+    </aside>
+
+    <header class="topbar">
+      <a class="brand" href="#/home" data-brand-for="top" aria-label="Convo, home">
+        <span class="brand-mark" data-mascot="idle" data-size="34" data-brand="top"></span>
+        <span class="brand-word">Convo</span>
+      </a>
+      <a class="side-level" href="#/settings/learning"><span class="sr-only">Level and difficulty: </span><span data-level-label>A2 · Standard</span></a>
+    </header>
+
+    <main id="view" class="view" tabindex="-1"></main>
+
+    <nav class="tabbar" aria-label="Main">
+      <a href="#/home" data-nav="home"><span data-app-icon="home"></span><span>Home</span></a>
+      <a href="#/talk" data-nav="talk" class="tab-talk"><span class="tab-talk-dot" data-app-icon="chat"></span><span>Talk</span></a>
+      <a href="#/reports" data-nav="reports"><span data-app-icon="reports"></span><span>Reports</span></a>
+      <a href="#/settings" data-nav="settings"><span data-app-icon="settings"></span><span>Settings</span></a>
+    </nav>
+  </div>
+</body>
+</html>
