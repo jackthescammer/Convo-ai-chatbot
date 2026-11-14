@@ -21,6 +21,30 @@ CSS = """
 """
 
 
+def _hidden(visible):
+    """Show/hide update that works on Gradio 4, 5 and 6."""
+    if hasattr(gr, "update"):
+        return gr.update(visible=visible)
+    return gr.Column(visible=visible)
+
+
+def _make_blocks():
+    """Gradio 6 moved css/theme from gr.Blocks() to launch(); support both."""
+    theme = gr.themes.Base(neutral_hue="slate")
+    try:
+        return gr.Blocks(title="Convo AI", css=CSS, theme=theme), {}
+    except TypeError:
+        return gr.Blocks(title="Convo AI"), {"css": CSS, "theme": theme}
+
+
+def _make_chatbot(**kwargs):
+    """Gradio 4/5 need type="messages"; Gradio 6 uses that format by default and rejects `type`."""
+    try:
+        return gr.Chatbot(type="messages", **kwargs)
+    except TypeError:
+        return gr.Chatbot(**kwargs)
+
+
 def build_app(backend):
     def start(level, difficulty, display):
         if not display:
@@ -29,7 +53,7 @@ def build_app(backend):
         conv = Conversation(backend, Settings(level=level, difficulty=difficulty, display=tuple(display)))
         turn = conv.start()
         chat = [{"role": "assistant", "content": format_turn(turn.reply, turn.english, conv.settings.display)}]
-        return (conv, chat, gr.update(visible=False), gr.update(visible=True), gr.update(visible=False))
+        return (conv, chat, _hidden(False), _hidden(True), _hidden(False))
 
     def send(message, chat, conv):
         message = (message or "").strip()
@@ -43,14 +67,16 @@ def build_app(backend):
 
     def finish(conv):
         if conv is None:
-            return gr.update(), gr.update(), gr.update()
+            keep = gr.update() if hasattr(gr, "update") else None
+            return keep, keep, keep
         report = build_report(backend, conv.learner_sentences, conv.settings)
-        return report.to_markdown(), gr.update(visible=False), gr.update(visible=True)
+        return report.to_markdown(), _hidden(False), _hidden(True)
 
     def restart():
-        return None, [], gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+        return None, [], _hidden(True), _hidden(False), _hidden(False)
 
-    with gr.Blocks(title="Convo AI", css=CSS, theme=gr.themes.Base(neutral_hue="slate")) as app:
+    blocks, launch_extras = _make_blocks()
+    with blocks as app:
         conv_state = gr.State(None)
         gr.Markdown("# Convo AI\nLearn Mandarin by having a conversation, not by memorising.")
 
@@ -63,7 +89,7 @@ def build_app(backend):
             start_btn = gr.Button("Start conversation", variant="primary")
 
         with gr.Column(visible=False) as chat_view:
-            chatbot = gr.Chatbot(type="messages", height=420, elem_id="chat", label="小林 · café waiter")
+            chatbot = _make_chatbot(height=420, elem_id="chat", label="小林 · café waiter")
             msg = gr.Textbox(placeholder="Type your reply in Chinese, then press Enter",
                              show_label=False, autofocus=True)
             end_btn = gr.Button("End conversation and get my report")
@@ -80,6 +106,13 @@ def build_app(backend):
         msg.submit(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state])
         end_btn.click(finish, [conv_state], [report_md, chat_view, report_view])
         again_btn.click(restart, None, [conv_state, chatbot, onboarding, chat_view, report_view])
+    if launch_extras:  # Gradio 6: pass css/theme at launch time
+        original_launch = app.launch
+
+        def launch(*args, **kwargs):
+            return original_launch(*args, **{**launch_extras, **kwargs})
+
+        app.launch = launch
     return app
 
 
