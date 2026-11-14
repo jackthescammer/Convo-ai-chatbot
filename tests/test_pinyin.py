@@ -80,3 +80,24 @@ def test_candidate_k_mixes_alternatives_without_duplicates():
     cands, _ = conv().candidates("ni hao? ma")
     assert cands[0] == "你好？吗"
     assert len(cands) == len(set(cands))
+
+
+def test_cafe_words_reorder_homophones():
+    from convo.pinyin_input import rerank
+    assert rerank(["我要已被咖啡", "我要一杯咖啡", "我要一倍咖啡"])[0] == "我要一杯咖啡"
+    assert rerank(["不要并", "不要病", "不要冰"])[0] == "不要冰"
+    assert rerank(["可以刷卡码？", "可以刷卡吗？"])[0] == "可以刷卡吗？"
+    # ties keep the dictionary's order
+    assert rerank(["先", "现"]) == ["先", "现"]
+
+
+def test_rerank_only_chooses_between_homophones_so_mistakes_survive():
+    # 'chi' is still 吃 even though 喝 is the right verb for coffee: the learner's mistake reaches the report
+    lookup = lambda sylls, n: ["我想吃一杯咖啡", "我想持一杯咖啡"]
+    c = PinyinConverter(lookup=lookup, syllables=["wo", "xiang", "chi", "yi", "bei", "ka", "fei"])
+    assert c.candidates("wo xiang chi yi bei kafei")[0][0] == "我想吃一杯咖啡"
+
+
+def test_one_stretch_varies_at_a_time():
+    cands, _ = conv().candidates("ni hao, xian")
+    assert cands == ["你好，先", "拟好，先", "你好，现"]
