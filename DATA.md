@@ -69,6 +69,10 @@ Targets we set: correction accuracy at least 85%, false-correction rate at most 
 
 - **After v1 (2026-11-14):** added 你们有茶吗？ as a second right answer for 你们有没有茶吗？ (tune sentence 04). It is correct Chinese that v1 produced but our key didn't accept. This changes the answer key, not the model. Under the new key, v1's "corrections matching" would be 5/7 instead of 4/7; we left the v1 row as originally recorded.
 
+## Repeat runs
+
+- **2026-11-14, v1 run again** (files `20261114-110918_…_v1_tune.json`, `20261114-111144_…_v1_na.json`). This was meant to be the v2 run, but Colab's `git pull` was refused (local result files clashed with newly committed ones), so the old v1 prompt ran. The results were **identical** to the first v1 run on every sentence and every conversation turn, which confirms runs are repeatable at temperature 0. It is not a new version, so it has no row in the table. The notebook now downloads a fresh copy of the code each time and prints the prompt version, so this can't happen silently again.
+
 
 ## Sentences with a mistake (28)
 

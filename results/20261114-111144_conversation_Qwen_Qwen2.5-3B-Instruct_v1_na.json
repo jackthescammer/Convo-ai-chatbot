@@ -1,0 +1,257 @@
+{
+  "kind": "conversation",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "prompt_version": "v1",
+  "split": null,
+  "timestamp": "20261114-111144",
+  "transcripts": [
+    {
+      "script": "latte",
+      "items": [
+        "拿铁"
+      ],
+      "state_after_order": [
+        "一杯热拿铁"
+      ],
+      "state_tracking_ok": true,
+      "context_retained": true,
+      "dialogue": [
+        {
+          "learner": "(enters)",
+          "waiter": "欢迎光临，需要点些什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "你好！",
+          "waiter": "你好！想要喝点什么？",
+          "valid": true
+        },
+        {
+          "learner": "我想要一杯拿铁。",
+          "waiter": "好的，来一杯拿铁，要热的还是冰的？",
+          "valid": true
+        },
+        {
+          "learner": "热的，谢谢。",
+          "waiter": "好的，马上来。",
+          "valid": true
+        },
+        {
+          "learner": "我刚才点了什么？",
+          "waiter": "您刚才点了杯热拿铁。",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "script": "tea",
+      "items": [
+        "茶"
+      ],
+      "state_after_order": [
+        "绿茶"
+      ],
+      "state_tracking_ok": true,
+      "context_retained": true,
+      "dialogue": [
+        {
+          "learner": "(enters)",
+          "waiter": "欢迎光临，需要点些什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "你好。",
+          "waiter": "你好！想要喝点什么？",
+          "valid": true
+        },
+        {
+          "learner": "你们有茶吗？",
+          "waiter": "有啊，我们这里有绿茶和红茶，您要哪种？",
+          "valid": true
+        },
+        {
+          "learner": "我要一杯绿茶。",
+          "waiter": "好的，绿茶给您。还要点别的吗？",
+          "valid": true
+        },
+        {
+          "learner": "我刚才点了什么？",
+          "waiter": "您刚才点了绿茶。",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "script": "cake_water",
+      "items": [
+        "蛋糕",
+        "水"
+      ],
+      "state_after_order": [
+        "蛋糕",
+        "水"
+      ],
+      "state_tracking_ok": true,
+      "context_retained": true,
+      "dialogue": [
+        {
+          "learner": "(enters)",
+          "waiter": "欢迎光临，需要点些什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "你好！",
+          "waiter": "你好！想要喝点什么？",
+          "valid": true
+        },
+        {
+          "learner": "我要一块蛋糕。",
+          "waiter": "好的，来一块蛋糕吧。要加糖吗？",
+          "valid": true
+        },
+        {
+          "learner": "还要一杯水。",
+          "waiter": "好的，再来一杯水。",
+          "valid": true
+        },
+        {
+          "learner": "我刚才点了什么？",
+          "waiter": "您刚才点了蛋糕和水。",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "script": "americano",
+      "items": [
+        "美式"
+      ],
+      "state_after_order": [
+        "一杯大杯冰美式",
+        "不要糖"
+      ],
+      "state_tracking_ok": true,
+      "context_retained": true,
+      "dialogue": [
+        {
+          "learner": "(enters)",
+          "waiter": "欢迎光临，需要点些什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "你好。",
+          "waiter": "你好！想要喝点什么？",
+          "valid": true
+        },
+        {
+          "learner": "我要一杯冰美式。",
+          "waiter": "好的，来一杯冰美式，要加糖吗？",
+          "valid": true
+        },
+        {
+          "learner": "大杯，不要糖。",
+          "waiter": "大杯的，不加糖，明白。",
+          "valid": true
+        },
+        {
+          "learner": "我刚才点了什么？",
+          "waiter": "您刚才点了大杯冰美式，不要糖。",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "script": "juice",
+      "items": [
+        "果汁"
+      ],
+      "state_after_order": [
+        "果汁"
+      ],
+      "state_tracking_ok": true,
+      "context_retained": true,
+      "dialogue": [
+        {
+          "learner": "(enters)",
+          "waiter": "欢迎光临，需要点些什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "你好！",
+          "waiter": "你好！想要喝点什么？",
+          "valid": true
+        },
+        {
+          "learner": "有果汁吗？",
+          "waiter": "有新鲜的橙汁和苹果汁，你想尝尝哪种？",
+          "valid": true
+        },
+        {
+          "learner": "好，我要一杯果汁。",
+          "waiter": "好的，您要加糖吗？",
+          "valid": true
+        },
+        {
+          "learner": "我刚才点了什么？",
+          "waiter": "您刚才点了果汁，还要其他吗？",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "script": "bread_coffee",
+      "items": [
+        "面包",
+        "咖啡"
+      ],
+      "state_after_order": [
+        "面包",
+        "咖啡"
+      ],
+      "state_tracking_ok": true,
+      "context_retained": true,
+      "dialogue": [
+        {
+          "learner": "(enters)",
+          "waiter": "欢迎光临，需要点些什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "你好。",
+          "waiter": "你好！想要喝点什么？",
+          "valid": true
+        },
+        {
+          "learner": "我想要一个面包。",
+          "waiter": "好的，来一个面包吧。想要加点什么吗？",
+          "valid": true
+        },
+        {
+          "learner": "还有一杯咖啡。",
+          "waiter": "好的，再来一杯咖啡。是热的还是冰的？",
+          "valid": true
+        },
+        {
+          "learner": "我刚才点了什么？",
+          "waiter": "您刚才点了面包和一杯咖啡。",
+          "valid": true
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "n_scripts": 6,
+    "n_waiter_turns": 30,
+    "character_consistency": 1.0,
+    "first_try_valid_rate": 1.0,
+    "context_retention": 1.0,
+    "state_tracking": 1.0,
+    "targets": {
+      "correction_accuracy": 0.85,
+      "false_correction_rate": 0.1,
+      "character_consistency": 0.9,
+      "context_retention": 0.9,
+      "explanation_accuracy": 0.8
+    }
+  }
+}
