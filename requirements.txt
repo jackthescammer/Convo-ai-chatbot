@@ -3,3 +3,4 @@ transformers>=4.45
 accelerate
 gradio>=4.44
 pypinyin
+opencc-python-reimplemented   # speech input: convert any traditional characters Whisper writes to simplified
