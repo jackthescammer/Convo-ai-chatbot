@@ -1,0 +1,201 @@
+{
+  "kind": "corrections",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "prompt_version": "v4",
+  "split": "tune",
+  "timestamp": "20261114-114903",
+  "rows": [
+    {
+      "id": "01",
+      "learner": "我要一杯面包。",
+      "expected": "我要一个面包。 | 我要一块面包。",
+      "category_expected": "measure_word",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我要一块面包。",
+      "category_model": "measure_word",
+      "explanation_model": "杯 (bēi) is used for drinks, not for bread. Use 个 (gè) for countable items like bread.",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "04",
+      "learner": "你们有没有茶吗？",
+      "expected": "你们有没有茶？ | 你们有茶吗？",
+      "category_expected": "question_structure",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "你们有茶吗？",
+      "category_model": "other",
+      "explanation_model": "句子结构正确，但可以省略 '有'，直接用疑问句形式。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "08",
+      "learner": "我喝咖啡在家。",
+      "expected": "我在家喝咖啡。",
+      "category_expected": "word_order",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我要喝咖啡在家。",
+      "category_model": "word_order",
+      "explanation_model": "In a café setting, '我要' (I want) is more appropriate than '我喝' (I drink).",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "12",
+      "learner": "这个蛋糕太很甜了。",
+      "expected": "这个蛋糕太甜了。",
+      "category_expected": "extra_word",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "这个蛋糕太甜了。",
+      "category_model": "vocabulary",
+      "explanation_model": "使用“甜”来形容蛋糕的味道更自然，而不是“很甜”。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "16",
+      "learner": "我没有钱现金。",
+      "expected": "我没有现金。",
+      "category_expected": "extra_word",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我没有现金。",
+      "category_model": "vocabulary",
+      "explanation_model": "现金用现金 (huì qián) 表达，而不是没有钱。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "24",
+      "learner": "我要一杯拿铁，不要糖。",
+      "expected": "我要一杯拿铁，不要糖。",
+      "category_expected": "none",
+      "has_mistake": false,
+      "flagged": true,
+      "model_fix": "我要一杯拿铁，不要加糖。",
+      "category_model": "vocabulary",
+      "explanation_model": "加糖用 加 (jia) 而不是不要冰。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "27",
+      "learner": "我要买单。",
+      "expected": "我要买单。",
+      "category_expected": "none",
+      "has_mistake": false,
+      "flagged": true,
+      "model_fix": "我要付钱。",
+      "category_model": "vocabulary",
+      "explanation_model": "买单 in this context means 'to pay the bill', which is more naturally expressed as '付钱' in casual conversation.",
+      "valid": true,
+      "guard": "",
+      "fix_exact": false
+    },
+    {
+      "id": "33",
+      "learner": "我明天再来这里喝咖啡。",
+      "expected": "我明天再来这里喝咖啡。",
+      "category_expected": "none",
+      "has_mistake": false,
+      "flagged": false,
+      "model_fix": "",
+      "category_model": "none",
+      "explanation_model": "",
+      "valid": true,
+      "guard": "no_change",
+      "fix_exact": false
+    },
+    {
+      "id": "36",
+      "learner": "我想吃一杯咖啡。",
+      "expected": "我想喝一杯咖啡。",
+      "category_expected": "vocabulary",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我想喝一杯咖啡。",
+      "category_model": "vocabulary",
+      "explanation_model": "吃 (eat) is used for food, while 喝 (drink) is used for beverages like coffee. For drinks, we use 杯 (cup).",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    },
+    {
+      "id": "40",
+      "learner": "我希望获得一杯咖啡。",
+      "expected": "我想要一杯咖啡。 | 我要一杯咖啡。",
+      "category_expected": "unnatural",
+      "has_mistake": true,
+      "flagged": true,
+      "model_fix": "我想要一杯咖啡。",
+      "category_model": "vocabulary",
+      "explanation_model": "使用“想要”更符合日常表达，而不是“希望”，并且“一杯”更自然地用于请求服务时。",
+      "valid": true,
+      "guard": "",
+      "fix_exact": true
+    }
+  ],
+  "metrics": {
+    "n_cases": 10,
+    "n_mistake_cases": 7,
+    "n_correct_cases": 3,
+    "baseline_mistakes_caught": 0,
+    "baseline_false_corrections": 0,
+    "mistakes_flagged": 7,
+    "detection_recall": 1.0,
+    "correction_accuracy_strict": 0.8571,
+    "false_correction_rate": 0.6667,
+    "false_corrections": 2,
+    "valid_output_rate": 1.0,
+    "targets": {
+      "correction_accuracy": 0.85,
+      "false_correction_rate": 0.1,
+      "character_consistency": 0.9,
+      "context_retention": 0.9,
+      "explanation_accuracy": 0.8
+    },
+    "by_category": {
+      "measure_word": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 1
+      },
+      "question_structure": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 1
+      },
+      "word_order": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 0
+      },
+      "extra_word": {
+        "n": 2,
+        "flagged": 2,
+        "exact": 2
+      },
+      "vocabulary": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 1
+      },
+      "unnatural": {
+        "n": 1,
+        "flagged": 1,
+        "exact": 1
+      }
+    }
+  }
+}
