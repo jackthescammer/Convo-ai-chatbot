@@ -7,7 +7,7 @@ from pathlib import Path
 from convo import Settings
 from convo.evaluation import (CONVERSATION_SCRIPTS, export_for_human_review, load_cases, log_result,
                               run_conversation_eval, run_correction_eval, summarise_human_review)
-from convo.prompts import CATEGORIES
+from convo.prompts import CATEGORIES, PROMPT_VERSION, build_review_prompt
 from convo.render import format_turn
 from convo.review import build_report, review_sentence
 from fakes import FakeBackend, review_json, turn_json
@@ -80,6 +80,15 @@ class ReviewTest(unittest.TestCase):
     def test_no_chinese_gives_friendly_report(self):
         report = build_report(FakeBackend(lambda m: ""), ["hello", "ok"], Settings(), pinyin_fn=FAKE_PINYIN)
         self.assertIn("nothing to review", report.to_markdown())
+
+
+class ReviewPromptTest(unittest.TestCase):
+    def test_review_prompt_keeps_correct_sentences_unchanged(self):
+        p = build_review_prompt("A2")
+        for needle in ("Assume the sentence is correct", "When in doubt", "Never add, remove or swap",
+                       "has_error false", "changing as little as possible"):
+            self.assertIn(needle, p)
+        self.assertEqual(PROMPT_VERSION, "v2")
 
 
 class DatasetTest(unittest.TestCase):
@@ -184,7 +193,7 @@ class CorrectionEvalTest(unittest.TestCase):
             out = log_result("corrections", "org/model", "tune", res, results_dir=d)
             self.assertTrue(out.exists())
             log = read_csv(Path(d) / "log.csv")
-            self.assertEqual((log[0]["model"], log[0]["prompt_version"]), ("org/model", "v1"))
+            self.assertEqual((log[0]["model"], log[0]["prompt_version"]), ("org/model", PROMPT_VERSION))
             log_result("corrections", "org/model", "test", res, results_dir=d)
             self.assertEqual(len(read_csv(Path(d) / "log.csv")), 2)
 

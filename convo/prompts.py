@@ -4,7 +4,7 @@ Bump PROMPT_VERSION whenever any prompt below changes; evaluation results are
 logged against it.
 """
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 CHARACTER_NAME = "小林"
 
@@ -111,9 +111,14 @@ def build_review_prompt(level):
             "The learner said it to a waiter in a café.",
             "",
             "Rules:",
-            "- Report a mistake only if a native speaker would find the sentence wrong. "
-            "Do NOT change sentences that are already correct. Do not correct punctuation or style, "
-            "and do not suggest advanced alternatives for a correct sentence.",
+            "- Assume the sentence is correct. Report a mistake only if you can name the specific "
+            "grammar rule or word that a native speaker would find wrong. When in doubt, answer "
+            'has_error false.',
+            "- A sentence that is grammatical and natural is correct, even if you can think of a more "
+            "polite, longer, more complete or more formal way to say it. Never add, remove or swap "
+            "words in such a sentence. Short, direct requests (starting with 我要, 请给我 or 我想) are "
+            "normal café Chinese and are correct. Do not correct punctuation or style, and do not "
+            "suggest alternatives for a correct sentence.",
             "- If a sentence is grammatically correct but a native speaker would never say it that way "
             'in a café (for example it sounds like a formal letter), report it with category "unnatural".',
             "- If there is a mistake, give the corrected sentence, changing as little as possible.",
