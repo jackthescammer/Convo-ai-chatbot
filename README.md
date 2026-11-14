@@ -17,11 +17,11 @@ The long-term vision is a full platform with many scenarios, voice and text, and
 ## What we added
 This is our own idea, not a suggested project. What we added:
 - **Our own user:** an immigrant at A2 level who needs everyday Chinese, practising one real situation: ordering at a cafe.
-- **Our own data:** a test set of 35 cafe sentences a learner might say. 23 contain a common beginner mistake (measure words, 不 vs 没, word order and others) and 12 are correct. We wrote the first draft with help from Claude, and TODO (name) checked and corrected every sentence as a Chinese speaker.
+- **Our own data:** a test set of 51 cafe sentences a learner might say (`test_sentences.csv`). 34 contain a common beginner mistake (measure words, 不 vs 没, word order and others) and 17 are correct. We wrote the first draft with help from Claude, and TODO (name) checked and corrected every sentence as a Chinese speaker.
 - **Our own question:** can a small, free, open-source model (Qwen 2.5 3B) catch beginner mistakes, explain them, and stay in character as a waiter, without "correcting" sentences that were already right?
 
 ## How it works
-- **Data:** our 35 learner sentences (23 with a mistake, 12 correct), each with the correct version and the mistake type. We used 10 to tune the prompt and kept the other 25 as a held-out test set. We didn't change the prompt after scoring the test set.
+- **Data:** our 51 learner sentences (34 with a mistake, 17 correct), each with the correct version and the mistake type. We used 10 to tune the prompt and kept the other 41 as a held-out test set. We didn't change the prompt after scoring the test set.
 - **Model:** Qwen 2.5 3B Instruct (open-source, run in Google Colab). We used a prompt that tells it to play a waiter, reply in Chinese and correct mistakes gently.
 - **Why this model:** small enough for a free GPU, and it supports Chinese.
 
