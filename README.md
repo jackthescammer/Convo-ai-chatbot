@@ -35,9 +35,17 @@ We changed one thing per version and measured it on the 10 tune sentences. Full 
 | Baseline | Never corrects anything | 0/7 | n/a | 0/3 | n/a | n/a |
 | v1 | First prompt | 6/7 | 4/7 | 2/3 | 30/30 | 6/6 |
 | v2 | Stronger written rule: don't change correct sentences | 6/7 | 4/7 | 2/3 | 30/30 | 6/6 |
-| v3 | Added worked examples of correct sentences left unchanged | 5/7 | 4/7 | **0/3** | 30/30 | 6/6 |
+| v3 | Added worked examples of correct sentences left unchanged | 5/7 | 4/7 | 0/3 | 30/30 | 6/6 |
+| v4 | Added worked examples of real word-choice and measure-word mistakes | 7/7 | 6/7 | 2/3 | 30/30 | 6/6 |
+| v5 | Second check in code: "is the original already correct?" | 4/7 | 3/7 | 1/3 | 30/30 | 6/6 |
+| **v6** | Second check shows original and fix side by side, keeps the original unless the fix is clearly better | **7/7** | **6/7** | 1/3 | 30/30 | 6/6 |
 
-**Is it improving?** Partly. The biggest problem in v1 and v2 was over-correcting: changing sentences that were already right (2 of 3). A written rule (v2) didn't fix it, but worked examples (v3) did: **0 of 3** correct sentences were changed. The trade-off is that v3 became more cautious and missed one more mistake (5/7 caught instead of 6/7), and corrections matching our answer stayed at 4/7. The waiter stayed in character and remembered the order in every test conversation in all versions. With only 10 tune sentences, one sentence moves a score a lot, so we treat small changes with caution.
+**Is it improving?** Yes. From v1 to v6, corrections matching our answer went from **4/7 to 6/7**, mistakes caught from 6/7 to **7/7**, and correct sentences wrongly "fixed" from 2/3 to 1/3. It wasn't a straight line, and the dead ends taught us the most:
+- A written rule (v2) changed nothing. Worked examples (v3) stopped the over-correcting, but made the model too cautious.
+- Examples of real mistakes (v4) brought the catches back, but the over-correcting returned too. Prompt examples alone swung between the two problems.
+- So we split "is it wrong?" from "how do I fix it?" with a second check in code. Asking about the sentence on its own (v5) failed, because the model said "it's fine" far too easily. Showing the original and the fix side by side (v6) worked: it kept all of v4's catches and removed one of its two over-corrections.
+
+The waiter stayed in character and remembered the order in every test conversation in every version. With only 10 tune sentences, one sentence moves a score by 14 to 33 points, so the final test on 32 unseen sentences is the real measure.
 
 ### Final score (held-out test sentences)
 TODO: run once on the 32 test sentences when the prompt is final, and report it here next to the baseline.
@@ -46,19 +54,18 @@ Note: the test sentences were also run once early, with v1 (19/21 mistakes flagg
 
 Nelson and Ferrell checked all the quiz sentences. TODO: who judged the corrections by hand.
 
-**Where it fails (v3, tune sentences):**
-- 我想吃一杯咖啡 (should be 喝, "drink") → not flagged. It misses word-choice mistakes.
-- 我要一杯面包 (should be 一个/一块面包) → the model said there was a mistake but returned the sentence unchanged. It struggles with measure words.
-- 我喝咖啡在家 (should be 我在家喝咖啡) → "fixed" to 我回家喝咖啡, which changes the meaning to "go home to drink coffee".
-- Explanations come out in Chinese, although we ask for English, which an A2 learner needs. This happened in every version so far.
+**Where it fails (v6, tune sentences):**
+- 我喝咖啡在家 (should be 我在家喝咖啡) → "fixed" to 我要喝咖啡在家. No version has moved the place phrase 在家 before the verb; the model keeps rewriting the verb instead.
+- 我要买单 (already correct, "I'd like the bill") → changed to 我要付钱 ("I want to pay"). The side-by-side check accepts it because both sound fine to the model.
+- Explanations: only about half are in English (4 of 8 in v6, up from 0 in v3); the rest are in Chinese, which an A2 learner can't use. Some explanations are also wrong, so they need checking by hand.
 
-We think a 3B model follows examples better than written rules, which is why v3 worked for over-correcting, but it hasn't seen examples of the mistakes it misses.
+We think a 3B model follows examples better than written rules, and judges two options side by side better than one sentence on its own.
 
 ## Limitations
 - Text only. Voice (Whisper) and spoken replies (TTS) are not built.
 - One scenario and one level.
 - Small quiz: 10 tune and 32 test sentences, so scores move a lot with one sentence.
-- Explanations are in Chinese instead of English so far.
+- About half the explanations still come out in Chinese instead of English, and some are wrong.
 - The test sentences were run once early (v1), before we fixed our rule of running them only at the end.
 
 ## What we'd do next

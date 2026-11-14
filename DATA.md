@@ -45,6 +45,9 @@ Never delete or edit old rows; add a new row per version.
 | v1 | 2026-11-14 | First prompt | 6/7 | 4/7 (57%) | 2/3 (67%) | 30/30 | 6/6 |
 | v2 | 2026-11-14 | Stronger rule: don't change sentences that are already correct (v1 wrongly fixed 2 of 3) | 6/7 | 4/7 (57%) | 2/3 (67%) | 30/30 | 6/6 |
 | v3 | 2026-11-14 | Added 3 worked examples of correct sentences left unchanged (false corrections were 2/3 in v1 and v2) | 5/7 | 4/7 (57%) | **0/3 (0%)** | 30/30 | 6/6 |
+| v4 | 2026-11-14 | Added 2 worked examples of real word-choice and measure-word mistakes, with English explanations (v3 missed 吃→喝 and 一杯面包) | 7/7 | 6/7 (86%) | 2/3 (67%) | 30/30 | 6/6 |
+| v5 | 2026-11-14 | Second check in code: ask "is the original already correct?" before accepting a fix (v4 over-corrected 2/3) | 4/7 | 3/7 (43%) | 1/3 (33%) | 30/30 | 6/6 |
+| v6 | 2026-11-14 | Second check shows original and fix side by side; keep the original unless the fix is clearly better (v5's check said "fine" too easily) | **7/7** | **6/7 (86%)** | 1/3 (33%) | 30/30 | 6/6 |
 
 Targets we set: correction accuracy at least 85%, false-correction rate at most 10%.
 
@@ -96,6 +99,37 @@ Code commit `d65e8dd`. Only the sentence-checker prompt changed: three worked ex
 - **Takeaway:** examples worked where a written rule didn't, but the model is now more cautious. Next: add worked examples of real word-choice and measure-word mistakes (not quiz sentences), keeping false corrections at 0/3; then fix the English explanations.
 
 Raw files: `20261114-113909_corrections_Qwen_Qwen2.5-3B-Instruct_v3_tune.json`, `20261114-114114_conversation_Qwen_Qwen2.5-3B-Instruct_v3_na.json`. Run by Claude in Colab (sections 1, 2, 3 and 5; the test split was not run). The files were copied out of Colab as text and checked against the SHA-256 hashes Colab printed.
+
+## v4 notes
+
+Code commit `7323f8e`. Checker prompt only: two worked examples of real mistakes with English explanations (我想喝一块蛋糕 → 我想吃一块蛋糕; 我要两杯三明治 → 我要两个三明治). Neither is a quiz sentence (a unit test checks).
+- **Better:** caught all 7 mistakes; 我要一杯面包 → 我要一块面包 and 我想吃一杯咖啡 → 我想喝一杯咖啡 now right. Corrections matching 6/7.
+- **Worse:** over-correcting came back: 我要一杯拿铁，不要糖 → 不要加糖, and 我要买单 → 我要付钱 (2/3).
+- **Explanations:** 4 of 9 in English (up from 0 of 5), probably because the new examples are in English. Some are wrong or confused.
+- **Takeaway:** prompt examples alone swing between over-correcting (v4) and under-correcting (v3).
+
+Raw files: `20261114-114903_…_v4_tune.json`, `20261114-115052_…_v4_na.json`.
+
+## v5 notes
+
+Code commits `aa0846d`. Change in `convo/review.py` and its prompt: when the checker flags a sentence, the model is asked a second yes/no question, "is this original sentence already correct, natural Chinese?". If it clearly says yes, the sentence is kept unchanged.
+- **Better:** 我要一杯拿铁，不要糖 left alone again (false corrections 1/3).
+- **Worse:** the second check said "it's fine" far too easily and threw away 3 real corrections (你们有没有茶吗, 我想吃一杯咖啡, 我希望获得一杯咖啡). Caught 4/7, matching 3/7: worse than v4.
+- **Still wrong:** 我要买单 → 我要付钱.
+- **Explanations:** 3 of 5 in English.
+
+Raw files: `20261114-115733_…_v5_tune.json`, `20261114-115843_…_v5_na.json`.
+
+## v6 notes
+
+Code commits `6a4fe39`, `b42c88b`. The second check now shows the model **both versions side by side** (A = what the learner wrote, B = the proposed fix) and asks which is more correct and natural, answering A if they are equally good. The original is kept only if the model clearly picks A.
+- **Best version on the tune split:** caught 7/7, corrections matching 6/7 (meets the 85% target), false corrections 1/3 (misses the 10% target). It keeps all of v4's catches and drops one of its two over-corrections.
+- **Still wrong:** 我喝咖啡在家 → 我要喝咖啡在家 (no version has fixed this word-order mistake); 我要买单 → 我要付钱 (the side-by-side check accepts it because both sound fine to the model).
+- **Explanations:** 4 of 8 in English; some still wrong, so they need human review.
+- **Regression check:** `scripts/compare_versions.py` compares a version's tune results with every earlier version, sentence by sentence, using the raw files.
+- **Recommended** as the candidate for the final test run.
+
+Raw files: `20261114-120403_…_v6_tune.json`, `20261114-120513_…_v6_na.json`.
 
 ## Test-split runs
 
