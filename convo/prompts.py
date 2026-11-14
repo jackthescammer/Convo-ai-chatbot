@@ -4,7 +4,7 @@ Bump PROMPT_VERSION whenever any prompt below changes; evaluation results are
 logged against it.
 """
 
-PROMPT_VERSION = "v3"
+PROMPT_VERSION = "v4"
 
 CHARACTER_NAME = "小林"
 
@@ -139,6 +139,14 @@ def build_review_prompt(level):
             'Sentence: 请问，有没有靠窗的位子？',
             '{"has_error": false, "corrected": "请问，有没有靠窗的位子？", "category": "none", '
             '"explanation": "", "english": "Excuse me, is there a seat by the window?"}',
+            'Sentence: 我想喝一块蛋糕。',
+            '{"has_error": true, "corrected": "我想吃一块蛋糕。", "category": "vocabulary", '
+            '"explanation": "Use 吃 (eat) for food. 喝 (drink) is only for drinks.", '
+            '"english": "I would like to eat a piece of cake."}',
+            'Sentence: 我要两杯三明治。',
+            '{"has_error": true, "corrected": "我要两个三明治。", "category": "measure_word", '
+            '"explanation": "杯 (cup) is only for drinks. Sandwiches are counted with 个.", '
+            '"english": "I would like two sandwiches."}',
             'Sentence: 我们要结账。',
             '{"has_error": false, "corrected": "我们要结账。", "category": "none", '
             '"explanation": "", "english": "We would like to pay the bill."}',
