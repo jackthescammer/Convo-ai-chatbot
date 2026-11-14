@@ -57,7 +57,7 @@ Version-by-version scores on the tune split are in [`results/VERSIONS.md`](resul
 | 23 | test | 请问，厕所在哪里吗？ | 请问，厕所在哪里？ | question_structure | Excuse me, where is the toilet? | 哪里 is already a question word, so 吗 is not added. |
 | 36 | tune | 我想吃一杯咖啡。 | 我想喝一杯咖啡。 | vocabulary | I'd like to drink a cup of coffee. | Use 喝 (drink) for drinks; 吃 (eat) is for food. |
 | 37 | test | 这是我朋友咖啡。 | 这是我朋友的咖啡。 | missing_particle | This is my friend's coffee. | Use 的 to show possession. |
-| 38 | test | 我已经点咖啡。 | 我已经点咖啡了。 | missing_particle | I've already ordered coffee. | 已经 normally goes with 了 to show the action is completed. |
+| 38 | test | 我已经点咖啡。 | 我已经点咖啡了。 / 我已经点了咖啡。 | missing_particle | I've already ordered coffee. | 已经 normally goes with 了 to show the action is completed. |
 | 39 | test | 你想喝什么咖啡还是茶？ | 你想喝咖啡还是茶？ | question_structure | Would you like coffee or tea? | 什么 and 还是 do not go together; use 还是 alone to offer a choice. |
 | 40 | tune | 我希望获得一杯咖啡。 | 我想要一杯咖啡。 / 我要一杯咖啡。 | unnatural | I'd like a coffee. | Grammatically fine, but 希望获得 sounds like formal writing. In a café say 我想要 or 我要. |
 | 41 | test | 我可以请求你给我菜单吗？ | 我可以看一下菜单吗？ / 可以给我看一下菜单吗？ | unnatural | Could I see the menu? | Grammatically fine, but 请求 is very formal. 我可以看一下菜单吗？ is what people say. |
