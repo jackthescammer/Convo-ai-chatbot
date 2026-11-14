@@ -24,6 +24,8 @@ const bySplit = count(recs, r => r.split), byCat = count(mist, r => r.category);
 const reviewed = recs.filter(r => r.reviewed_by.trim()).length;
 const table = list => ["| ID | Split | Learner says | Right answer(s) | Type | Meaning | Why |", "|---|---|---|---|---|---|---|",
   ...list.map(r => `| ${r.id} | ${r.split} | ${r.learner} | ${r.correct.split("|").map(esc).join(" / ")} | ${r.category} | ${esc(r.intended_meaning)} | ${esc(r.explanation)} |`)].join("\n");
+const VERSIONS_PATH = require("path").join(require("path").dirname(csvPath), "..", "results", "VERSIONS.md");
+const versions = fs.existsSync(VERSIONS_PATH) ? fs.readFileSync(VERSIONS_PATH, "utf8").replace(/^# Version historys*/, "") : "No results yet.";
 const md = `# Convo AI: test data
 
 **Recorded by Ethan**
@@ -56,6 +58,12 @@ This is the quiz we use to measure Convo. It is **test data, not training data**
 - **Fairness:** we only improved the prompt using the **tune** split. The **test** split is run once, at the end, and the prompt is not changed after that.
 
 Version-by-version scores on the tune split are in [\`results/VERSIONS.md\`](results/VERSIONS.md). Raw outputs for every run are in [\`results/\`](results/).
+
+## Results by version
+
+(Copied from [`results/VERSIONS.md`](results/VERSIONS.md).)
+
+${versions}
 
 ## Sentences with a mistake (${mist.length})
 
