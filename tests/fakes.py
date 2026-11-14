@@ -6,13 +6,19 @@ import json
 class FakeBackend:
     name = "fake-model"
 
-    def __init__(self, handler):
-        """`handler(messages) -> str` decides each answer. All calls are recorded."""
+    def __init__(self, handler, verify=None):
+        """`handler(messages) -> str` decides each answer. All calls are recorded.
+
+        If `verify` is given, it is returned for the second (A/B) check instead of calling handler.
+        """
         self.handler = handler
+        self.verify = verify
         self.calls = []
 
     def generate(self, messages, *, max_new_tokens=300, temperature=0.0):
         self.calls.append(messages)
+        if self.verify is not None and messages[0]["content"].startswith("You are a native Mandarin speaker"):
+            return self.verify
         return self.handler(messages)
 
 

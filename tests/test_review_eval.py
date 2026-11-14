@@ -87,7 +87,7 @@ class ReviewTest(unittest.TestCase):
                 return json.dumps({"assessment": "You did well ordering drinks. Practise measure words."})
             return table[messages[1]["content"]]
 
-        backend = FakeBackend(handler)
+        backend = FakeBackend(handler, verify='{"better": "B"}')
         report = build_report(backend, list(table) + ["thanks", "  "], Settings(), pinyin_fn=FAKE_PINYIN)
         self.assertEqual(report.skipped, 2)
         self.assertEqual(report.recurring, [("measure_word", 2)])
@@ -188,7 +188,7 @@ class CorrectionEvalTest(unittest.TestCase):
             "我要买单。": review_json(True, "我想买单。", "other", "Changed it."),                # false correction
             "请给我菜单。": review_json(False, "请给我菜单。"),
         }
-        res = run_correction_eval(FakeBackend(lambda m: answers[m[1]["content"]]), self.cases)
+        res = run_correction_eval(FakeBackend(lambda m: answers[m[1]["content"]], verify='{"better": "B"}'), self.cases)
         m = res["metrics"]
         self.assertEqual((m["n_mistake_cases"], m["n_correct_cases"]), (2, 2))
         self.assertEqual(m["detection_recall"], 0.5)
@@ -213,7 +213,7 @@ class CorrectionEvalTest(unittest.TestCase):
 
     def test_human_review_roundtrip_and_logging(self):
         answers = {c["learner"]: review_json(True, c["correct"] + "x", "other", "why") for c in self.cases}
-        res = run_correction_eval(FakeBackend(lambda m: answers[m[1]["content"]]), self.cases)
+        res = run_correction_eval(FakeBackend(lambda m: answers[m[1]["content"]], verify='{"better": "B"}'), self.cases)
         with tempfile.TemporaryDirectory() as d:
             path = export_for_human_review(res, Path(d) / "sub" / "review.csv")
             rows = read_csv(path)
