@@ -1,0 +1,15 @@
+[convo] loading model: Qwen/Qwen2.5-3B-Instruct
+[convo] loaded Qwen/Qwen2.5-3B-Instruct on cuda
+NOTE: this is the final score. Don't change the prompt and re-run to improve it.
+  n_cases: 32
+  n_mistake_cases: 21
+  n_correct_cases: 11
+  baseline_mistakes_caught: 0
+  baseline_false_corrections: 0
+  mistakes_flagged: 15
+  detection_recall: 71%
+  correction_accuracy_strict: 33%
+  false_correction_rate: 18%
+  false_corrections: 2
+  valid_output_rate: 100%
+saved /content/Convo-ai-chatbot/results/20261114-131827_corrections_Qwen_Qwen2.5-3B-Instruct_v6_test.json
