@@ -1,7 +1,7 @@
 # Convo AI
 
 **Track:** Languages
-**Team:** TODO names
+**Team:** Nelson, Ethan and Ferrell
 
 ## The problem
 Many immigrants learn Chinese vocabulary and grammar but freeze in real conversations, like ordering at a cafe. Apps built on memorisation and scripted dialogues don't give them practice at responding to a real person. TODO: name one real person or persona (e.g. "an A2 learner who just moved to a Chinese-speaking city").
@@ -15,10 +15,13 @@ A text conversation partner for Chinese learners.
 The long-term vision is a full platform with many scenarios, voice and text, and personalised grading. This weekend we built and tested only the first slice: **one scenario (cafe), one language (Chinese), text only.**
 
 ## What we added
-TODO: our own user, data or question. For example: "We wrote our own test set of N learner sentences with known mistakes, checked by a Chinese speaker, and measured how often the model corrects them properly."
+This is our own idea, not a suggested project. What we added:
+- **Our own user:** an immigrant at A2 level who needs everyday Chinese, practising one real situation: ordering at a cafe.
+- **Our own data:** a test set of 35 cafe sentences a learner might say. 23 contain a common beginner mistake (measure words, 不 vs 没, word order and others) and 12 are correct. We wrote the first draft with help from Claude, and TODO (name) checked and corrected every sentence as a Chinese speaker.
+- **Our own question:** can a small, free, open-source model (Qwen 2.5 3B) catch beginner mistakes, explain them, and stay in character as a waiter, without "correcting" sentences that were already right?
 
 ## How it works
-- **Data:** TODO: N learner sentences we wrote (X with a mistake, Y correct), each with the correct version and mistake type. Split: TODO tuning set / TODO held-out test set. The model never saw the test set when we tuned the prompt.
+- **Data:** our 35 learner sentences (23 with a mistake, 12 correct), each with the correct version and the mistake type. We used 10 to tune the prompt and kept the other 25 as a held-out test set. We didn't change the prompt after scoring the test set.
 - **Model:** Qwen 2.5 3B Instruct (open-source, run in Google Colab). We used a prompt that tells it to play a waiter, reply in Chinese and correct mistakes gently.
 - **Why this model:** small enough for a free GPU, and it supports Chinese.
 
@@ -42,7 +45,8 @@ All numbers are on held-out sentences we did not use to tune the prompt. A Chine
 2. Add more scenarios and levels, then test with real learners.
 
 ## Sources
-- Qwen 2.5 3B Instruct (Hugging Face): TODO link
+- Qwen 2.5 3B Instruct (Hugging Face): https://huggingface.co/Qwen/Qwen2.5-3B-Instruct
+- Hugging Face Transformers: https://huggingface.co/docs/transformers
 - Google Colab: https://colab.research.google.com
-- AI tools used: TODO (e.g. Claude, for help planning and writing starter code)
+- AI tools used: Claude (Anthropic), for help planning, writing the starter notebook and drafting the test sentences
 - TODO: any dataset or tutorial
