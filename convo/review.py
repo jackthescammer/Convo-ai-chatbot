@@ -8,7 +8,7 @@ pinyin and study tips are done in code, not by the model.
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 
-from .prompts import build_assessment_prompt, build_review_prompt
+from .prompts import build_assessment_prompt, build_review_prompt, build_verify_prompt
 from .render import to_pinyin
 from .structured import HAN, extract_json, validate_review
 
@@ -131,6 +131,10 @@ def review_sentence(backend, sentence, level="A2", *, temperature=0.0, max_retri
         raw = backend.generate(messages, max_new_tokens=max_new_tokens, temperature=temperature)
         payload, problems = validate_review(extract_json(raw), sentence)
         if payload:
+            if payload.has_error and _verified_correct(backend, sentence, max_new_tokens):
+                # A separate yes/no check says the original was already fine: keep it unchanged.
+                return SentenceReview(original=sentence, corrected=sentence, english=payload.english,
+                                      guard="verified_correct")
             return SentenceReview(original=sentence, has_error=payload.has_error,
                                   corrected=payload.corrected, category=payload.category,
                                   explanation=payload.explanation, english=payload.english,
@@ -141,6 +145,18 @@ def review_sentence(backend, sentence, level="A2", *, temperature=0.0, max_retri
              + ". Answer again with only the JSON object."},
         ]
     return SentenceReview(original=sentence, corrected=sentence, valid=False, problems=problems)
+
+
+def _verified_correct(backend, sentence, max_new_tokens=60):
+    """True only if the model clearly answers that the original sentence is already correct.
+
+    Any unclear or invalid answer keeps the checker's original decision.
+    """
+    raw = backend.generate([{"role": "system", "content": build_verify_prompt()},
+                            {"role": "user", "content": sentence}],
+                           max_new_tokens=min(max_new_tokens, 60), temperature=0.0)
+    obj = extract_json(raw)
+    return isinstance(obj, dict) and obj.get("correct") is True
 
 
 def _stats_text(reviews):
