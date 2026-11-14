@@ -1,0 +1,5 @@
+# torch is preinstalled on Google Colab; install it yourself elsewhere.
+transformers>=4.45
+accelerate
+gradio>=4.44
+pypinyin
