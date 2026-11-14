@@ -25,7 +25,7 @@ const reviewed = recs.filter(r => r.reviewed_by.trim()).length;
 const table = list => ["| ID | Split | Learner says | Right answer(s) | Type | Meaning | Why |", "|---|---|---|---|---|---|---|",
   ...list.map(r => `| ${r.id} | ${r.split} | ${r.learner} | ${r.correct.split("|").map(esc).join(" / ")} | ${r.category} | ${esc(r.intended_meaning)} | ${esc(r.explanation)} |`)].join("\n");
 const VERSIONS_PATH = require("path").join(require("path").dirname(csvPath), "..", "results", "VERSIONS.md");
-const versions = fs.existsSync(VERSIONS_PATH) ? fs.readFileSync(VERSIONS_PATH, "utf8").replace(/^# Version historys*/, "") : "No results yet.";
+const versions = fs.existsSync(VERSIONS_PATH) ? fs.readFileSync(VERSIONS_PATH, "utf8").replace(/^# Version history\s*/, "") : "No results yet.";
 const md = `# Convo AI: test data
 
 **Recorded by Ethan**
@@ -61,7 +61,7 @@ Version-by-version scores on the tune split are in [\`results/VERSIONS.md\`](res
 
 ## Results by version
 
-(Copied from [`results/VERSIONS.md`](results/VERSIONS.md).)
+(Copied from [\`results/VERSIONS.md\`](results/VERSIONS.md).)
 
 ${versions}
 
