@@ -29,3 +29,7 @@ Targets we set: correction accuracy at least 85%, false-correction rate at most 
 **Caveat:** the tune split is tiny (10 sentences), so one sentence changes a score by 10 to 33 percentage points. Treat differences between versions with caution.
 
 **Next changes (one per version):** (a) a stronger "don't change correct sentences" rule; (b) require English explanations; (c) a short list of common beginner mistakes.
+
+## Answer-key changes
+
+- **After v1 (2026-11-14):** added 你们有茶吗？ as a second right answer for 你们有没有茶吗？ (tune sentence 04). It is correct Chinese that v1 produced but our key didn't accept. This changes the answer key, not the model. Under the new key, v1's "corrections matching" would be 5/7 instead of 4/7; we left the v1 row as originally recorded.

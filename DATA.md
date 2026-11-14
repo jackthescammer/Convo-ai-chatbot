@@ -65,6 +65,10 @@ Targets we set: correction accuracy at least 85%, false-correction rate at most 
 
 **Next changes (one per version):** (a) a stronger "don't change correct sentences" rule; (b) require English explanations; (c) a short list of common beginner mistakes.
 
+## Answer-key changes
+
+- **After v1 (2026-11-14):** added 你们有茶吗？ as a second right answer for 你们有没有茶吗？ (tune sentence 04). It is correct Chinese that v1 produced but our key didn't accept. This changes the answer key, not the model. Under the new key, v1's "corrections matching" would be 5/7 instead of 4/7; we left the v1 row as originally recorded.
+
 
 ## Sentences with a mistake (28)
 
@@ -73,7 +77,7 @@ Targets we set: correction accuracy at least 85%, false-correction rate at most 
 | 01 | tune | 我要一杯面包。 | 我要一个面包。 / 我要一块面包。 | measure_word | I'd like a piece of bread. | Bread is counted with 个 or 块 (piece), not 杯 (cup), which is for drinks. |
 | 02 | test | 我是很饿。 | 我很饿。 | extra_word | I'm very hungry. | With an adjective like 饿, you don't need 是: say 我很饿. |
 | 03 | test | 我想喝咖啡热。 | 我想喝热咖啡。 | word_order | I'd like a hot coffee. | The adjective goes before the noun: 热咖啡. |
-| 04 | tune | 你们有没有茶吗？ | 你们有没有茶？ | question_structure | Do you have tea? | A 有没有 question already asks yes/no, so 吗 is not added. |
+| 04 | tune | 你们有没有茶吗？ | 你们有没有茶？ / 你们有茶吗？ | question_structure | Do you have tea? | A 有没有 question already asks yes/no, so 吗 is not added. |
 | 05 | test | 我昨天不喝咖啡。 | 我昨天没喝咖啡。 | negation | I didn't drink coffee yesterday. | Use 没 to negate something that did not happen in the past. |
 | 06 | test | 我要两杯水和一杯蛋糕。 | 我要两杯水和一块蛋糕。 / 我要两杯水和一个蛋糕。 / 我要两杯水和一份蛋糕。 | measure_word | I'd like two glasses of water and a piece of cake. | Cake is counted with 块 (piece), not 杯 (cup). |
 | 07 | test | 这个咖啡多少钱吗？ | 这个咖啡多少钱？ | question_structure | How much is this coffee? | 多少钱 is already a question word, so 吗 is not added. |
