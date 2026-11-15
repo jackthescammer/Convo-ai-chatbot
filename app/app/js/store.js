@@ -60,6 +60,7 @@ export function clearAll() {
   try {
     localStorage.removeItem(SETTINGS_KEY);
     localStorage.removeItem(REPORTS_KEY);
+    localStorage.removeItem('convo-app-wallet'); // coins and wardrobe (wallet.js)
   } catch { /* ignore */ }
   listeners.forEach((fn) => fn(getSettings()));
 }

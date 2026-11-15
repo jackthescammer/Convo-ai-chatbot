@@ -2,6 +2,8 @@ import { esc, layered, bindLayerToggles, layerChips } from './ui.js';
 import { mountMascots, formatDate } from './kit.js';
 import { getReport, DIFFICULTY_LABEL } from './store.js';
 import { resetSession } from './talk.js';
+import { rewardFor, wasAwarded, MIN_MESSAGES } from './wallet.js';
+import { COIN } from './shop.js';
 
 const CJK = /[㐀-鿿]/;
 
@@ -36,6 +38,17 @@ function transcript(lines) {
   </details>`;
 }
 
+function coinNote(r) {
+  const pay = rewardFor(r);
+  if (pay.total && wasAwarded(r.id)) {
+    const parts = [`${pay.base} for finishing`];
+    if (pay.goals) parts.push(`${pay.goals} for ${pay.done} goal${pay.done === 1 ? '' : 's'}`);
+    return `<p class="coin-note">${COIN}<span><strong>+${pay.total} coins</strong> <span class="coin-note-sub">${esc(parts.join(' + '))}.</span> <a class="text-link" href="#/shop">Spend them</a></span></p>`;
+  }
+  if (!pay.total) return `<p class="coin-note is-none">${COIN}<span>No coins this time. Say at least ${MIN_MESSAGES} things in a conversation to earn them.</span></p>`;
+  return '';
+}
+
 export function render(root, { arg }) {
   const r = getReport(arg);
   if (!r) {
@@ -63,6 +76,7 @@ export function render(root, { arg }) {
           ${(r.goals || []).length ? `<div><dt>Goals</dt><dd>${goalsDone} of ${r.goals.length} reached</dd></div>` : ''}
           ${r.assessment.map((a) => `<div><dt>${esc(a.label)}</dt><dd>${esc(a.value)}</dd></div>`).join('')}
         </dl>
+        ${coinNote(r)}
         <div class="report-actions">
           <a class="btn btn-primary" href="#/talk" data-again>Practise again</a>
           <a class="text-link" href="#/home">Back to conversations</a>

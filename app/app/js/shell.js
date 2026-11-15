@@ -1,7 +1,7 @@
 /* The app after setup: dashboard, conversation, reports and settings.
    Setup (onboarding) is a separate page, app/index.html, which hands off to this one.
 
-   Routes: #/home  #/talk[/scenario]  #/reports  #/progress  #/report/:id  #/settings[/section] */
+   Routes: #/home  #/talk[/scenario]  #/reports  #/progress  #/report/:id  #/shop  #/settings[/section] */
 
 import { applyLayers, poke } from './ui.js';
 import { mountMascots, APP_ICONS } from './kit.js';
@@ -13,6 +13,8 @@ import * as progress from './progress.js';
 import * as talk from './talk.js';
 import * as report from './report.js';
 import * as settings from './settings.js';
+import * as shop from './shop.js';
+import { getWallet, onWallet } from './wallet.js';
 
 const ROUTES = {
   home: { render: (root) => dashboard.render(root), title: 'Home', nav: 'home' },
@@ -20,6 +22,7 @@ const ROUTES = {
   reports: { render: (root) => reportList.render(root), title: 'Your reports', nav: 'reports' },
   progress: { render: (root) => progress.render(root), title: 'Your progress', nav: 'progress' },
   report: { render: (root, arg) => report.render(root, { arg }), title: 'Your report', nav: 'reports' },
+  shop: { render: (root) => shop.render(root), title: 'Shop', nav: 'shop' },
   settings: { render: (root, arg) => settings.render(root, { arg }), title: 'Settings', nav: 'settings' },
 };
 
@@ -64,6 +67,11 @@ document.querySelectorAll('.brand').forEach((b) => {
   b.addEventListener('pointerenter', () => poke(chromeMascots.get(`[data-brand="${b.dataset.brandFor}"]`), 'wave'));
 });
 onSettings(syncChrome);
+
+/* Coin balance in the sidebar and top bar. */
+const paintCoins = () => document.querySelectorAll('[data-coins]').forEach((n) => { n.textContent = getWallet().coins; });
+paintCoins();
+onWallet(paintCoins);
 
 /* ---------- Start ---------- */
 applyPrefs();

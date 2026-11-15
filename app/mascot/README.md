@@ -106,3 +106,9 @@ Suggested mapping for a conversation turn: `listening` while the learner types o
 - `peeking` and `peekaboo` draw a wall and a ledge. Match them to the page with the CSS variables
   `--convo-mascot-surface`, `--convo-mascot-surface-edge`, `--convo-mascot-wall`, `--convo-mascot-wall-edge`.
 - The mascot is drawn in code from the sheet, not traced from it: proportions and shading are close, not identical.
+
+## Cosmetics
+
+`cosmetics.js` holds the hats, glasses and neckwear (plain SVG in the mascot's own coordinates). Pass
+`cosmetics: { hat, glasses, neck }` (item ids) to `createConvoMascot`, or call `handle.setCosmetics(...)`
+later. Glasses sit on the face group, so they follow its turn and tilt; hats and neckwear sit on the body.

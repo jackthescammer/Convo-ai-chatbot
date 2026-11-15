@@ -5,6 +5,7 @@ import { mountMascots } from './kit.js';
 import { getPrefs, savePrefs } from './prefs.js';
 import { model, MODEL_INFO, SCENARIOS, scenarioById, validateTurn, validateReport } from './model.js';
 import { getSettings, addReport } from './store.js';
+import { awardReport } from './wallet.js';
 import { voiceSupported, createDictation } from './speech.js';
 
 const CJK = /[㐀-鿿]/;
@@ -171,6 +172,7 @@ async function writeReport(s) {
     ...r,
   };
   addReport(report);
+  awardReport(report); // coins for a finished conversation, once per report
   s.reportId = report.id;
   return report.id;
 }

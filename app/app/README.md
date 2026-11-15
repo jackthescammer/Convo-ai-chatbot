@@ -133,3 +133,12 @@ It uses the speech recognition built into the browser (Web Speech API, `zh-CN`),
 - It's not Whisper, which CLAUDE.md names for Phase 2. Whisper needs a server: it could run next to the model on Colab, with a recorder in the browser. Any engine that keeps `createDictation`'s shape in `js/speech.js` can replace this one.
 - On Windows, the OS's own voice typing (Win + H) also works in the reply box, like any text field: switch the Windows keyboard to Chinese (Win + Space) first, or it types pinyin as English words. The composer shows this tip under the box on Windows. It's independent of the mic button and works in every browser, Firefox included.
 - Transcription isn't pronunciation assessment. The recogniser guesses the most likely words, so a wrong tone can come out as the right character.
+
+## Coins and the shop
+
+`js/wallet.js` keeps coins, owned items and what the mascot wears in this browser's localStorage
+(`convo-app-wallet`; "Clear my data" in settings empties it). A finished conversation pays once per
+report: 10 coins if you said at least 3 things, plus 5 per goal reached. `js/shop.js` is the `#/shop`
+page: try items on the mascot, buy them, wear or take them off. Prices are in `wallet.js`; the items
+themselves are in `mascot/cosmetics.js`. Every mascot in the app wears what you've equipped. Coins are
+not synced anywhere, so they're per browser and can be cleared by the browser.

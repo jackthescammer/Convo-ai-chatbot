@@ -63,6 +63,8 @@ export interface MascotOptions {
   ariaLabel?: string;
   /** Colour overrides. Read once: create the mascot again to change them. */
   character?: Partial<MascotCharacter>;
+  /** Items worn, by slot: hat, glasses, neck (ids from cosmetics.js). Missing or unknown means none. */
+  cosmetics?: { hat?: string | null; glasses?: string | null; neck?: string | null } | null;
   /** Receives the new state name. */
   onStateChange?: ((state: MascotState) => void) | null;
 }
@@ -73,6 +75,8 @@ export interface MascotHandle {
   update(options: Omit<MascotOptions, 'seed' | 'character'>): void;
   setState(state: MascotState): void;
   setFace(face: MascotFace | null): void;
+  /** Changes what the mascot wears. */
+  setCosmetics(cosmetics: MascotOptions['cosmetics']): void;
   lookAt(point: readonly [number, number] | null): void;
   /** Lays a gesture over what plays, `turns` times in a row. */
   poke(gesture: MascotGesture, turns?: number): void;

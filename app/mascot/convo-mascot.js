@@ -13,6 +13,7 @@
  *   'loop' — everything, including the idle hop and the bobs. Off-brand for the product.
  * No dependencies. Works in any browser, and in React through ConvoMascot.tsx.
  */
+import { SLOTS, cosmeticSvg } from './cosmetics.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const TAU = Math.PI * 2;
@@ -908,14 +909,17 @@ function markup(id, c, props) {
         </g>
         <path data-k="mSmile" d="M-5.5 -68 Q0 -63 5.5 -68" fill="none" stroke="${c.eye}" stroke-width="2.6" stroke-linecap="round"/>
         <path data-k="mFrown" d="M-5 -64 Q0 -68.5 5 -64" fill="none" stroke="${c.eye}" stroke-width="2.6" stroke-linecap="round"/>
+        <g data-k="cosglasses"></g>
         ${layer('face')}
       </g>
     </g>
+    <g data-k="cosneck"></g>
     <g clip-path="${u('clip')}" opacity=".24">
       <rect data-k="shL" x="-8.5" y="-6" width="21" height="36" rx="10.5" fill="${c.bodyShade}"/>
       <rect data-k="shR" x="-8.5" y="-6" width="21" height="36" rx="10.5" fill="${c.bodyShade}"/>
     </g>
   </g>
+  <g data-k="coshat"></g>
   <g data-k="mid">${layer('mid')}</g>
   <g data-k="armsS">
     <g data-k="armL"><rect x="-10.5" y="-8" width="21" height="36" rx="10.5" fill="${u('limb')}"/></g>
@@ -1328,6 +1332,16 @@ export function createConvoMascot(target, options = {}) {
       listenPointer(o.followPointer);
       changed = true;
     }
+    if ('cosmetics' in next) {
+      const worn = next.cosmetics || {};
+      for (const slot of SLOTS) {
+        const key = worn[slot] || '';
+        if (k[`cos${slot}`] && k[`cos${slot}`]._w !== key) {
+          k[`cos${slot}`]._w = key;
+          k[`cos${slot}`].innerHTML = cosmeticSvg(slot, key);
+        }
+      }
+    }
     if ('freezeAt' in next && next.freezeAt != null) stateStart = clock - next.freezeAt;
     svg.style.filter = o.muted ? 'grayscale(1)' : '';
     svg.setAttribute('aria-label', o.ariaLabel);
@@ -1350,6 +1364,7 @@ export function createConvoMascot(target, options = {}) {
     update,
     setState: (name) => update({ state: name }),
     setFace: (face) => update({ face }),
+    setCosmetics: (cosmetics) => update({ cosmetics }),
     lookAt: (point) => update({ lookAt: point }),
     poke(name, turns = 1) {
       if (!GESTURES[name] || still()) return;

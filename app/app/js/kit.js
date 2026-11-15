@@ -4,6 +4,7 @@
 import { createConvoMascot } from '../../mascot/convo-mascot.js';
 import { esc } from './ui.js';
 import { getPrefs } from './prefs.js';
+import { equippedNow, onWallet } from './wallet.js';
 
 /* ---------- Mascots: like ui.js's, plus the "calm mascot" preference ---------- */
 export function mountMascots(root) {
@@ -19,15 +20,21 @@ export function mountMascots(root) {
         state: slot.dataset.mascot || 'idle',
         size: size.endsWith('%') ? size : Number(size) || 120,
         motion: calm ? 'still' : 'expressive',
+        // Slots that show a chosen look themselves (the shop's preview) opt out with data-own-look.
+        cosmetics: 'ownLook' in slot.dataset ? null : equippedNow(),
       });
       made.push([slot, handle]);
     } catch (err) {
       console.warn('Convo mascot could not render:', err);
     }
   });
+  // Buying or equipping anywhere updates every mascot on screen.
+  const off = onWallet(() => made.forEach(([slot, m]) => {
+    if (!('ownLook' in slot.dataset)) m.setCosmetics(equippedNow());
+  }));
   return {
     get: (selector) => made.find(([slot]) => slot.matches(selector))?.[1],
-    destroy: () => made.forEach(([, m]) => m.destroy()),
+    destroy: () => { off(); made.forEach(([, m]) => m.destroy()); },
   };
 }
 
@@ -64,6 +71,7 @@ export const APP_ICONS = {
   reports: svg('<path d="M7 4h10a1 1 0 0 1 1 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 0 1 1-1z"/><path d="M9.5 9h5M9.5 12.5h5"/>'),
   progress: svg('<path d="M4 19.5h16"/><path d="M7 16v-4M12 16V7M17 16v-6.5"/>'),
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2L5.5 5.5"/>'),
+  shop: svg('<path d="M5.5 8.5h13l-1 11h-11z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>'),
   chat: svg('<path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M8.5 10.5h7"/>'),
   download: svg('<path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/>'),
   trash: svg('<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5M14 11v5"/>'),
