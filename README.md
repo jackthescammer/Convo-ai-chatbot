@@ -1,6 +1,6 @@
 # Convo AI: a Mandarin conversation partner for beginners
 
-**Track:** AI + Languages · **Team:** Nelson, Ethan and Ferrell
+**Track:** AI + Languages · **Team:** Nelson Wang, Ferrell Dong, Ethan Cao
 **Try it:** [tryconvo.vercel.app](https://tryconvo.vercel.app) (live chat works while our model is running) · **Demo video:** TODO
 **Version:** prompts v12. The mistake checker was scored at v6; v7 to v12 added features without changing it.
 
