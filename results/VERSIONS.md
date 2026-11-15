@@ -119,3 +119,7 @@ Raw files: `20261114-120403_…_v6_tune.json`, `20261114-120513_…_v6_na.json`.
 2026-11-15. New turn check (`convo/turn_check.py`): in the live app, each learner message is compared with the character's last line and sorted into answer / no answer / off-topic / not appropriate by a short extra model call. If it isn't an answer, the character gets a hidden one-off note for that reply (ask again and don't assume, or steer back politely), and the live feedback card warns the learner. Example that prompted it: the barista asked what the customer wanted, the learner only said "Ni hao", and the barista replied "hot or iced?" as if a drink had been ordered.
 
 The check is off by default in `Conversation`, so the scored evaluation runs exactly as before; the café system prompts and the checker are unchanged (golden test). Unclear model answers count as "answer", so a shaky check doesn't interrupt normal conversations. Not yet measured: how often it misjudges a real answer.
+
+## v11 notes (live app only, not evaluated)
+
+2026-11-15. Turn check: the steer-back instruction now goes into the character's system prompt for that one reply (in v10 it was a note at the end of the learner's message, and the barista still followed an off-topic message twice: 那你平时喜欢做什么呢？ and 足球听起来很有趣，您喜欢哪个队？). It is also firmer: don't talk about the new topic, ask the last question again. No surprise is added on a steer-back turn. Café prompts and the checker are unchanged.
