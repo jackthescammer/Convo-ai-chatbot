@@ -4,7 +4,7 @@
 **Team:** Nelson, Ethan and Ferrell
 **Try it:** [tryconvo.vercel.app](https://tryconvo.vercel.app) (the live chat works while our model is running)
 
-> **Main takeaway:** a free, small AI model (Qwen 2.5 3B) can coach beginner café Chinese. Our best version caught 7/7 beginner mistakes and fixed 6/7 correctly, compared with 0 for a baseline that never corrects. Showing the model examples worked far better than giving it rules.
+> **Main takeaway:** a free, small AI model (Qwen 2.5 3B) can start to coach beginner café Chinese, but it isn't reliable yet. On 32 sentences it had never seen, our best version fixed 7/21 mistakes correctly (first version: 3/21) and wrongly changed 2/11 correct sentences (first version: 6/11); a baseline that never corrects fixes 0. Showing the model examples worked far better than giving it rules.
 
 ## The problem
 Many immigrants learn Chinese vocabulary and grammar but freeze in real conversations, like ordering at a café. Apps built on memorisation and scripted dialogues don't give them practice at responding to a real person. An example stakeholder would be an A2 learner who just moved to a Chinese-speaking city.
@@ -43,7 +43,15 @@ We changed one thing per version (full details: [VERSIONS.md](results/VERSIONS.m
 
 A written rule (v2) changed nothing. Examples stopped the over-correcting (v3) but made the model too cautious, and examples of real mistakes (v4) brought the over-correcting back. Splitting "is it wrong?" from "how do I fix it?" worked once the model compared the original and the fix side by side (v6). The waiter stayed in character in 30/30 turns and remembered the order in 6/6 chats in every version.
 
-**Final score (32 unseen sentences):** TODO, v6 vs baseline. The test sentences were also run once early by mistake with v1 (19/21 caught, 3/21 fixed correctly, 6/11 wrongly "fixed"); we never used those results to choose a change.
+**Final score (32 unseen sentences: 21 with a mistake, 11 correct):**
+
+| Test sentences | Mistakes caught | Fixed correctly | Correct sentences wrongly "fixed" |
+|---|---|---|---|
+| Baseline (never corrects) | 0/21 | 0/21 | 0/11 |
+| v1 (run once early, by mistake) | 19/21 | 3/21 (14%) | 6/11 (55%) |
+| **v6 (final)** | **15/21** | **7/21 (33%)** | **2/11 (18%)** |
+
+v6 is much more careful than v1: it fixes more than twice as many mistakes correctly and over-corrects far less, but it lets more mistakes through. The scores are much lower than on the 10 tune sentences, so our improvements only partly carried over to new sentences. It did best on measure words (3/3 fixed) and worst on question structure, negation and missing particles (0 fixed). We never used test results to choose a change. Breakdown by mistake type: [DATA.md](DATA.md#data-analysis).
 
 **Real examples (v6):**
 
@@ -54,7 +62,14 @@ A written rule (v2) changed nothing. Examples stopped the over-correcting (v3) b
 | 我喝咖啡在家。 | 我要喝咖啡在家。 | 我在家喝咖啡。 | ❌ never moves 在家 before the verb |
 | 我要买单。 (already correct) | 我要付钱。 | (no change) | ❌ rewrites a correct sentence |
 
-**Where it fails:** word-order mistakes, rewriting some correct sentences, and explanations: only about half come out in English, which an A2 learner needs. TODO: who checked Convo's corrections by hand, and what a real learner said after trying it.
+**Where it fails (v6, unseen sentences):**
+- 我昨天不喝咖啡 (should be 没喝) → left unchanged. 5 of the 6 mistakes it missed were spotted by the first check, then wrongly undone by the side-by-side second check.
+- 这是我朋友咖啡 → "fixed" to 这是我的朋友的咖啡 instead of 这是我朋友的咖啡.
+- 我不会说中文很好 → switched to traditional characters (我不會說中文很好), mistake still there.
+- 谢谢，咖啡来得很快 (already correct) → changed to 谢谢，咖啡快来了, which changes the meaning.
+- Explanations: 10 of the 17 flagged sentences got an English explanation; the rest were in Chinese, which an A2 learner can't use.
+
+TODO: who checked Convo's corrections by hand, and what a real learner said after trying it.
 
 ## Limitations
 - Small quiz (10 tune, 32 test), so one sentence moves a score a lot.
@@ -62,7 +77,7 @@ A written rule (v2) changed nothing. Examples stopped the over-correcting (v3) b
 - The live chat link only works while our model is running in Colab.
 
 ## What we'd do next
-1. Force English explanations.
+1. Make the second check less eager to undo real corrections, then force English explanations.
 2. Voice input with Whisper (in progress on the `phase2-whisper` branch), tested per speaker.
 3. More scenarios, then testing with real learners.
 

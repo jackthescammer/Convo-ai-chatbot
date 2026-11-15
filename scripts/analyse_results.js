@@ -142,9 +142,11 @@ L.push("English explanations only appeared once the prompt included worked examp
 L.push("");
 
 // 5. early test-split run
+const testScores = {};
 for (const v of Object.keys(test).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)))) {
   const d = test[v].data, s = score(d.rows), early = v === "v1";
-  L.push(early ? `### 5. Early test-split run (${v}, 32 unseen sentences)` : `### 5. FINAL test-split run (${v}, 32 unseen sentences)`);
+  testScores[v] = s;
+  L.push(early ? `### 5a. Early test-split run (${v}, 32 unseen sentences)` : `### 5b. FINAL test-split run (${v}, 32 unseen sentences)`);
   L.push("");
   L.push(early ? `This was run once by accident with ${v} (see "Test-split runs"). It was not used to choose any change, but it shows how ${v} behaved on sentences it had never seen.` : `The final score: ${v} run once on sentences it never saw while we improved the prompt. No prompt or code was changed after this run.`);
   L.push("");
@@ -163,6 +165,14 @@ for (const v of Object.keys(test).sort((a, b) => parseInt(a.slice(1)) - parseInt
   L.push("|---|---|---|---|");
   for (const [c, x] of Object.entries(cats).sort((a, b) => b[1].n - a[1].n)) L.push(`| ${c} | ${x.n} | ${x.caught} | ${x.right} |`);
   L.push("");
+  if (!early && testScores.v1) {
+    const a = testScores.v1;
+    L.push(`**Compared with v1 on the same 32 sentences:** fixed correctly ${frac(a.matching, a.nm)} → ${frac(s.matching, s.nm)}, correct sentences wrongly "fixed" ${frac(a.falseFix, a.nok)} → ${frac(s.falseFix, s.nok)}, mistakes caught ${frac(a.caught, a.nm)} → ${frac(s.caught, s.nm)}. ${s.name || v} is more careful: it fixes more mistakes correctly and over-corrects far less, but it lets more mistakes through. On unseen sentences the scores are much lower than on the 10 tune sentences, so the tune gains carried over only partly.`);
+    const reverted = s.rows.filter(r => r.has_mistake && !r.flagged && r.guard === "verified_correct").length;
+    const missed = s.rows.filter(r => r.has_mistake && !r.flagged).length;
+    if (missed) L.push("", `**Why mistakes were missed:** ${reverted} of the ${missed} missed mistakes were caught by the first check, then wrongly undone by the side-by-side second check. That second check is the main thing to improve next.`);
+    L.push("");
+  }
   if (early) L.push(`${v} noticed almost every mistake but fixed very few correctly, the same "catching vs fixing" gap as on the tune sentences, only bigger. This is why later versions focused on the quality of the fix and on not over-correcting. The final test run will show how much of the tune-split improvement carries over to unseen sentences.`);
   L.push("");
 }

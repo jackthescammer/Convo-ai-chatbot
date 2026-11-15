@@ -135,6 +135,8 @@ Raw files: `20261114-120403_…_v6_tune.json`, `20261114-120513_…_v6_na.json`.
 
 - **2026-11-14, v1 on the test split** (file `20261114-105738_…_v1_test.json`): the test split was run once during the first Colab run, before we had settled our rule of only running it at the end. Result: 19/21 mistakes flagged, 3/21 corrections matching (14%), 6/11 false corrections. We are not using these test results to choose prompt changes (all changes are based on the tune split only). The final test run will be reported alongside this one.
 
+- **2026-11-14, v6 on the test split (final benchmark)** (file `20261114-131827_…_v6_test.json`, console log `20261114-131827_console_v6_test.txt`): run once with v6 unchanged. Result: 15/21 mistakes caught, 7/21 corrections matching (33%), 2/11 false corrections (18%), 32/32 valid. Compared with v1 on the same 32 sentences: matching 3/21 → 7/21, false corrections 6/11 → 2/11, caught 19/21 → 15/21. 5 of the 6 missed mistakes were flagged by the first check and then undone by the side-by-side second check. Targets (85% matching, at most 10% false corrections) not met. Rows for a Chinese speaker to mark: `20261114-131827_human_review_test_v6.csv`. These results are not used to choose any change; if the checker changes again, the test split is run again at the end and every run is reported.
+
 
 ## Data analysis
 
@@ -210,7 +212,7 @@ We ask for explanations in English, because an A2 learner can't read a Chinese g
 
 English explanations only appeared once the prompt included worked examples written in English (v4). This is still our weakest area.
 
-### 5. Early test-split run (v1, 32 unseen sentences)
+### 5a. Early test-split run (v1, 32 unseen sentences)
 
 This was run once by accident with v1 (see "Test-split runs"). It was not used to choose any change, but it shows how v1 behaved on sentences it had never seen.
 
@@ -232,6 +234,32 @@ This was run once by accident with v1 (see "Test-split runs"). It was not used t
 | unnatural | 1 | 1 | 0 |
 
 v1 noticed almost every mistake but fixed very few correctly, the same "catching vs fixing" gap as on the tune sentences, only bigger. This is why later versions focused on the quality of the fix and on not over-correcting. The final test run will show how much of the tune-split improvement carries over to unseen sentences.
+
+### 5b. FINAL test-split run (v6, 32 unseen sentences)
+
+The final score: v6 run once on sentences it never saw while we improved the prompt. No prompt or code was changed after this run.
+
+| | Baseline | v6 |
+|---|---|---|
+| Mistakes caught | 0/21 | 15/21 (71%) |
+| Corrections matching our answer | 0/21 | 7/21 (33%) |
+| Correct sentences wrongly "fixed" | 0/11 | 2/11 (18%) |
+
+| Mistake type | Sentences | Caught | Fixed right |
+|---|---|---|---|
+| word_order | 6 | 5 | 2 |
+| extra_word | 4 | 3 | 2 |
+| measure_word | 3 | 3 | 3 |
+| question_structure | 3 | 1 | 0 |
+| missing_particle | 2 | 1 | 0 |
+| negation | 1 | 0 | 0 |
+| other | 1 | 1 | 0 |
+| unnatural | 1 | 1 | 0 |
+
+**Compared with v1 on the same 32 sentences:** fixed correctly 3/21 → 7/21, correct sentences wrongly "fixed" 6/11 → 2/11, mistakes caught 19/21 → 15/21. v6 is more careful: it fixes more mistakes correctly and over-corrects far less, but it lets more mistakes through. On unseen sentences the scores are much lower than on the 10 tune sentences, so the tune gains carried over only partly.
+
+**Why mistakes were missed:** 5 of the 6 missed mistakes were caught by the first check, then wrongly undone by the side-by-side second check. That second check is the main thing to improve next.
+
 
 ### 6. Reliability checks
 
