@@ -124,7 +124,7 @@ export const SCENARIOS = [
     goals: GOALS,
   },
   {
-    id: 'shop', title: 'Buying things at a shop', word: '购物', role: 'the shop assistant',
+    id: 'shop', title: 'Buying things at a shop', word: '购物', role: 'the shop assistant', image: 'img/scenes/shop.webp',
     blurb: 'Find what you need, ask the price and pay.',
     context: "You've walked into a small neighbourhood shop. Convo works there and speaks first.",
     goals: [
