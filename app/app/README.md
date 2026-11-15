@@ -43,7 +43,7 @@ Sidebar on desktop (icon-only on mid-size screens and during a conversation); to
 
 | Route | File | What it is |
 | ----- | ---- | ---------- |
-| `#/home` | `js/dashboard.js` | Greeting, the conversation in progress (resume) or the one started last, the other conversations ("More conversations"), this week against your weekly goal and streak, latest report, patterns that keep coming up, practice totals, your setup with a display preview. Everything is worked out from reports on this device (`js/stats.js`); nothing is estimated. |
+| `#/home` | `js/dashboard.js` | Greeting, the conversation in progress (resume) or the one started last, "Pick your conversation" (a dialog listing every conversation; picking one starts it), this week against your weekly goal and streak, latest report, patterns that keep coming up, practice totals, your setup with a display preview. Everything is worked out from reports on this device (`js/stats.js`); nothing is estimated. |
 | `#/talk[/scenario]` | `js/talk.js` | The conversation: chat, Convo in the scenario's role, and (when the model provides them) "Help me reply" phrases, goals and notes saved for the report. `#/talk/shop` (or `cafe`, `restaurant`, `interview`, `chat`) opens that conversation; plain `#/talk` resumes the one in progress or starts the last one. Leaving and coming back resumes it; starting a different one ends it without a report. |
 | `#/voice[/scenario]` | `js/voice.js` (+ `talk.js`) | The same conversation by voice messages, hands-free (see "Voice conversation" below). **Type / Speak** in the conversation bar switches between the two without losing the conversation, and `#/talk` links open the way you answered last. |
 | `#/reports` | `js/history.js` | Every report on this device. |

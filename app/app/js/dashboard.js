@@ -7,6 +7,8 @@ import { thisWeek, streak, totals, patterns } from './stats.js';
 import { hasActiveSession, sessionProgress, resetSession, currentScenario } from './talk.js';
 
 const ARROW = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const GRID = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.75"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.75"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.75"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.75"/></svg>';
+const CLOSE = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
 
 /* A sample of how the barista talks, for the display preview. Interface copy, not model output. */
 const SAMPLE = { zh: '你好，想喝点什么？', py: 'Nǐ hǎo, xiǎng hē diǎn shénme?', en: 'Hi, what can I get you?' };
@@ -32,6 +34,7 @@ function continueCard(s, sc, resume, progress) {
       </ol>
       <div class="continue-actions">
         <a class="btn btn-primary" href="${resume ? '#/talk' : `#/talk/${esc(sc.id)}`}">${resume ? 'Resume conversation' : 'Start conversation'}</a>
+        <button type="button" class="btn-quiet continue-pick" data-pick-open aria-haspopup="dialog">${GRID}Pick your conversation</button>
         ${resume ? '<button type="button" class="text-link link-btn" data-start-over>Start over</button>' : ''}
         <span class="continue-meta">
           <a class="meta-pill" href="#/settings/learning" aria-label="Level ${esc(s.level)}, change in settings">${esc(s.level)}</a>
@@ -43,28 +46,55 @@ function continueCard(s, sc, resume, progress) {
   </article>`;
 }
 
-/* The other conversations. Each link starts that one (#/talk/<id>). */
-function scenesCard(current, resume) {
-  const others = SCENARIOS.filter((x) => x.id !== current.id);
+/* "Pick your conversation": every conversation in a modal dialog. Scenes with a picture show as
+   cards; one without (the open conversation) runs full width under them. Picking one starts it. */
+function pickerDialog(s, current, resume) {
   return `
-  <section class="panel" aria-labelledby="scenes-title">
-    <h2 class="panel-title" id="scenes-title">More conversations</h2>
-    <ul class="scenes">
-      ${others.map((x) => `<li>
-        <a class="scene" href="#/talk/${esc(x.id)}">
-          ${x.image
-            ? `<img class="scene-thumb" src="${esc(x.image)}" alt="" width="160" height="160" loading="lazy" decoding="async">`
-            : `<span class="scene-word" lang="zh-Hans" aria-hidden="true">${esc(x.word)}</span>`}
-          <span class="scene-copy">
-            <span class="scene-title">${esc(x.title)}</span>
-            <span class="scene-blurb">${esc(x.blurb)}</span>
-          </span>
-          <span class="scene-go" aria-hidden="true">${ARROW}</span>
-        </a>
-      </li>`).join('')}
-    </ul>
-    ${resume ? '<p class="panel-foot">Starting one of these ends the conversation in progress, without a report.</p>' : ''}
-  </section>`;
+  <dialog class="picker" aria-labelledby="picker-title" aria-describedby="picker-lede" data-picker>
+    <header class="picker-head">
+      <div>
+        <h2 class="picker-title" id="picker-title">Pick your conversation</h2>
+        <p class="picker-lede" id="picker-lede">Convo plays the other person, at your level: ${esc(s.level)} · ${esc(DIFFICULTY_LABEL[s.difficulty])}.</p>
+      </div>
+      <button type="button" class="picker-close" data-pick-close aria-label="Close">${CLOSE}</button>
+    </header>
+    <div class="picker-body">
+      <ul class="picks">
+        ${SCENARIOS.map((x) => {
+          const here = x.id === current.id;
+          return `<li class="${x.image ? '' : 'is-wide'}">
+          <a class="pick${here ? ' is-current' : ''}" href="${here && resume ? '#/talk' : `#/talk/${esc(x.id)}`}" data-pick${here ? ' aria-current="true"' : ''}>
+            ${x.image
+              ? `<img class="pick-img" src="${esc(x.image)}" alt="" width="1600" height="900" loading="lazy" decoding="async">`
+              : `<span class="pick-word" lang="zh-Hans" aria-hidden="true">${esc(x.word)}</span>`}
+            <span class="pick-copy">
+              <span class="pick-title">${esc(x.title)}</span>
+              <span class="pick-blurb">${esc(x.blurb)}</span>
+            </span>
+            ${here ? `<span class="pick-badge">${resume ? 'In progress' : 'Up next'}</span>` : ''}
+          </a>
+        </li>`;
+        }).join('')}
+      </ul>
+      ${resume ? '<p class="picker-foot">Picking a different one ends the conversation in progress, without a report.</p>' : ''}
+    </div>
+  </dialog>`;
+}
+
+function bindPicker(root) {
+  const dialog = root.querySelector('[data-picker]');
+  const open = root.querySelector('[data-pick-open]');
+  if (!dialog || !open) return () => {};
+  // Browsers without showModal (older than 2022) still get the list, just not as a modal.
+  open.addEventListener('click', () => (dialog.showModal ? dialog.showModal() : dialog.setAttribute('open', '')));
+  root.querySelector('[data-pick-close]').addEventListener('click', () => dialog.close());
+  // A press that starts and ends on the backdrop closes it; a drag out of the panel doesn't.
+  let fromBackdrop = false;
+  dialog.addEventListener('pointerdown', (e) => { fromBackdrop = e.target === dialog; });
+  dialog.addEventListener('click', (e) => { if (fromBackdrop && e.target === dialog) dialog.close(); });
+  // Picking navigates to the conversation; close first so the page underneath scrolls again.
+  dialog.querySelectorAll('[data-pick]').forEach((a) => a.addEventListener('click', () => dialog.close()));
+  return () => { if (dialog.open) dialog.close(); };
 }
 
 function weekCard(goal) {
@@ -188,7 +218,6 @@ export function render(root) {
     <div class="dash-grid">
       <div class="dash-main">
         ${continueCard(s, sc, resume, progress)}
-        ${scenesCard(sc, resume)}
         ${lastReportCard(reports)}
         ${patternsCard(patterns(reports))}
       </div>
@@ -200,13 +229,15 @@ export function render(root) {
     </div>
 
     <p class="soon"><span class="soon-mascot" data-mascot="listening" data-size="40"></span>Coming next: spoken replies, so you hear Convo say every line out loud.</p>
+    ${pickerDialog(s, sc, resume)}
   </div>`;
 
   const mascots = mountMascots(root);
   const unbind = bindLayerToggles(root);
+  const unbindPicker = bindPicker(root);
   root.querySelector('[data-start-over]')?.addEventListener('click', () => {
     resetSession();
     location.hash = `#/talk/${sc.id}`;
   });
-  return () => { unbind(); mascots.destroy(); };
+  return () => { unbindPicker(); unbind(); mascots.destroy(); };
 }
