@@ -1,9 +1,11 @@
-# Upload only the public site: the landing page, the demo app and the mascot engine they import.
+# Upload only the public site: the landing page, the demo app, the mascot engine they import and the
+# voice function (api/tts.js).
 # Everything else (CLAUDE.md, DESIGN.md, PRODUCT.md, .claude, .impeccable) stays local.
 /*
 !/landing
 !/app
 !/mascot
+!/api
 !/vercel.json
 /landing/README.md
 /app/README.md

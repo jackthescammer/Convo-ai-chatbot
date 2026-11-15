@@ -112,7 +112,7 @@ Open the app with `?model=placeholder` (or type `placeholder` in Settings › Ab
 - Learner messages show as typed: no pinyin or English for them until the model provides it.
 - Reports, settings and preferences live in this browser only; private windows may not keep them.
 - "Delete reports" reloads the page, because `store.js` keeps reports in memory and has no delete call of its own.
-- Voice input uses the browser's speech recognition, not Whisper (see below). Convo's spoken replies use the browser's own Mandarin voice, not a dedicated TTS model.
+- Voice input uses the browser's speech recognition, not Whisper (see below). Convo's spoken replies use ElevenLabs (see "Spoken replies" below), and the browser's own Mandarin voice when that isn't available.
 - Only the café has been evaluated (prompts v6, `results/VERSIONS.md` in the team repo). The shop, restaurant, job interview and open conversation prompts are new and unscored: run `python -m convo.evaluation conversation --scenario <id>` on Colab and have someone review the transcripts before relying on them. The correction test set is café sentences only.
 - Setup (onboarding) still describes the café: its level check, goals preview and display preview use café lines.
 
@@ -150,7 +150,7 @@ Text is an optional layer. Each voice message has **Show text** (Convo's line in
 | Your words | `js/speech.js` | The browser's speech recognition (`zh-CN`), as for the mic button. |
 | When you've finished | `js/voice.js`, `js/voice-capture.js` | No voice from the mic and no new words for 1.5 s (Easy 1.9 s, Challenging 1.2 s). The noise floor adapts to the room. If the room stays loud, it sends 4 s after the words stop. Without a mic level, the words alone decide (1.8 s). |
 | Your voice message | `js/voice-capture.js` | The mic's audio, trimmed to your speech, kept as a 16 kHz WAV in memory for replay. It never leaves the device and is gone when the page closes. |
-| Convo's voice | `js/voice-tts.js` | The browser's speech synthesis with the best Mandarin voice on the device (Edge's natural voices, Chrome's Google voice, Safari's Tingting…). Slower on Easy (0.8×) and Standard (0.9×). |
+| Convo's voice | `js/voice-tts.js`, `api/tts.js` | ElevenLabs, female or male depending on the character (see "Spoken replies"). Without it, the browser's speech synthesis with the best Mandarin voice on the device (Edge's natural voices, Chrome's Google voice, Safari's Tingting…). Slower on Easy (0.8×) and Standard (0.9×). |
 
 - **The first tap.** Browsers only let a page speak and record after a tap. On a freshly loaded page the orb says "Tap the mic to start talking". Arriving from Speak or the app's own links usually needs no extra tap (Safari may still ask once).
 - **No Mandarin voice** (for example Windows without a Chinese voice): Convo's replies show as text, with a note. You still answer by speaking.
@@ -171,9 +171,10 @@ not synced anywhere, so they're per browser and can be cleared by the browser.
 
 ## Spoken replies (ElevenLabs)
 
-`app/api/tts.js` is a Vercel function that turns a reply into speech with ElevenLabs. The API key is
-never in the repo: set `ELEVENLABS_API_KEY` in the Vercel project (Settings, Environment Variables)
-and redeploy. Voices: Jenny speaks for the restaurant server and the open-chat friend, Jin for the
-café, shop and interview (see `SPEAKER` in `js/voice-tts.js`; voice ids are in `api/tts.js`). Replies have a
-Listen button in typed conversations, and the voice conversation speaks them. If the function or key is
-missing, or a request fails, the browser's own Mandarin voice is used instead.
+`app/api/tts.js` is a Vercel function that turns a reply into speech with ElevenLabs (`eleven_multilingual_v2`, forced to Mandarin with `language_code: zh`). The browser posts `{ text, voice }` to `/api/tts` and plays the MP3 it gets back. Replies have a Listen button in typed conversations, and the voice conversation speaks them.
+
+- **Key.** Never in the repo or the website's files. It's the `ELEVENLABS_API_KEY` environment variable of the Vercel project (set on 2026-11-15 for Production and Preview). To run the function locally, put it in `.env.local` (git-ignored) and use `vercel dev`. `python -m http.server` has no `/api`, so Convo uses the browser's voice there.
+- **Voices.** Two slots: `jenny` (female) speaks for the restaurant server and the open-chat friend, `jin` (male) for the café, shop and interview (`SPEAKER` in `js/voice-tts.js`). The team picked ElevenLabs' library voices Jenny and Jin, but ElevenLabs only lets paid plans use library voices through the API, and the account is on the free plan (`402 paid_plan_required`). Until it's upgraded, the slots use ElevenLabs' built-in voices: Sarah (`jenny`) and George (`jin`), in `DEFAULT_IDS` in `api/tts.js`. They're English-native voices speaking Mandarin, so their tones haven't been checked by a Mandarin speaker. After upgrading, set `ELEVENLABS_VOICE_JENNY` and `ELEVENLABS_VOICE_JIN` in Vercel to the library voices' ids and redeploy. No code change is needed.
+- **Credits.** The free plan has 10,000 credits a month, and `eleven_multilingual_v2` costs 1 credit per character, so roughly 10,000 characters of replies (a short reply is 10 to 30) for every visitor together. Replays of a line in the same visit are kept in the browser and cost nothing.
+- **When it can't speak.** A failure that will repeat (no key, no function on this host, plan, credits used up, unknown voice) stops further requests for the visit. Then the browser's Mandarin voice speaks, and the voice conversation says why in a note under the orb: "…, so Convo is speaking with this browser's Mandarin voice." A one-off failure (ElevenLabs busy, offline) uses the browser's voice for that line only and tries ElevenLabs again on the next one. The typed conversation's Listen button switches without a note.
+- **Safari.** The clip is fetched first and played after, so outside a tap Safari may refuse to play it. That line then uses the browser's voice. Not tested on Safari yet.

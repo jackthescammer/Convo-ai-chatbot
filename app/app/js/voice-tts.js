@@ -80,17 +80,33 @@ export function unlockSpeech() {
 let current = null; // keeps the utterance referenced: Chrome drops events of collected utterances
 
 /* ---------- Server voices (ElevenLabs through /api/tts) ----------
-   Convo's characters speak with Jenny or Jin when the site's server has a key (api/tts.js). If the
-   request fails for any reason (no key, no such function on this host, offline, a refused play) the
-   browser voice above says the line instead, so a conversation never depends on it. */
+   Convo's characters speak with the female ("jenny") or male ("jin") ElevenLabs voice when the site's
+   server has a key (api/tts.js says which voices those are). If the request fails (no key, no such
+   function on this host, plan or quota, offline, a refused play) the browser voice above says the line
+   instead, so a conversation never depends on it. A failure that will repeat stops further requests,
+   and serverVoiceIssue() says why, so the voice conversation can tell the learner. */
 const SPEAKER = { cafe: 'jin', shop: 'jin', restaurant: 'jenny', interview: 'jin', chat: 'jenny' };
 let speaker = null;       // 'jenny' | 'jin' for the conversation on screen
-let serverDown = false;   // set after a hard failure (no key, no function), so lines don't wait on it
+let serverIssue = null;   // code of a failure that will repeat (no key, no function, plan, quota), so lines don't wait on it
 const clips = new Map();  // `${voice}|${text}` -> object URL of the audio, so replays cost nothing
+
+// Why the ElevenLabs voice isn't speaking, finished by "…, so Convo is using this browser's voice".
+const ISSUES = {
+  'paid-plan': 'The ElevenLabs account needs a paid plan for this voice',
+  quota: "Convo's ElevenLabs voice has used up this month's credits",
+  'bad-key': "ElevenLabs refused this site's key",
+  'voice-missing': "ElevenLabs couldn't find this voice",
+  'no-key': 'This copy of Convo has no ElevenLabs key',
+  'no-server': 'This copy of Convo has no voice server (api/tts.js)',
+  forbidden: "Convo's voice server only answers its own site",
+};
 
 /** Which character is speaking now (call when a conversation opens). */
 export function setSpeaker(scenarioId) { speaker = SPEAKER[scenarioId] || null; }
 export const speakerName = () => speaker;
+
+/** Why the ElevenLabs voice has stopped for this visit, as a sentence without a full stop, or null. */
+export const serverVoiceIssue = () => (serverIssue ? ISSUES[serverIssue] || "Convo's ElevenLabs voice isn't available" : null);
 
 async function clipFor(voice, text) {
   const key = `${voice}|${text}`;
@@ -98,7 +114,13 @@ async function clipFor(voice, text) {
   const r = await fetch('/api/tts', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, voice }),
   });
-  if (!r.ok) throw Object.assign(new Error('tts'), { status: r.status });
+  if (!r.ok) {
+    let info = null;
+    try { info = await r.json(); } catch { /* a host without the function answers with a page */ }
+    // No JSON on 404 / 405 / 501: this host has no voice function (a static server, an old deploy).
+    const code = info?.code || ([404, 405, 501].includes(r.status) ? 'no-server' : 'failed');
+    throw Object.assign(new Error('tts'), { status: r.status, code, lasting: Boolean(info?.lasting) || code === 'no-server' });
+  }
   const url = URL.createObjectURL(await r.blob());
   clips.set(key, url);
   if (clips.size > 40) { const [old] = clips.keys(); URL.revokeObjectURL(clips.get(old)); clips.delete(old); }
@@ -130,8 +152,8 @@ function speakServer(text, voice, { rate = 1, onStart } = {}) {
     audio.onerror = () => me.finish({ ok: false, code: 'server-unavailable' });
     return audio.play();
   }).catch((err) => {
-    // 404 / 501 / 401: no function or no key here; stop asking. 429 or a network blip: ask again next time.
-    if (err?.status === 404 || err?.status === 501 || err?.status === 401) serverDown = true;
+    // No function, key, plan or credits: stop asking. Busy, a network blip or a refused play: ask again next time.
+    if (err?.lasting) serverIssue = err.code;
     me.finish({ ok: false, code: 'server-unavailable' });
   });
   return { done, cancel: () => me.finish({ ok: false, code: 'cancelled' }) };
@@ -142,7 +164,7 @@ function speakServer(text, voice, { rate = 1, onStart } = {}) {
  * @returns {{ done: Promise<{ ok: boolean, code?: string, seconds?: number }>, cancel: () => void }}
  */
 export function speak(text, opts = {}) {
-  if (!speaker || serverDown) return speakBrowser(text, opts);
+  if (!speaker || serverIssue) return speakBrowser(text, opts);
   stopSpeaking();
   let inner = speakServer(text, speaker, opts);
   let cancelled = false;

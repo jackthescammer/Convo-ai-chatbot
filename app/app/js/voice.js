@@ -20,7 +20,7 @@
 
 import { esc, el, layered, reduceMotion } from './ui.js';
 import { voiceSupported, createDictation } from './speech.js';
-import { ttsSupported, speak, stopSpeaking, estimateDuration, unlockSpeech, RATE } from './voice-tts.js';
+import { ttsSupported, speak, stopSpeaking, estimateDuration, unlockSpeech, RATE, serverVoiceIssue } from './voice-tts.js';
 import { captureSupported, openCapture, unlockAudio, barsFor } from './voice-capture.js';
 
 /** Hands-free voice needs both recognition (speech.js) and a voice for Convo. */
@@ -478,6 +478,12 @@ export function createVoiceDock(dock, { difficulty = 'standard', canListen, onSe
       queued = item;
       set('gate', 'Tap the mic to hear Convo and start talking.');
       return false;
+    }
+    // The ElevenLabs voice stopped (plan, credits, no key…): say so rather than change voice silently.
+    const issue = serverVoiceIssue();
+    if (issue && r.code !== 'cancelled' && note.hidden) {
+      note.hidden = false;
+      note.textContent = `${issue}, so Convo is speaking with this browser's Mandarin voice.`;
     }
     if (r.code === 'no-voice') {
       note.hidden = false;
