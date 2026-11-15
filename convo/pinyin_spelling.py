@@ -19,14 +19,14 @@ _WORD = re.compile(r"[a-zA-ZüÜ:āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚ�
 
 
 def _dist(a, b):
-    """Edit distance (insert, delete, change one letter)."""
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a, 1):
-        cur = [i]
-        for j, cb in enumerate(b, 1):
-            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
-        prev = cur
-    return prev[-1]
+    """Edit distance: insert, delete or change one letter, or swap two neighbours ('kafie' -> 'kafei' is 1)."""
+    d = [[i + j if i * j == 0 else 0 for j in range(len(b) + 1)] for i in range(len(a) + 1)]
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] != b[j - 1]))
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[-1][-1]
 
 
 def cafe_syllables(cafe_index):
@@ -56,7 +56,10 @@ def why_not_pinyin(word):
 def spelling_feedback(text, converter):
     """{'issues': [{'typed', 'suggest', 'char', 'reason'}], 'fixed': text with suggestions swapped in}."""
     valid = getattr(converter, "valid", None) or set()
-    weights = cafe_syllables(getattr(converter, "cafe_index", {}) or {})
+    cafe_index = getattr(converter, "cafe_index", {}) or {}
+    weights = cafe_syllables(cafe_index)
+    # whole café words typed as one word ('kafei') can be suggested too, ahead of single syllables
+    words = {"".join(key): max(weights.values(), default=0) + 1 for key in cafe_index if len(key) > 1}
     issues = []
 
     def char_for(syllable):
@@ -74,7 +77,7 @@ def spelling_feedback(text, converter):
             return tok
         parts = split_syllables(base, valid)
         if parts is None:
-            sug = suggest(base, valid, weights)
+            sug = suggest(base, valid | set(words), {**weights, **words})
             issues.append({"typed": tok, "suggest": sug or "", "char": char_for(sug) if sug else "",
                            "reason": why_not_pinyin(base)})
             return sug or tok

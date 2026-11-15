@@ -7,7 +7,7 @@ VALID = {"wo", "yao", "yi", "yin", "ye", "ao", "ge", "bing", "cha", "ni", "hao",
 CAFE_INDEX = {("wo",): "我", ("yao",): "要", ("yi",): "一", ("yi", "ge"): "一个", ("ye",): "也",
               ("bing",): "冰", ("cha",): "茶", ("ni", "hao"): "你好", ("ka", "fei"): "咖啡",
               ("xie", "xie"): "谢谢", ("yi", "bei"): "一杯"}
-CHARS = {"yao": "要", "yi": "一"}
+CHARS = {"yao": "要", "yi": "一", "kafei": "咖啡"}
 
 
 class Conv:
@@ -46,3 +46,9 @@ def test_real_words_are_left_alone():
 def test_reasons_and_suggestions():
     assert "end in a vowel" in why_not_pinyin("wok")
     assert suggest("yir", VALID, {"yi": 3}) == "yi"
+
+
+def test_swapped_letters_suggest_the_whole_cafe_word():
+    r = spelling_feedback("wo yao kafie", Conv())
+    assert [(i["typed"], i["suggest"], i["char"]) for i in r["issues"]] == [("kafie", "kafei", "咖啡")]
+    assert r["fixed"] == "wo yao kafei"
