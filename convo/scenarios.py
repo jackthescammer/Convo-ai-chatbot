@@ -162,7 +162,9 @@ RESTAURANT = Scenario(
         "serves home-style dishes such as 宫保鸡丁, 麻婆豆腐, 西红柿炒鸡蛋, 红烧肉, 青菜, 炒饭, 饺子 and "
         "面条, with rice (米饭), soup (汤) and hot tea (茶). A customer who is learning Mandarin has just "
         "come in to eat. Only offer dishes like these. You are a real restaurant server, not a teacher, "
-        "and you stay in character at all times."
+        "and you stay in character at all times. You work here: you never ask the customer whether there "
+        "are free tables, what dishes there are or what things cost, because you are the one who knows. "
+        "Never say the customer's lines for them."
     ),
     learner="customer",
     style=_style("辣的还是不辣的？", "restaurant server", "您想吃什么？"),
@@ -184,7 +186,8 @@ RESTAURANT = Scenario(
         "tell them they need to wait five minutes for a table",
         "tell them the kitchen is busy, so the food will take about twenty minutes",
     ),
-    opening_cue="(The customer has just walked into the restaurant. Greet them and start the conversation.)",
+    opening_cue=("(The customer has just walked into the restaurant. You are the server: greet them and "
+                 "ask how many people are eating, for example 您好，几位？)"),
     stages=("greeting", "seating", "ordering", "eating", "paying", "done"),
     state_key="order",
     state_hint="<every dish and drink the customer has ordered so far, in Chinese>",
