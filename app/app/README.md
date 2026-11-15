@@ -45,6 +45,7 @@ Sidebar on desktop (icon-only on mid-size screens and during a conversation); to
 | ----- | ---- | ---------- |
 | `#/home` | `js/dashboard.js` | Greeting, the conversation in progress (resume) or the one started last, the other conversations ("More conversations"), this week against your weekly goal and streak, latest report, patterns that keep coming up, practice totals, your setup with a display preview. Everything is worked out from reports on this device (`js/stats.js`); nothing is estimated. |
 | `#/talk[/scenario]` | `js/talk.js` | The conversation: chat, Convo in the scenario's role, and (when the model provides them) "Help me reply" phrases, goals and notes saved for the report. `#/talk/shop` (or `cafe`, `restaurant`, `interview`, `chat`) opens that conversation; plain `#/talk` resumes the one in progress or starts the last one. Leaving and coming back resumes it; starting a different one ends it without a report. |
+| `#/voice[/scenario]` | `js/voice.js` (+ `talk.js`) | The same conversation by voice messages, hands-free (see "Voice conversation" below). **Type / Speak** in the conversation bar switches between the two without losing the conversation, and `#/talk` links open the way you answered last. |
 | `#/reports` | `js/history.js` | Every report on this device. |
 | `#/report/:id` | `js/report.js` | The post-conversation report: summary, goals, corrections (said / better / why), patterns, transcript. |
 | `#/settings[/section]` | `js/settings.js` | Profile (name for the greeting), setup (go through setup again; the two-sentence level check, which returns here on Save), learning (level, difficulty, why you're learning, weekly goal), display (layers, Chinese text size), conversation (show notes, show "Help me reply", Enter sends, calm mascot), your data (export reports as JSON, delete reports, reset everything), about. Saves as you change things. |
@@ -58,7 +59,7 @@ Sidebar on desktop (icon-only on mid-size screens and during a conversation); to
 | `convo-app-settings` | setup and Settings, through `js/store.js` | `onboarded`, `reasons`, `knows`, `level`, `difficulty`, `difficultyPicked` |
 | `convo-layers` | `js/ui.js` | 汉字 / Pinyin / English, shared with the landing page |
 | `convo-app-reports` | `js/store.js` | up to 12 reports |
-| `convo-app-prefs` | `js/prefs.js` | name, weekly goal, Chinese text size, notes, help, Enter to send, calm mascot, the conversation started last |
+| `convo-app-prefs` | `js/prefs.js` | name, weekly goal, Chinese text size, notes, help, Enter to send, calm mascot, the conversation started last, Type or Speak last used (`talkMode`), Text on in the voice conversation (`voiceText`) |
 | `convo-model-url` | `js/model.js` | the live model link, if it was changed from the built-in one (or `placeholder`) |
 
 `js/store.js` and `js/ui.js` are shared with setup; app-only preferences live in `js/prefs.js` so the two pages can change independently.
@@ -111,7 +112,7 @@ Open the app with `?model=placeholder` (or type `placeholder` in Settings › Ab
 - Learner messages show as typed: no pinyin or English for them until the model provides it.
 - Reports, settings and preferences live in this browser only; private windows may not keep them.
 - "Delete reports" reloads the page, because `store.js` keeps reports in memory and has no delete call of its own.
-- Voice input uses the browser's speech recognition, not Whisper (see below). Spoken replies are a later phase.
+- Voice input uses the browser's speech recognition, not Whisper (see below). Convo's spoken replies use the browser's own Mandarin voice, not a dedicated TTS model.
 - Only the café has been evaluated (prompts v6, `results/VERSIONS.md` in the team repo). The shop, restaurant, job interview and open conversation prompts are new and unscored: run `python -m convo.evaluation conversation --scenario <id>` on Colab and have someone review the transcripts before relying on them. The correction test set is café sentences only.
 - Setup (onboarding) still describes the café: its level check, goals preview and display preview use café lines.
 
@@ -133,6 +134,31 @@ It uses the speech recognition built into the browser (Web Speech API, `zh-CN`),
 - It's not Whisper, which CLAUDE.md names for Phase 2. Whisper needs a server: it could run next to the model on Colab, with a recorder in the browser. Any engine that keeps `createDictation`'s shape in `js/speech.js` can replace this one.
 - On Windows, the OS's own voice typing (Win + H) also works in the reply box, like any text field: switch the Windows keyboard to Chinese (Win + Space) first, or it types pinyin as English words. The composer shows this tip under the box on Windows. It's independent of the mic button and works in every browser, Firefox included.
 - Transcription isn't pronunciation assessment. The recogniser guesses the most likely words, so a wrong tone can come out as the right character.
+
+## Voice conversation
+
+`#/voice/<scenario>` (**Speak** in the conversation bar) is the same conversation, held with voice messages. It's hands-free:
+
+1. Convo's reply arrives as a voice message and plays by itself.
+2. When it finishes, the mic opens on its own: the orb turns yellow, a ring pulses out from it, and its bars follow your voice.
+3. When you stop talking, a ring fills around the orb and your voice message sends itself. **Send** sends straight away; **Redo** throws the take away and listens again. Tapping the orb while it listens pauses the mic, and tapping it while Convo speaks skips to your turn.
+
+Text is an optional layer. Each voice message has **Show text** (Convo's line in 汉字 / Pinyin / English, or the words heard from you). **Text** in the bar shows them all, adds the 汉字 / Pinyin / English chips, and shows your words live under the orb as you speak. The report is the same as in the text conversation.
+
+| Piece | File | How |
+| ----- | ---- | --- |
+| Your words | `js/speech.js` | The browser's speech recognition (`zh-CN`), as for the mic button. |
+| When you've finished | `js/voice.js`, `js/voice-capture.js` | No voice from the mic and no new words for 1.5 s (Easy 1.9 s, Challenging 1.2 s). The noise floor adapts to the room. If the room stays loud, it sends 4 s after the words stop. Without a mic level, the words alone decide (1.8 s). |
+| Your voice message | `js/voice-capture.js` | The mic's audio, trimmed to your speech, kept as a 16 kHz WAV in memory for replay. It never leaves the device and is gone when the page closes. |
+| Convo's voice | `js/voice-tts.js` | The browser's speech synthesis with the best Mandarin voice on the device (Edge's natural voices, Chrome's Google voice, Safari's Tingting…). Slower on Easy (0.8×) and Standard (0.9×). |
+
+- **The first tap.** Browsers only let a page speak and record after a tap. On a freshly loaded page the orb says "Tap the mic to start talking". Arriving from Speak or the app's own links usually needs no extra tap (Safari may still ask once).
+- **No Mandarin voice** (for example Windows without a Chinese voice): Convo's replies show as text, with a note. You still answer by speaking.
+- **It pauses itself** after the recogniser stops three times in a row without hearing anything, and whenever you switch tabs, so the mic isn't left open.
+- **Replaying a message** pauses listening, so the mic doesn't pick it up. Listening starts again when the message ends.
+- **Same browsers as voice input.** Firefox has no speech recognition, so Speak is greyed out with an explanation. Brave and Opera say they can't reach a speech service.
+- **Sound kept or not.** If a browser can't record while it recognises speech (some Android phones), the message keeps only its words: the bubble shows a mic instead of a play button.
+- **Tested with fakes, not real speech.** The turn-taking, auto-send timing, Redo, Send, replay, Text and Type/Speak switching were tested in headless Chromium with stand-ins for speech recognition and speech synthesis, and Chromium's fake microphone. Real recognition accuracy and real room noise haven't been measured.
 
 ## Coins and the shop
 

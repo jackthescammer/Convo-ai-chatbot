@@ -12,6 +12,8 @@ export const PREF_DEFAULTS = {
   enterToSend: true,    // Enter sends; otherwise Enter adds a line and only the button sends
   calmMascot: false,    // mascot holds one pose per state instead of animating
   scenario: 'cafe',     // the conversation started last: the dashboard offers it first, #/talk opens it
+  talkMode: 'text',     // text | voice: how the learner answered last; #/talk opens that way
+  voiceText: false,     // voice conversation: show every message's words (otherwise voice only, text per message)
 };
 
 let prefs = { ...PREF_DEFAULTS };

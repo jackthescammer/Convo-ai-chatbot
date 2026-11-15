@@ -1,12 +1,14 @@
 /* The app after setup: dashboard, conversation, reports and settings.
    Setup (onboarding) is a separate page, app/index.html, which hands off to this one.
 
-   Routes: #/home  #/talk[/scenario]  #/reports  #/progress  #/report/:id  #/shop  #/settings[/section] */
+   Routes: #/home  #/talk[/scenario]  #/voice[/scenario]  #/reports  #/progress  #/report/:id  #/shop  #/settings[/section]
+   #/voice is the same conversation by voice messages (voice.js): the same screen, chrome and session. */
 
 import { applyLayers, poke } from './ui.js';
 import { mountMascots, APP_ICONS } from './kit.js';
 import { getSettings, onSettings, describeSettings } from './store.js';
-import { applyPrefs, onPrefs } from './prefs.js';
+import { applyPrefs, onPrefs, getPrefs } from './prefs.js';
+import { voiceModeSupported } from './voice.js';
 import * as dashboard from './dashboard.js';
 import * as reportList from './history.js';
 import * as progress from './progress.js';
@@ -18,7 +20,7 @@ import { getWallet, onWallet } from './wallet.js';
 
 const ROUTES = {
   home: { render: (root) => dashboard.render(root), title: 'Home', nav: 'home' },
-  talk: { render: (root, arg) => talk.render(root, arg), title: 'Conversation', nav: 'talk' }, // #/talk/<scenario>
+  talk: { render: (root, arg, opts) => talk.render(root, arg, opts), title: 'Conversation', nav: 'talk' }, // #/talk/<scenario>, #/voice/<scenario>
   reports: { render: (root) => reportList.render(root), title: 'Your reports', nav: 'reports' },
   progress: { render: (root) => progress.render(root), title: 'Your progress', nav: 'progress' },
   report: { render: (root, arg) => report.render(root, { arg }), title: 'Your report', nav: 'reports' },
@@ -31,7 +33,17 @@ let cleanup = null;
 let first = true;
 
 function route() {
-  const [name = '', arg = ''] = location.hash.replace(/^#\/?/, '').split('/');
+  const [path = '', arg = ''] = location.hash.replace(/^#\/?/, '').split('/');
+  let name = path;
+  let mode = 'text';
+  if (name === 'voice') {
+    name = 'talk';
+    mode = 'voice';
+  } else if (name === 'talk' && getPrefs().talkMode === 'voice' && voiceModeSupported) {
+    // #/talk opens the way the learner answered last (the Type link switches back first).
+    mode = 'voice';
+    window.history.replaceState(null, '', `#/voice${arg ? `/${arg}` : ''}`);
+  }
   const key = ROUTES[name] ? name : 'home';
   if (!ROUTES[name]) window.history.replaceState(null, '', '#/home');
   const r = ROUTES[key];
@@ -48,7 +60,7 @@ function route() {
   });
   syncChrome();
 
-  cleanup = r.render(view, decodeURIComponent(arg)) || null;
+  cleanup = r.render(view, decodeURIComponent(arg), { mode }) || null;
   if (!(key === 'settings' && arg)) window.scrollTo(0, 0);
   if (!first && key !== 'talk') view.focus({ preventScroll: true });
   first = false;

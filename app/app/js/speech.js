@@ -6,8 +6,9 @@
   - Chrome and Edge send the audio to their own cloud service (Google, Microsoft) to transcribe it;
     Safari uses Apple's. It needs a connection and a secure page (https or localhost).
   - Firefox has no speech recognition, so `voiceSupported` is false and the mic button isn't shown.
-  - Brave and Opera have the API, but their speech service refuses requests, which shows up as a
-    "network" error.
+  - Opera and Brave have the API but no speech service behind it: it says it started and then never
+    hears anything, with no error. They're recognised by name, and any other browser that does the
+    same is caught by a watchdog. Either way the learner is told to switch browser or type.
   This is not Whisper (CLAUDE.md, Phase 2). A Whisper engine (record with MediaRecorder, transcribe on
   a server) can replace this one by keeping the same shape: createDictation(handlers) returns
   { start, stop, abort, toggle, listening }.
@@ -22,6 +23,13 @@ export const voiceSupported = Boolean(Recognition) && window.isSecureContext;
 // Chrome on Android repeats earlier words in continuous mode, so phones there stop after each pause
 // (tap again to add more). Elsewhere it keeps listening through pauses until the learner taps stop.
 const CONTINUOUS = !/Android/i.test(navigator.userAgent);
+
+// Browsers whose speech recognition is an empty shell (tested: Opera 139 never fires a single event).
+const SHELL = /\bOP[RT]\//.test(navigator.userAgent) ? 'Opera' : ('brave' in navigator ? 'Brave' : '');
+const noService = (name) => `${name || 'This browser'} can't turn speech into text, because it has no speech service. To speak, open Convo in Chrome, Edge or Safari. You can still type here.`;
+// How long to wait for the service to say it's listening before calling it dead. Longer while the
+// browser may still be asking for microphone permission.
+const WATCHDOG_MS = { granted: 5000, other: 20000 };
 
 const ERRORS = {
   'not-allowed': 'Microphone access is blocked. Allow it for this site in your browser settings, then try again.',
@@ -41,6 +49,8 @@ const ERRORS = {
 export function createDictation({ lang = 'zh-CN', onText, onState, onError } = {}) {
   let rec = null;
   let listening = false;
+  let watchdog = 0;
+  let started = false; // the current recogniser's service said it's listening
 
   const setListening = (on) => {
     if (listening === on) return;
@@ -48,9 +58,31 @@ export function createDictation({ lang = 'zh-CN', onText, onState, onError } = {
     onState?.(on);
   };
 
+  // If the service never says it started, it isn't there: stop pretending to listen.
+  async function armWatchdog(r) {
+    let state = 'other';
+    try { state = (await navigator.permissions.query({ name: 'microphone' })).state; } catch { /* not supported */ }
+    if (r !== rec || started) return;
+    watchdog = setTimeout(() => {
+      if (r !== rec || started) return;
+      onError?.(noService(''), 'no-service');
+      abort();
+    }, state === 'granted' ? WATCHDOG_MS.granted : WATCHDOG_MS.other);
+  }
+
   function start() {
     if (!voiceSupported || rec) return;
+    if (SHELL) {
+      onError?.(noService(SHELL), 'no-service');
+      return;
+    }
     const r = new Recognition();
+    started = false;
+    r.onstart = () => {
+      if (r !== rec) return;
+      started = true;
+      clearTimeout(watchdog);
+    };
     r.lang = lang;
     r.interimResults = true;
     r.continuous = CONTINUOUS;
@@ -72,6 +104,7 @@ export function createDictation({ lang = 'zh-CN', onText, onState, onError } = {
     };
     r.onend = () => {
       if (r !== rec) return;
+      clearTimeout(watchdog);
       rec = null;
       setListening(false);
     };
@@ -79,6 +112,7 @@ export function createDictation({ lang = 'zh-CN', onText, onState, onError } = {
     try {
       r.start();
       setListening(true);
+      armWatchdog(r);
     } catch (err) {
       rec = null;
       onError?.('Voice input couldn\'t start. Tap the mic to try again.', 'start');
@@ -92,6 +126,7 @@ export function createDictation({ lang = 'zh-CN', onText, onState, onError } = {
   function abort() {
     const r = rec;
     if (!r) return;
+    clearTimeout(watchdog);
     rec = null;
     r.abort();
     setListening(false);

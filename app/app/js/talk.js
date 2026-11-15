@@ -7,6 +7,7 @@ import { model, MODEL_INFO, SCENARIOS, scenarioById, validateTurn, validateRepor
 import { getSettings, addReport } from './store.js';
 import { awardReport } from './wallet.js';
 import { voiceSupported, createDictation } from './speech.js';
+import { voiceModeSupported, VOICE_UNSUPPORTED, voiceMessage, voiceDockHTML, createVoiceDock, unlockVoice } from './voice.js';
 
 const CJK = /[㐀-鿿]/;
 const ARROW = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -30,6 +31,8 @@ const STATUS = {
   celebrate: 'Conversation finished',
   wave: 'Conversation finished',
 };
+// The voice conversation says it differently where it differs.
+const STATUS_VOICE = { chatting: 'Thinking of a reply' };
 
 /* ---------- Session: survives leaving the screen, so a conversation can be resumed ---------- */
 let session = null;
@@ -136,10 +139,11 @@ async function liveCheck(s, entry) {
   s.view?.renderCheck(entry, false);
 }
 
-function send(s, text) {
+/** `extra` carries a voice message's recording: { spoken, audio, duration, wave } (voice.js). */
+function send(s, text, extra = {}) {
   const clean = text.trim();
   if (!clean || s.pending || s.ended) return false;
-  const entry = { who: 'you', id: `m${Date.now().toString(36)}`, text: clean, notes: [] };
+  const entry = { ...extra, who: 'you', id: `m${Date.now().toString(36)}`, text: clean, notes: [] };
   s.history.push(entry);
   s.view?.addMessage(entry, true);
   runModel(s, 'reply');
@@ -182,11 +186,21 @@ const DIFF = { easy: 'Easy', standard: 'Standard', challenging: 'Challenging' };
 // The live model's name is filled in once its server answers, so this is re-read after each reply.
 const railFoot = () => (MODEL_INFO.connected ? `Replies by ${MODEL_INFO.name}.` : MODEL_INFO.detail);
 
-function template(s) {
+/* Type or Speak: the same conversation either way, so switching keeps it going. */
+const modeSwitch = (sc, voice) => `
+  <div class="mode-switch" role="group" aria-label="How you answer">
+    <a class="mode-opt" href="#/talk/${esc(sc.id)}" data-mode-link="text"${voice ? '' : ' aria-current="page"'}>${ICONS.chat}<span>Type</span></a>
+    ${voiceModeSupported
+    ? `<a class="mode-opt" href="#/voice/${esc(sc.id)}" data-mode-link="voice"${voice ? ' aria-current="page"' : ''}>${MIC}<span>Speak</span></a>`
+    : `<button type="button" class="mode-opt" data-mode-unsupported aria-disabled="true">${MIC}<span>Speak</span></button>`}
+  </div>`;
+
+function template(s, voice) {
   const sc = scenarioById(s.settings.scenario);
   const meta = `${s.settings.level} · ${DIFF[s.settings.difficulty]}`;
+  const showText = voice && getPrefs().voiceText;
   return `
-  <section class="talk" aria-labelledby="talk-title">
+  <section class="talk${voice ? ' talk-voice' : ''}" aria-labelledby="talk-title"${voice ? ' data-voice' : ''}${showText ? ' data-voice-text' : ''}>
     <div class="talk-stage" data-stage>
       <div class="talk-bar" data-hint-scope>
         <span class="talk-bar-mascot" data-mascot="idle" data-size="44" data-barista-mini></span>
@@ -195,6 +209,8 @@ function template(s) {
           <p class="talk-sub">${esc(meta)}</p>
         </div>
         <div class="talk-controls">
+          ${modeSwitch(sc, voice)}
+          ${voice ? `<button type="button" class="chip voice-text-chip" data-voice-text-toggle aria-pressed="${showText}">Text</button>` : ''}
           ${layerChips('Show in conversation')}
           <button type="button" class="btn-quiet notes-btn" data-rail-toggle aria-expanded="false" aria-controls="talk-rail">
             ${ICONS.notes}<span>Notes</span><span class="count" data-note-count${MODEL_INFO.provides.notes ? '' : ' hidden'}>0</span>
@@ -212,8 +228,10 @@ function template(s) {
           ${sc.image ? `<img class="chat-scene" src="${esc(sc.image)}" alt="" decoding="async">` : ''}
           <div class="chat-log" data-log role="log" aria-live="polite" aria-label="Conversation with Convo">
             <p class="chat-context">${esc(sc.context)}</p>
+            ${voice ? '<p class="chat-context chat-context-voice">Hands-free: when Convo finishes speaking, the mic opens. Stop talking and your voice message sends itself.</p>' : ''}
           </div>
-          <div class="composer" data-composer>
+          ${voice ? voiceDockHTML() : ''}
+          <div class="composer" data-composer${voice ? ' hidden' : ''}>
             <div class="suggest" id="talk-suggest" data-suggest hidden>
               <p class="suggest-title" id="suggest-title">Try saying</p>
               <div class="suggest-list" role="group" aria-labelledby="suggest-title" data-suggest-list></div>
@@ -271,15 +289,19 @@ function template(s) {
 
 /** #/talk resumes the conversation in progress (or starts the last one); #/talk/<scenario> opens that
     scenario, and starting a different one ends an unfinished conversation, as Start over does. */
-export function render(root, arg) {
+export function render(root, arg, { mode = 'text' } = {}) {
   const wanted = SCENARIOS.some((sc) => sc.id === arg) ? arg : null;
   if (!session || session.reportId || (wanted && session.settings.scenario !== wanted)) {
     session = newSession(wanted || currentScenario().id);
   }
   const s = session;
   const role = scenarioById(s.settings.scenario).role;
+  // #/voice/<scenario> is the same conversation by voice messages (voice.js), where the browser can.
+  const voice = mode === 'voice' && voiceModeSupported;
+  if (mode === 'voice' && !voice) window.history.replaceState(null, '', `#/talk/${s.settings.scenario}`);
+  if (getPrefs().talkMode !== (voice ? 'voice' : 'text')) savePrefs({ talkMode: voice ? 'voice' : 'text' });
   document.title = `${scenarioById(s.settings.scenario).title} · Convo`;
-  root.innerHTML = template(s);
+  root.innerHTML = template(s, voice);
 
   const q = (sel) => root.querySelector(sel);
   const stage = q('[data-stage]');
@@ -304,8 +326,46 @@ export function render(root, arg) {
 
   const scrollLog = () => log.scrollTo({ top: log.scrollHeight, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
 
+  /* --- voice: the dock replaces the reply box; turns are voice messages --- */
+  const talkEl = q('.talk');
+  const dockEl = q('[data-vdock]');
+  const dock = voice ? createVoiceDock(dockEl, {
+    difficulty: s.settings.difficulty,
+    canListen: () => !s.pending && !s.ended && !s.error,
+    onSend: (text, extra) => send(s, text, extra),
+    mood: (state, label) => mood(state, label),
+    onNoVoice: () => talkEl.setAttribute('data-no-voice', ''),
+  }) : null;
+  const voiceTextBtn = q('[data-voice-text-toggle]');
+  voiceTextBtn?.addEventListener('click', () => {
+    const on = !talkEl.hasAttribute('data-voice-text');
+    talkEl.toggleAttribute('data-voice-text', on);
+    voiceTextBtn.setAttribute('aria-pressed', String(on));
+    savePrefs({ voiceText: on });
+  });
+  q('[data-mode-link="voice"]')?.addEventListener('click', unlockVoice); // lets Convo speak on arrival
+  // Saved before the route changes, so #/talk doesn't send the learner back to the voice mode.
+  q('[data-mode-link="text"]')?.addEventListener('click', () => savePrefs({ talkMode: 'text' }));
+  q('[data-mode-unsupported]')?.addEventListener('click', () => {
+    const hint = q('[data-toggle-hint]');
+    hint.textContent = VOICE_UNSUPPORTED;
+    setTimeout(() => { if (hint.textContent === VOICE_UNSUPPORTED) hint.textContent = ''; }, 6000);
+  });
+  if (mode === 'voice' && !voice) q('[data-toggle-hint]').textContent = VOICE_UNSUPPORTED;
+
   /* --- rendering pieces --- */
   function addMessage(entry, animate) {
+    if (voice) {
+      if (entry.who === 'ai' || entry.spoken) {
+        const vmsg = voiceMessage(entry, { role, difficulty: s.settings.difficulty, animate });
+        log.append(vmsg);
+        // Convo's newest line is said aloud when it's the learner's turn; anything the learner says clears it.
+        if (entry.who === 'ai') { if (!entry.spoken) dock.reply(entry, vmsg); } else dock.clearQueue();
+        scrollLog();
+        return;
+      }
+      dock.clearQueue(); // typed earlier, in the Type mode
+    }
     const msg = el('div', `msg msg-${entry.who}${animate ? ' is-new' : ''}`);
     if (entry.who === 'ai') {
       msg.append(el('p', 'msg-who', `Convo <span class="msg-role">as ${esc(role)}</span>`));
@@ -410,9 +470,9 @@ export function render(root, arg) {
     });
   }
 
-  function mood(state) {
+  function mood(state, label) {
     baristas.forEach((m) => setMood(m, state));
-    statusEl.textContent = STATUS[state] || STATUS.talking;
+    statusEl.textContent = label || (voice && STATUS_VOICE[state]) || STATUS[state] || STATUS.talking;
   }
 
   let typingEl = null;
@@ -468,12 +528,14 @@ export function render(root, arg) {
     mood('talking');
     statusEl.textContent = 'Couldn\'t reply';
     ready();
+    dock?.error('Convo couldn\'t reply. Tap to try again.', () => retry.click());
   }
 
   function busy() {
     sendBtn.disabled = true;
     toggleHelp(false);
     helpBtn.disabled = true;
+    dock?.busy();
   }
 
   function ready() {
@@ -481,6 +543,7 @@ export function render(root, arg) {
     helpBtn.disabled = !s.suggestions.length;
     const foot = q('[data-rail-foot]');
     if (foot) foot.textContent = railFoot();
+    dock?.ready(); // voice: Convo's line is said, then the mic opens
   }
 
   function syncInput() {
@@ -526,6 +589,10 @@ export function render(root, arg) {
   function finish(animate) {
     dictation?.abort();
     composer.hidden = true;
+    if (dock) {
+      dockEl.hidden = true;
+      dock.finish({ say: animate }); // the mic closes; Convo's closing line is still said
+    }
     q('[data-end]').hidden = true;
     q('[data-restart]').hidden = false;
     toggleHelp(false);
@@ -620,9 +687,10 @@ export function render(root, arg) {
   else { const last = s.history[s.history.length - 1]; mood(last.who === 'ai' ? (last.mood === 'surprised' ? 'surprised' : 'talking') : 'thinking'); ready(); }
 
   log.scrollTop = log.scrollHeight;
-  if (!s.ended && s.history.length) input.focus({ preventScroll: true });
+  if (!voice && !s.ended && s.history.length) input.focus({ preventScroll: true });
 
   return () => {
+    dock?.destroy();
     dictation?.abort();
     s.view = null;
     unbindLayers();
