@@ -29,45 +29,38 @@ Our own idea, not a suggested project.
 - **Baseline:** a waiter that never corrects anything.
 
 ## Results
-We changed one thing per version (full details: [VERSIONS.md](results/VERSIONS.md); analysis: [DATA.md](DATA.md#data-analysis)).
 
-| Tune sentences | Mistakes caught | Fixed correctly | Correct sentences wrongly "fixed" |
-|---|---|---|---|
-| Baseline (never corrects) | 0/7 | 0/7 | 0/3 |
-| v1: first prompt | 6/7 | 4/7 | 2/3 |
-| v2: stronger written rule | 6/7 | 4/7 | 2/3 |
-| v3: examples of correct sentences | 5/7 | 4/7 | 0/3 |
-| v4: examples of real mistakes | 7/7 | 6/7 | 2/3 |
-| v5: second check, original on its own | 4/7 | 3/7 | 1/3 |
-| **v6: second check, original vs fix side by side** | **7/7** | **6/7** | **1/3** |
-
-A written rule (v2) changed nothing. Examples stopped the over-correcting (v3) but made the model too cautious, and examples of real mistakes (v4) brought the over-correcting back. Splitting "is it wrong?" from "how do I fix it?" worked once the model compared the original and the fix side by side (v6). The waiter stayed in character in 30/30 turns and remembered the order in 6/6 chats in every version.
-
-**Final score (32 unseen sentences: 21 with a mistake, 11 correct):**
+**Final score (32 sentences the model never saw while we improved it: 21 with a mistake, 11 correct):**
 
 | Test sentences | Mistakes caught | Fixed correctly | Correct sentences wrongly "fixed" |
 |---|---|---|---|
 | Baseline (never corrects) | 0/21 | 0/21 | 0/11 |
-| v1 (run once early, by mistake) | 19/21 | 3/21 (14%) | 6/11 (55%) |
-| **v6 (final)** | **15/21** | **7/21 (33%)** | **2/11 (18%)** |
+| v1: first prompt (run once early, by mistake) | 19/21 | 3/21 (14%) | 6/11 (55%) |
+| **v6: final** | **15/21** | **7/21 (33%)** | **2/11 (18%)** |
 
-v6 is much more careful than v1: it fixes more than twice as many mistakes correctly and over-corrects far less, but it lets more mistakes through. The scores are much lower than on the 10 tune sentences, so our improvements only partly carried over to new sentences. It did best on measure words (3/3 fixed) and worst on question structure, negation and missing particles (0 fixed). We never used test results to choose a change. Breakdown by mistake type: [DATA.md](DATA.md#data-analysis).
+v6 fixes more than twice as many mistakes correctly as v1 and over-corrects far less, but lets more mistakes through. Best on measure words (3/3 fixed), worst on question structure, negation and missing particles (0 fixed). We never used these results to choose a change.
 
-**Real examples (v6):**
+**How we improved it (10 tune sentences, one change per version):**
+
+| Tune sentences | Caught | Fixed correctly | Wrongly "fixed" |
+|---|---|---|---|
+| Baseline | 0/7 | 0/7 | 0/3 |
+| v1: first prompt | 6/7 | 4/7 | 2/3 |
+| **v6: second check, original vs fix side by side** | **7/7** | **6/7** | **1/3** |
+
+A written rule (v2) changed nothing; worked examples helped but swung between over- and under-correcting (v3, v4); a second check only worked once it compared the original and the fix side by side (v6). Tune gains only partly carried over to unseen sentences. The waiter stayed in character in every test conversation. All six versions: [VERSIONS.md](results/VERSIONS.md); full analysis: [DATA.md](DATA.md#data-analysis).
+
+**Real examples (v6, unseen sentences):**
 
 | Learner wrote | Convo's fix | Correct answer | |
 |---|---|---|---|
-| 我想吃一杯咖啡。 | 我想喝一杯咖啡。 | 我想喝一杯咖啡。 | ✅ 喝 for drinks |
-| 我要一杯面包。 | 我要一块面包。 | 我要一块面包。 | ✅ measure word |
-| 我喝咖啡在家。 | 我要喝咖啡在家。 | 我在家喝咖啡。 | ❌ never moves 在家 before the verb |
-| 我要买单。 (already correct) | 我要付钱。 | (no change) | ❌ rewrites a correct sentence |
+| 我们两个人要一桌子。 | 我们两个人要一张桌子。 | 我们两个人要一张桌子。 | ✅ measure word |
+| 他要也一杯咖啡。 | 他也要一杯咖啡。 | 他也要一杯咖啡。 | ✅ word order |
+| 我昨天不喝咖啡。 | (no change) | 我昨天没喝咖啡。 | ❌ missed 不 vs 没 |
+| 我不会说中文很好。 | 我不會說中文很好。 | 我中文说得不好。 | ❌ switched to traditional characters, mistake kept |
+| 谢谢，咖啡来得很快。 (already correct) | 谢谢，咖啡快来了。 | (no change) | ❌ changed a correct sentence's meaning |
 
-**Where it fails (v6, unseen sentences):**
-- 我昨天不喝咖啡 (should be 没喝) → left unchanged. 5 of the 6 mistakes it missed were spotted by the first check, then wrongly undone by the side-by-side second check.
-- 这是我朋友咖啡 → "fixed" to 这是我的朋友的咖啡 instead of 这是我朋友的咖啡.
-- 我不会说中文很好 → switched to traditional characters (我不會說中文很好), mistake still there.
-- 谢谢，咖啡来得很快 (already correct) → changed to 谢谢，咖啡快来了, which changes the meaning.
-- Explanations: 10 of the 17 flagged sentences got an English explanation; the rest were in Chinese, which an A2 learner can't use.
+**Where it fails:** 5 of the 6 mistakes it missed were spotted by the first check, then wrongly undone by the second check. Only 10 of 17 explanations came out in English, which an A2 learner needs.
 
 TODO: who checked Convo's corrections by hand, and what a real learner said after trying it.
 
