@@ -137,6 +137,36 @@ Raw files: `20261114-120403_…_v6_tune.json`, `20261114-120513_…_v6_na.json`.
 
 - **2026-11-14, v6 on the test split (final benchmark)** (file `20261114-131827_…_v6_test.json`, console log `20261114-131827_console_v6_test.txt`): run once with v6 unchanged. Result: 15/21 mistakes caught, 7/21 corrections matching (33%), 2/11 false corrections (18%), 32/32 valid. Compared with v1 on the same 32 sentences: matching 3/21 → 7/21, false corrections 6/11 → 2/11, caught 19/21 → 15/21. 5 of the 6 missed mistakes were flagged by the first check and then undone by the side-by-side second check. Targets (85% matching, at most 10% false corrections) not met. Rows for a Chinese speaker to mark: `20261114-131827_human_review_test_v6.csv`. These results are not used to choose any change; if the checker changes again, the test split is run again at the end and every run is reported.
 
+## v7 notes (not evaluated yet)
+
+2026-11-15. Added four scenarios next to the café: `shop`, `restaurant`, `interview` and `chat` (open conversation, where the character picks the topics). Everything scenario-specific moved into `convo/scenarios.py`: character, setting, flow, what to remember, surprises, the name of the state list (`order`, `basket`, `facts`), and where the checker is told the sentence was said. The checker's rules and worked examples are the same in every scenario.
+
+- **Café unchanged:** every café prompt (system prompts for each level, difficulty and surprise, the checker, the second check and the assessment) is identical to v6; `tests/test_scenarios.py` checks this against `tests/golden_cafe_v6.json`. Café surprise sequences for a given seed are also unchanged. So the v6 café rows above still hold, and the café needs no re-run.
+- **New scenarios: no scores yet.** Nothing has been run on Qwen for them. Each has three scripted conversations with a recall question in `convo/evaluation.py` (`SCENARIO_SCRIPTS`); run `python -m convo.evaluation conversation --scenario shop` (and `restaurant`, `interview`, `chat`) and add a row per scenario. Character consistency and context retention there need a person to read the transcripts too.
+- **Checker in new scenarios:** the correction test set is café sentences, so correction accuracy and false corrections are only measured for the café.
+
+## v8 notes (not evaluated yet)
+
+2026-11-15 (commit 651aa1d). Made the restaurant, shop and job-interview scenarios more realistic for China: real home-style dishes, prices in yuan, "scan or cash" at the till, a bookshop as the interview setting, and the phrases real staff use. Café prompts unchanged (golden test). These scenarios have not been evaluated.
+
+## v9 notes (not evaluated yet)
+
+2026-11-15. Restaurant only: the server sometimes opened with the customer's line (您好，请问有空位吗？). The restaurant prompt now says the server never asks the customer about free tables, dishes or prices and never speaks the customer's lines, and the opening cue asks for 您好，几位？. Café prompts are unchanged (golden test), so the v6 café scores still hold.
+
+## v10 notes (live app only, not evaluated)
+
+2026-11-15. New turn check (`convo/turn_check.py`): in the live app, each learner message is compared with the character's last line and sorted into answer / no answer / off-topic / not appropriate by a short extra model call. If it isn't an answer, the character gets a hidden one-off note for that reply (ask again and don't assume, or steer back politely), and the live feedback card warns the learner. Example that prompted it: the barista asked what the customer wanted, the learner only said "Ni hao", and the barista replied "hot or iced?" as if a drink had been ordered.
+
+The check is off by default in `Conversation`, so the scored evaluation runs exactly as before; the café system prompts and the checker are unchanged (golden test). Unclear model answers count as "answer", so a shaky check doesn't interrupt normal conversations. Not yet measured: how often it misjudges a real answer.
+
+## v11 notes (live app only, not evaluated)
+
+2026-11-15. Turn check: the steer-back instruction now goes into the character's system prompt for that one reply (in v10 it was a note at the end of the learner's message, and the barista still followed an off-topic message twice: 那你平时喜欢做什么呢？ and 足球听起来很有趣，您喜欢哪个队？). It is also firmer: don't talk about the new topic, ask the last question again. No surprise is added on a steer-back turn. Café prompts and the checker are unchanged.
+
+## v12 notes (live app only, not evaluated)
+
+2026-11-15. Found in our own testing: a reply in English ("Thank you, I will leave now.") was treated as misspelt pinyin, "corrected" word by word (Thank → tang 糖, will → null ...) into nonsense characters (糖有，一唟略耨), and the turn check called it "not appropriate". v12 adds a rule-based English detector (common English words, and words that can't be read as pinyin; no model call). English replies now get no spelling, tone or grammar feedback, just "That's English … reply in Mandarin" and a "That wasn't in Mandarin" warning, and the character is told to answer in simple Chinese, encourage the learner to say it in Chinese and ask again. Also, "null" is no longer offered as a pinyin syllable. Café prompts and the checker are unchanged.
+
 
 ## Data analysis
 

@@ -110,6 +110,10 @@ Raw files: `20261114-120403_…_v6_tune.json`, `20261114-120513_…_v6_na.json`.
 - **New scenarios: no scores yet.** Nothing has been run on Qwen for them. Each has three scripted conversations with a recall question in `convo/evaluation.py` (`SCENARIO_SCRIPTS`); run `python -m convo.evaluation conversation --scenario shop` (and `restaurant`, `interview`, `chat`) and add a row per scenario. Character consistency and context retention there need a person to read the transcripts too.
 - **Checker in new scenarios:** the correction test set is café sentences, so correction accuracy and false corrections are only measured for the café.
 
+## v8 notes (not evaluated yet)
+
+2026-11-15 (commit 651aa1d). Made the restaurant, shop and job-interview scenarios more realistic for China: real home-style dishes, prices in yuan, "scan or cash" at the till, a bookshop as the interview setting, and the phrases real staff use. Café prompts unchanged (golden test). These scenarios have not been evaluated.
+
 ## v9 notes (not evaluated yet)
 
 2026-11-15. Restaurant only: the server sometimes opened with the customer's line (您好，请问有空位吗？). The restaurant prompt now says the server never asks the customer about free tables, dishes or prices and never speaks the customer's lines, and the opening cue asks for 您好，几位？. Café prompts are unchanged (golden test), so the v6 café scores still hold.
