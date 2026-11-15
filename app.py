@@ -20,6 +20,7 @@ import gradio as gr
 from convo.chat import Conversation
 from convo.prompts import PROMPT_VERSION
 from convo.pinyin_feedback import tone_feedback
+from convo.pinyin_spelling import spelling_feedback
 from convo.render import format_turn, to_pinyin
 from convo.review import CATEGORY_LABELS, build_report, review_sentence
 from convo.scenarios import DEFAULT_SCENARIO, SCENARIOS
@@ -95,9 +96,18 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenar
     if HAN.search(text):
         sentence = text
     elif pinyin is not None and text:
-        cands, problem = pinyin.candidates(text)
+        # fix misspelt words first (and say why), so the rest of the sentence still gets checked
+        spell = {"issues": [], "fixed": text}
+        if getattr(pinyin, "valid", None):
+            try:
+                spell = spelling_feedback(text, pinyin)
+            except Exception as exc:
+                print("[convo] spelling help skipped:", exc)
+        out["spelling"] = spell["issues"]
+        cands, problem = pinyin.candidates(spell["fixed"])
         if not cands or not HAN.search(cands[0]):  # e.g. only punctuation: nothing to check
-            out["skipped"] = f"'{problem}' doesn't look like pinyin." if problem else "Write in Chinese characters or pinyin to get feedback."
+            out["skipped"] = (f"We couldn't read '{problem}' as pinyin." if problem
+                              else "Write in Chinese characters or pinyin to get feedback.")
             return out
         # shortcut: takes the top pinyin candidate; if it guesses the wrong characters, the check is of that guess
         sentence, out["from_pinyin"] = cands[0], True
@@ -115,9 +125,17 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenar
                english=r.english)
     if out["from_pinyin"] and getattr(pinyin, "valid", None):
         try:  # tone marks the learner typed vs the right ones; display only, never blocks the check
-            out["tones"] = tone_feedback(text, sentence, pinyin.valid)
+            out["tones"] = tone_feedback(spell["fixed"], sentence, pinyin.valid)
         except Exception as exc:  # e.g. pypinyin missing
             print("[convo] tone feedback skipped:", exc)
+    # "Try saying": the whole sentence done right, whenever something needed fixing
+    if r.valid and (out["has_error"] or out.get("spelling")):
+        better = out["corrected"] or sentence
+        try:
+            better_py = pinyin_fn(better)
+        except Exception:
+            better_py = ""
+        out["example"] = {"zh": better, "py": better_py, "en": r.english}
     return out
 
 

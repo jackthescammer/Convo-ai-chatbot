@@ -426,6 +426,18 @@ export function render(root, arg, { mode = 'text' } = {}) {
       <p class="check-why">${msg}</p>${right}${wrong ? `<ul class="check-tones">${wrong}</ul>` : ''}</div>`;
   }
 
+  // Misspelt pinyin words: what was typed, what was probably meant (with its character) and why.
+  function spellingBlock(issues) {
+    if (!issues?.length) return '';
+    const items = issues.map((i) => `<li>
+      <p class="check-spell-change"><span class="from">${esc(i.typed)}</span>${ARROW}${i.suggest
+        ? `<span class="to">${esc(i.suggest)}</span>${i.char ? ` <span lang="zh-Hans">${esc(i.char)}</span>` : ''}`
+        : '<span class="to">?</span>'}</p>
+      <p class="check-why">${i.suggest ? `“${esc(i.typed)}” isn't pinyin: ${esc(i.reason)}. You probably meant “${esc(i.suggest)}”.` : `“${esc(i.typed)}” isn't pinyin: ${esc(i.reason)}. Check the spelling.`}</p>
+    </li>`).join('');
+    return `<div class="check-part"><span class="tag tag-grammar">Spelling</span><ul class="check-spell">${items}</ul></div>`;
+  }
+
   function renderCheck(entry, animate) {
     if (!checksEl || !entry.check) return;
     const c = entry.check;
@@ -439,18 +451,25 @@ export function render(root, arg, { mode = 'text' } = {}) {
     const readAs = c.from_pinyin && c.checked
       ? `<p class="check-read">We read it as <span lang="zh-Hans">${esc(c.checked)}</span></p>` : '';
     const tones = toneBlock(c.tones);
+    const spelling = spellingBlock(c.spelling);
+    const example = c.example?.zh ? `<div class="check-part check-example"><span class="tag tag-ok">Try saying</span>
+      <p class="check-example-zh" lang="zh-Hans">${esc(c.example.zh)}</p>
+      ${c.example.py ? `<p class="check-py">${esc(c.example.py)}</p>` : ''}
+      ${c.example.en ? `<p class="check-meaning">${esc(c.example.en)}</p>` : ''}</div>` : '';
     const goodJob = (text) => `<p class="check-good"><span class="check-good-mark">${ICONS.check}</span><strong>Good job!</strong> ${text}</p>`;
     let html;
     if (c.pending) html = said + '<p class="check-status"><span class="check-dots" aria-hidden="true"><span></span><span></span><span></span></span>Checking…</p>';
     else if (c.failed) html = said + `<p class="check-status">Couldn't check this one. ${esc(c.failed)}</p>`;
-    else if (c.skipped) html = said + `<p class="check-status">${esc(c.skipped)}</p>`;
+    else if (c.skipped) html = said + spelling + `<p class="check-status">${esc(c.skipped)}</p>`;
     else if (c.valid === false) html = said + '<p class="check-status">Couldn\'t check this one.</p>';
     else if (c.has_error && c.corrected) {
       const [tag, label] = TAG_FOR[c.category] || ['grammar', c.label ? c.label[0].toUpperCase() + c.label.slice(1) : 'Grammar'];
-      html = said + readAs + `<div class="check-part"><span class="tag tag-${tag}">${esc(label)}</span>
+      html = said + spelling + readAs + `<div class="check-part"><span class="tag tag-${tag}">${esc(label)}</span>
         <p class="note-change"><span class="from" lang="zh-Hans">${esc(c.checked || entry.text)}</span>${ARROW}<span class="to" lang="zh-Hans">${esc(c.corrected)}</span></p>
-        ${c.corrected_pinyin ? `<p class="check-py">${esc(c.corrected_pinyin)}</p>` : ''}
-        ${c.explanation ? `<p class="check-why">${esc(c.explanation)}</p>` : ''}</div>` + tones;
+        ${c.explanation ? `<p class="check-why">${esc(c.explanation)}</p>` : ''}</div>` + tones + example;
+    } else if (spelling) {
+      // the words were misspelt, but once fixed the sentence is right
+      html = said + spelling + readAs + `<p class="check-good"><span class="check-good-mark">${ICONS.check}</span>Once the spelling is fixed, the sentence is right.</p>` + tones + example;
     } else if (tones) {
       // right sentence, but the pinyin's tones need work
       html = goodJob('The sentence is right.') + readAs + tones;

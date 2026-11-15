@@ -821,3 +821,14 @@ html[data-hide-notes] .notes-hidden { display: block; }
 .check-tones .to { color: var(--fathom); font-weight: 600; }
 .check-tones svg { width: 0.875rem; height: 0.875rem; color: var(--ink-50); }
 .check-tones [lang] { color: var(--ink-72); font-family: var(--font-zh); }
+
+/* Live feedback: pinyin spelling help and the "Try saying" example */
+.check-spell { display: grid; gap: 0.5rem; width: 100%; }
+.check-spell li { display: grid; gap: 0.125rem; }
+.check-spell-change { display: flex; align-items: center; gap: 0.375rem; font-family: var(--font-pinyin); font-size: 1rem; }
+.check-spell-change .from { color: var(--pulse); text-decoration: line-through; text-decoration-color: var(--flare); text-decoration-thickness: 2px; }
+.check-spell-change .to { color: var(--fathom); font-weight: 600; }
+.check-spell-change svg { width: 0.875rem; height: 0.875rem; color: var(--ink-50); }
+.check-spell-change [lang] { font-family: var(--font-zh); color: var(--vast); }
+.check-example { background: var(--lumen); border-radius: var(--r-sm); padding: 0.625rem 0.75rem; border-top: 0; margin-top: 0.25rem; }
+.check-example-zh { font-family: var(--font-zh); font-size: 1.125rem; font-weight: 500; }
