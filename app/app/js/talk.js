@@ -2,8 +2,8 @@ import {
   esc, el, layered, wait, setMood, poke, reduceMotion, bindLayerToggles, layerChips, ICONS,
 } from './ui.js';
 import { mountMascots } from './kit.js';
-import { getPrefs } from './prefs.js';
-import { model, MODEL_INFO, GOALS, validateTurn, validateReport } from './model.js';
+import { getPrefs, savePrefs } from './prefs.js';
+import { model, MODEL_INFO, SCENARIOS, scenarioById, validateTurn, validateReport } from './model.js';
 import { getSettings, addReport } from './store.js';
 import { voiceSupported, createDictation } from './speech.js';
 
@@ -33,11 +33,12 @@ const STATUS = {
 /* ---------- Session: survives leaving the screen, so a conversation can be resumed ---------- */
 let session = null;
 
-function newSession() {
+function newSession(scenario) {
   const s = getSettings();
+  savePrefs({ scenario }); // the dashboard offers this one first next time
   return {
     id: `c${Date.now().toString(36)}`,
-    settings: { level: s.level, difficulty: s.difficulty },
+    settings: { level: s.level, difficulty: s.difficulty, scenario },
     history: [],      // { who: 'ai', line, mood } | { who: 'you', text, notes }
     notes: [],
     goals: {},
@@ -52,6 +53,8 @@ function newSession() {
 
 export const hasActiveSession = () => Boolean(session && !session.ended && session.history.some((h) => h.who === 'you'));
 export const sessionProgress = () => ({ goals: { ...(session?.goals || {}) } });
+/** The conversation #/talk opens: the one in progress, else the one started last. */
+export const currentScenario = () => scenarioById(hasActiveSession() ? session.settings.scenario : getPrefs().scenario);
 export function resetSession() {
   if (session) session.view = null;
   session = null;
@@ -75,7 +78,7 @@ async function runModel(s, kind) {
     const raw = kind === 'start'
       ? await model.start({ settings: s.settings })
       : await model.reply({ history: toModelHistory(s), settings: s.settings });
-    const turn = validateTurn(raw);
+    const turn = validateTurn(raw, s.settings.scenario);
     await applyTurn(s, turn);
     // after the reply, so the check doesn't slow the conversation down (one GPU does both)
     if (learner && !learner.check) liveCheck(s, learner);
@@ -116,7 +119,7 @@ async function applyTurn(s, turn) {
   else v.ready();
 }
 
-/* ---------- Live feedback: each message is checked after the barista answers ---------- */
+/* ---------- Live feedback: each message is checked after Convo answers ---------- */
 const LIVE_CHECKS = MODEL_INFO.connected && typeof model.check === 'function';
 
 async function liveCheck(s, entry) {
@@ -151,16 +154,18 @@ function endEarly(s) {
 async function writeReport(s) {
   const raw = await model.report({ history: toModelHistory(s), notes: s.notes, settings: s.settings });
   const r = validateReport(raw);
+  const sc = scenarioById(s.settings.scenario);
   const report = {
     id: `r${Date.now().toString(36)}`,
     createdAt: new Date().toISOString(),
-    scenario: 'Ordering at a café',
+    scenario: sc.title,
+    scenarioId: sc.id,
     level: s.settings.level,
     difficulty: s.settings.difficulty,
     model: MODEL_INFO.name,
     placeholder: !MODEL_INFO.connected,
     // Only a model that reports goals gets them in the report (none are guessed).
-    goals: MODEL_INFO.provides.goals ? GOALS.map((g) => ({ label: g.label, done: Boolean(s.goals[g.id]) })) : [],
+    goals: MODEL_INFO.provides.goals ? sc.goals.map((g) => ({ label: g.label, done: Boolean(s.goals[g.id]) })) : [],
     transcript: s.history.map((h) => (h.who === 'ai' ? { who: 'ai', ...h.line } : { who: 'you', zh: h.text })),
     notes: s.notes,
     ...r,
@@ -176,6 +181,7 @@ const DIFF = { easy: 'Easy', standard: 'Standard', challenging: 'Challenging' };
 const railFoot = () => (MODEL_INFO.connected ? `Replies by ${MODEL_INFO.name}.` : MODEL_INFO.detail);
 
 function template(s) {
+  const sc = scenarioById(s.settings.scenario);
   const meta = `${s.settings.level} · ${DIFF[s.settings.difficulty]}`;
   return `
   <section class="talk" aria-labelledby="talk-title">
@@ -183,7 +189,7 @@ function template(s) {
       <div class="talk-bar" data-hint-scope>
         <span class="talk-bar-mascot" data-mascot="idle" data-size="44" data-barista-mini></span>
         <div class="talk-heading">
-          <h1 class="talk-title" id="talk-title">Ordering at a café</h1>
+          <h1 class="talk-title" id="talk-title">${esc(sc.title)}</h1>
           <p class="talk-sub">${esc(meta)}</p>
         </div>
         <div class="talk-controls">
@@ -202,7 +208,7 @@ function template(s) {
       <div class="talk-body">
         <div class="talk-chat">
           <div class="chat-log" data-log role="log" aria-live="polite" aria-label="Conversation with Convo">
-            <p class="chat-context">You're at the counter. Convo is the barista and speaks first.</p>
+            <p class="chat-context">${esc(sc.context)}</p>
           </div>
           <div class="composer" data-composer>
             <div class="suggest" id="talk-suggest" data-suggest hidden>
@@ -228,7 +234,7 @@ function template(s) {
           <div class="barista">
             <span class="barista-mascot" data-mascot="idle" data-size="84" data-barista></span>
             <div class="barista-copy">
-              <p class="barista-name">Convo <span class="msg-role">as the barista</span></p>
+              <p class="barista-name">Convo <span class="msg-role">as ${esc(sc.role)}</span></p>
               <p class="barista-status" data-status>${STATUS.idle}</p>
             </div>
             <button type="button" class="rail-close" data-rail-close aria-label="Close notes">${ICONS.close}</button>
@@ -236,7 +242,7 @@ function template(s) {
           ${MODEL_INFO.provides.goals ? `<section class="rail-block" aria-labelledby="goals-title">
             <h2 class="rail-title" id="goals-title">Goals</h2>
             <ol class="goals" data-goals>
-              ${GOALS.map((g) => `<li class="goal" data-goal="${g.id}"><span class="goal-mark">${ICONS.check}</span><span class="goal-label">${esc(g.label)}</span><span class="sr-only" data-goal-state>, not done yet</span></li>`).join('')}
+              ${sc.goals.map((g) => `<li class="goal" data-goal="${g.id}"><span class="goal-mark">${ICONS.check}</span><span class="goal-label">${esc(g.label)}</span><span class="sr-only" data-goal-state>, not done yet</span></li>`).join('')}
             </ol>
           </section>` : ''}
           ${MODEL_INFO.provides.notes ? `<section class="rail-block" aria-labelledby="notes-title">
@@ -260,9 +266,16 @@ function template(s) {
   </section>`;
 }
 
-export function render(root) {
-  if (!session || session.reportId) session = newSession();
+/** #/talk resumes the conversation in progress (or starts the last one); #/talk/<scenario> opens that
+    scenario, and starting a different one ends an unfinished conversation, as Start over does. */
+export function render(root, arg) {
+  const wanted = SCENARIOS.some((sc) => sc.id === arg) ? arg : null;
+  if (!session || session.reportId || (wanted && session.settings.scenario !== wanted)) {
+    session = newSession(wanted || currentScenario().id);
+  }
   const s = session;
+  const role = scenarioById(s.settings.scenario).role;
+  document.title = `${scenarioById(s.settings.scenario).title} · Convo`;
   root.innerHTML = template(s);
 
   const q = (sel) => root.querySelector(sel);
@@ -292,7 +305,7 @@ export function render(root) {
   function addMessage(entry, animate) {
     const msg = el('div', `msg msg-${entry.who}${animate ? ' is-new' : ''}`);
     if (entry.who === 'ai') {
-      msg.append(el('p', 'msg-who', 'Convo <span class="msg-role">as the barista</span>'));
+      msg.append(el('p', 'msg-who', `Convo <span class="msg-role">as ${esc(role)}</span>`));
       const bubble = el('div', 'bubble', layered(entry.line));
       msg.append(bubble);
       if (entry.line.py || entry.line.en) {

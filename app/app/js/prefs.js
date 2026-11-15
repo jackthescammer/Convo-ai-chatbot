@@ -11,6 +11,7 @@ export const PREF_DEFAULTS = {
   showHelp: true,       // show the "Help me reply" button
   enterToSend: true,    // Enter sends; otherwise Enter adds a line and only the button sends
   calmMascot: false,    // mascot holds one pose per state instead of animating
+  scenario: 'cafe',     // the conversation started last: the dashboard offers it first, #/talk opens it
 };
 
 let prefs = { ...PREF_DEFAULTS };

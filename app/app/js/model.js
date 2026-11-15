@@ -25,7 +25,8 @@
 
    Calls
    -----
-   start({ settings })                  -> Promise<Turn>     the barista's opening line
+   settings: { level: 'A1'|'A2', difficulty, scenario }      scenario: an id from SCENARIOS below
+   start({ settings })                  -> Promise<Turn>     the character's opening line
    reply({ history, settings })         -> Promise<Turn>     history: [{ who: 'ai'|'you', zh }]
    report({ history, notes, settings }) -> Promise<Report>
 */
@@ -101,13 +102,74 @@ export const MODEL_INFO = LIVE
     provides: { goals: true, notes: true, suggestions: true },
   };
 
-/* The scenario's goals (shown in the rail). The model marks them done through `turn.goals`. */
+/* The café's goals (shown in the rail). The model marks them done through `turn.goals`.
+   Setup imports this too, so keep the export and its ids. */
 export const GOALS = [
   { id: 'order', label: 'Order a drink' },
   { id: 'answer', label: "Answer the barista's questions" },
   { id: 'surprise', label: 'Cope with a surprise' },
   { id: 'pay', label: 'Pay for your order' },
 ];
+
+/* The conversations. Ids match the model server's scenarios (convo/scenarios.py in the team repo);
+   everything else here is interface copy. `role` finishes "Convo, as …". Goals say what each
+   conversation practises; only a model that reports goals ticks them (the placeholder does).
+   `image` (optional) is the scene's picture, relative to home.html: app/img/scenes/<id>.webp, 16:9.
+   A conversation without one shows its `word` in a tile instead. */
+export const SCENARIOS = [
+  {
+    id: 'cafe', title: 'Ordering at a café', word: '咖啡', role: 'the barista', image: 'img/scenes/cafe.webp',
+    blurb: 'Order a drink, answer a few questions and pay.',
+    context: "You're at the counter. Convo is the barista and speaks first.",
+    goals: GOALS,
+  },
+  {
+    id: 'shop', title: 'Buying things at a shop', word: '购物', role: 'the shop assistant',
+    blurb: 'Find what you need, ask the price and pay.',
+    context: "You've walked into a small neighbourhood shop. Convo works there and speaks first.",
+    goals: [
+      { id: 'ask', label: 'Ask for what you need' },
+      { id: 'choose', label: 'Choose which one and how many' },
+      { id: 'price', label: 'Ask the price' },
+      { id: 'pay', label: 'Pay' },
+    ],
+  },
+  {
+    id: 'restaurant', title: 'Ordering at a restaurant', word: '餐厅', role: 'the server', image: 'img/scenes/restaurant.webp',
+    blurb: 'Get a table, order dishes and ask for the bill.',
+    context: "You've walked into a busy restaurant. Convo is your server and speaks first.",
+    goals: [
+      { id: 'table', label: 'Get a table' },
+      { id: 'order', label: 'Order dishes and drinks' },
+      { id: 'how', label: 'Say how you like it' },
+      { id: 'bill', label: 'Ask for the bill' },
+    ],
+  },
+  {
+    id: 'interview', title: 'A job interview', word: '面试', role: 'the interviewer', image: 'img/scenes/interview.webp',
+    blurb: 'Introduce yourself and talk about your experience.',
+    context: "You're interviewing for a part-time job at a bookshop. Convo is the manager and speaks first.",
+    goals: [
+      { id: 'intro', label: 'Introduce yourself' },
+      { id: 'experience', label: 'Talk about your experience' },
+      { id: 'when', label: 'Say when you can work' },
+      { id: 'ask', label: 'Ask a question of your own' },
+    ],
+  },
+  {
+    id: 'chat', title: 'Open conversation', word: '聊天', role: 'your new friend',
+    blurb: 'No script. Convo picks the topics and leads.',
+    context: "You've just met Convo through a friend. Convo picks what to talk about and speaks first.",
+    goals: [
+      { id: 'about', label: 'Say a little about yourself' },
+      { id: 'answer', label: "Answer Convo's questions" },
+      { id: 'askback', label: 'Ask a question back' },
+      { id: 'keep', label: 'Keep the conversation going' },
+    ],
+  },
+];
+export const DEFAULT_SCENARIO = 'cafe';
+export const scenarioById = (id) => SCENARIOS.find((s) => s.id === id) || SCENARIOS[0];
 
 /* ---------- Validation: nothing from the model is shown until it passes ---------- */
 const CJK = /[㐀-鿿]/;
@@ -130,12 +192,12 @@ function cleanNote(n) {
   return out;
 }
 
-export function validateTurn(turn) {
+export function validateTurn(turn, scenario = DEFAULT_SCENARIO) {
   const reply = cleanLine(turn?.reply);
   if (!reply) throw new Error('The reply was empty or not in Chinese.');
   const goals = {};
   if (turn.goals && typeof turn.goals === 'object') {
-    GOALS.forEach(({ id }) => { if (typeof turn.goals[id] === 'boolean') goals[id] = turn.goals[id]; });
+    scenarioById(scenario).goals.forEach(({ id }) => { if (typeof turn.goals[id] === 'boolean') goals[id] = turn.goals[id]; });
   }
   return {
     reply,
@@ -230,6 +292,50 @@ const STEPS = [
   },
 ];
 
+/* The other conversations get an opening line each, then the same generic replies, which tick the
+   scenario's goals in order. Enough to click through the screens; nothing here reads the learner. */
+const SCENE_OPENINGS = {
+  shop: {
+    reply: { zh: '你好！你想买什么？', py: 'Nǐ hǎo! Nǐ xiǎng mǎi shénme?', en: 'Hi! What would you like to buy?' },
+    suggestions: [
+      { zh: '我想买一瓶水。', py: 'Wǒ xiǎng mǎi yì píng shuǐ.', en: "I'd like to buy a bottle of water." },
+      { zh: '有没有雨伞？', py: 'Yǒu méiyǒu yǔsǎn?', en: 'Do you have umbrellas?' },
+    ],
+  },
+  restaurant: {
+    reply: { zh: '你好！几位？', py: 'Nǐ hǎo! Jǐ wèi?', en: 'Hi! How many people?' },
+    suggestions: [
+      { zh: '一位。', py: 'Yí wèi.', en: 'Just one.' },
+      { zh: '我们两位。', py: 'Wǒmen liǎng wèi.', en: 'Two of us.' },
+    ],
+  },
+  interview: {
+    reply: { zh: '你好，请坐。请介绍一下你自己。', py: 'Nǐ hǎo, qǐng zuò. Qǐng jièshào yíxià nǐ zìjǐ.', en: 'Hello, please sit down. Please introduce yourself.' },
+    suggestions: [
+      { zh: '您好，我叫安娜。', py: 'Nín hǎo, wǒ jiào Ānnà.', en: 'Hello, my name is Anna.' },
+      { zh: '我是大学生。', py: 'Wǒ shì dàxuéshēng.', en: "I'm a university student." },
+    ],
+  },
+  chat: {
+    reply: { zh: '你好！很高兴认识你。你周末喜欢做什么？', py: 'Nǐ hǎo! Hěn gāoxìng rènshi nǐ. Nǐ zhōumò xǐhuan zuò shénme?', en: 'Hi! Nice to meet you. What do you like doing at weekends?' },
+    suggestions: [
+      { zh: '我喜欢看电影。', py: 'Wǒ xǐhuan kàn diànyǐng.', en: 'I like watching films.' },
+      { zh: '我喜欢做饭。', py: 'Wǒ xǐhuan zuò fàn.', en: 'I like cooking.' },
+    ],
+  },
+};
+const SCENE_STEPS = [
+  { reply: { zh: '好的，明白了。还有呢？', py: 'Hǎo de, míngbai le. Hái yǒu ne?', en: 'OK, got it. What else?' } },
+  { reply: { zh: '真的吗？可以多说一点吗？', py: 'Zhēn de ma? Kěyǐ duō shuō yìdiǎn ma?', en: 'Really? Can you tell me a bit more?' } },
+  { reply: { zh: '好的，谢谢你！', py: 'Hǎo de, xièxie nǐ!', en: 'OK, thank you!' } },
+  { reply: { zh: '今天很高兴和你聊天。再见！', py: 'Jīntiān hěn gāoxìng hé nǐ liáotiān. Zàijiàn!', en: 'It was nice talking with you today. Bye!' }, mood: 'happy', ended: true },
+];
+const sceneStep = (scenario, n) => {
+  const step = SCENE_STEPS[Math.min(n, SCENE_STEPS.length) - 1];
+  const goal = scenarioById(scenario).goals[Math.min(n, SCENE_STEPS.length) - 1];
+  return { ...step, goals: goal ? { [goal.id]: true } : {} };
+};
+
 /* Three hand-written checks so the notes rail and report can be clicked through.
    The real model replaces all of this. */
 const PLACEHOLDER_CHECKS = [
@@ -268,12 +374,15 @@ const learnerCount = (history) => history.filter((h) => h.who === 'you').length;
 const placeholderModel = {
   async start({ settings }) {
     await delay(700);
+    const scene = SCENE_OPENINGS[settings.scenario];
+    if (scene) return { ...scene, mood: 'talking' };
     return { reply: OPENINGS[settings.difficulty] || OPENINGS.standard, mood: 'talking', suggestions: OPENING_SUGGESTIONS };
   },
 
-  async reply({ history }) {
+  async reply({ history, settings }) {
     const n = learnerCount(history);
-    const step = STEPS[Math.min(n, STEPS.length) - 1];
+    const cafe = !SCENE_OPENINGS[settings.scenario];
+    const step = cafe ? STEPS[Math.min(n, STEPS.length) - 1] : sceneStep(settings.scenario, n);
     const said = history[history.length - 1]?.zh || '';
     const notes = [];
     PLACEHOLDER_CHECKS.forEach((c) => { const m = said.match(c.test); if (m) notes.push(c.note(m, said)); });
@@ -288,7 +397,8 @@ const placeholderModel = {
     await delay(900);
     const mine = history.filter((h) => h.who === 'you');
     const inMandarin = mine.filter((h) => CJK.test(h.zh)).length;
-    const finished = learnerCount(history) >= STEPS.length;
+    const cafe = !SCENE_OPENINGS[settings.scenario];
+    const finished = learnerCount(history) >= (cafe ? STEPS : SCENE_STEPS).length;
     const fixes = notes.filter((n) => n.said);
     const surprised = notes.some((n) => n.tag === 'surprise');
     const look = fixes.length === 1 ? 'One sentence is worth another look.' : `${fixes.length} sentences are worth another look.`;
@@ -303,8 +413,8 @@ const placeholderModel = {
       leftAlone: [],
       pattern: fixes.length > 1 ? 'Several small grammar slips. Read each "Why" before the next conversation.' : 'Nothing came up more than once.',
       next: settings.difficulty === 'challenging'
-        ? 'Stay on Challenging and ask the barista a question of your own, like 你推荐什么？'
-        : 'Try the next difficulty up. The barista asks more follow-up questions.',
+        ? `Stay on Challenging and ask ${scenarioById(settings.scenario).role} a question of your own${cafe ? ', like 你推荐什么？' : '.'}`
+        : `Try the next difficulty up. ${scenarioById(settings.scenario).role[0].toUpperCase()}${scenarioById(settings.scenario).role.slice(1)} asks more follow-up questions.`,
     };
   },
 };
@@ -319,6 +429,25 @@ const placeholderModel = {
 const DIFFICULTY_NAME = { easy: 'Easy', standard: 'Standard', challenging: 'Challenging' };
 const OFFLINE = "Can't reach the live model. It runs on a Google Colab GPU that's started by hand, so it may be off, or its link may have changed (Settings › About).";
 const LOST = "The live model no longer has this conversation (it may have been restarted). Start a new conversation.";
+const OUTDATED = (title) => `The live model is running an older version that only has the café conversation, so it can't do “${title}” yet. Restart the Colab notebook so it loads the latest code, or pick the café for now.`;
+
+/* Which API endpoints the model server has. Servers from before scenarios (prompts v6) have only
+   /start and /check, which are always the café; newer ones add /start_scenario and /check_scenario.
+   Resolves a Set of names, or null if the server didn't answer. */
+async function serverEndpoints() {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(`${MODEL_URL}/gradio_api/info`, { headers: TUNNEL_HEADERS, signal: ctrl.signal });
+    if (!res.ok) return null;
+    const info = await res.json();
+    return new Set(Object.keys(info?.named_endpoints || {}).map((k) => k.replace(/^\//, '')));
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /* pypinyin gives "nín hǎo， huān yíng。": switch to Latin punctuation and capitalise sentences. */
 const PINYIN_PUNCT = { '，': ',', '。': '.', '？': '?', '！': '!', '、': ',', '；': ';', '：': ':', '（': '(', '）': ')', '“': '"', '”': '"' };
@@ -487,23 +616,26 @@ async function readResult(res) {
   }
 }
 
-/** Is the live model's server up? Resolves { ok, name }. Also fills in MODEL_INFO.name from the
-    app's footer, which says which model and prompt version it runs ("Model: Qwen/... · prompts v6"). */
+/** Is the live model's server up? Resolves { ok, name, scenarios }, where `scenarios` says whether
+    it has every conversation (false: an older server with only the café; null: unknown). Also fills
+    in MODEL_INFO.name from the app's footer, which says which model and prompt version it runs
+    ("Model: Qwen/... · prompts v7"). */
 export async function checkModel() {
-  if (!LIVE) return { ok: false, name: MODEL_INFO.name };
+  if (!LIVE) return { ok: false, name: MODEL_INFO.name, scenarios: null };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 10000);
   try {
     const res = await fetch(`${MODEL_URL}/config`, { headers: TUNNEL_HEADERS, signal: ctrl.signal });
-    if (!res.ok) return { ok: false, name: MODEL_INFO.name };
+    if (!res.ok) return { ok: false, name: MODEL_INFO.name, scenarios: null };
     const cfg = await res.json();
     for (const c of cfg.components || []) {
       const m = typeof c?.props?.value === 'string' && c.props.value.match(/Model:\s*([^·<\n]+?)\s*·\s*prompts\s*([\w.-]+)/);
       if (m) { MODEL_INFO.name = `${m[1].split('/').pop()}, prompts ${m[2]}`; break; }
     }
-    return { ok: true, name: MODEL_INFO.name };
+    const api = await serverEndpoints();
+    return { ok: true, name: MODEL_INFO.name, scenarios: api ? api.has('start_scenario') : null };
   } catch {
-    return { ok: false, name: MODEL_INFO.name };
+    return { ok: false, name: MODEL_INFO.name, scenarios: null };
   } finally {
     clearTimeout(timer);
   }
@@ -511,6 +643,7 @@ export async function checkModel() {
 
 function gradioModel(base) {
   let session = null; // one Gradio session per conversation
+  let api = null;     // the server's endpoints, read when a conversation starts
 
   async function call(api, data, timeoutMs) {
     const ctrl = new AbortController();
@@ -540,8 +673,20 @@ function gradioModel(base) {
     async start({ settings }) {
       session = `convo${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
       checkModel();
+      const scenario = scenarioById(settings.scenario);
       const level = settings.level === 'A1' ? 'A1' : 'A2';
-      const out = await call('start', [level, DIFFICULTY_NAME[settings.difficulty] || 'Standard', ['chinese', 'pinyin', 'english']], 90000);
+      const args = [level, DIFFICULTY_NAME[settings.difficulty] || 'Standard', ['chinese', 'pinyin', 'english']];
+      api = await serverEndpoints();
+      let out;
+      if (api && !api.has('start_scenario')) {
+        // An older server: it can only do the café, and is never asked to pretend otherwise.
+        if (scenario.id !== 'cafe') throw new Error(OUTDATED(scenario.title));
+        out = await call('start', args, 90000);
+      } else if (!api && scenario.id === 'cafe') {
+        out = await call('start', args, 90000); // works on old and new servers alike
+      } else {
+        out = await call('start_scenario', [...args, scenario.id], 90000);
+      }
       return turnFrom(out);
     },
 
@@ -557,7 +702,13 @@ function gradioModel(base) {
     /** Live feedback on one message (the server's "check" API, same checker as the report).
         Resolves the server's result object, or null if it sent nothing usable. */
     async check({ text, settings }) {
-      const out = await call('check', [text, settings.level === 'A1' ? 'A1' : 'A2'], 120000);
+      const level = settings.level === 'A1' ? 'A1' : 'A2';
+      const scenario = scenarioById(settings.scenario).id;
+      // The checker is told where the sentence was said. /check (older servers) assumes the café.
+      const withScenario = api ? api.has('check_scenario') : scenario !== 'cafe';
+      const out = withScenario
+        ? await call('check_scenario', [text, level, scenario], 120000)
+        : await call('check', [text, level], 120000);
       const r = Array.isArray(out) ? out[0] : out;
       return r && typeof r === 'object' ? r : null;
     },

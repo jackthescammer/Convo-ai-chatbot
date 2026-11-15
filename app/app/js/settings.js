@@ -2,7 +2,7 @@ import { esc, layered, bindLayerToggles, layerChips, setLayer, LAYERS } from './
 import { mountMascots, switchControl, APP_ICONS, REASONS } from './kit.js';
 import { getSettings, saveSettings, listReports, clearAll } from './store.js';
 import { getPrefs, savePrefs, resetPrefs } from './prefs.js';
-import { MODEL_INFO, DEFAULT_MODEL_URL, setModelUrl, checkModel } from './model.js';
+import { MODEL_INFO, DEFAULT_MODEL_URL, SCENARIOS, setModelUrl, checkModel } from './model.js';
 import { resetSession, hasActiveSession } from './talk.js';
 
 const SECTIONS = [
@@ -180,7 +180,7 @@ function template(s, p) {
               <div><dt>Conversation model</dt><dd data-model-name>${MODEL_INFO.connected ? esc(MODEL_INFO.name) : 'Placeholder, not connected'}</dd></div>
               ${MODEL_INFO.connected ? '<div><dt>Live model</dt><dd data-model-status>Checking the link…</dd></div>' : ''}
               <div><dt>Where your data lives</dt><dd>This browser only</dd></div>
-              <div><dt>Scenarios</dt><dd>Ordering at a café</dd></div>
+              <div><dt>Conversations</dt><dd>${esc(SCENARIOS.map((x) => x.title).join(', '))}</dd></div>
             </dl>
             ${MODEL_INFO.connected ? '' : `<p class="set-note">Replies come from the placeholder: they follow a fixed order and don't respond to what you write. Clear the link below to use the live model (Qwen2.5-3B-Instruct).</p>`}
             <div class="setting-row setting-row-stack">
@@ -245,12 +245,14 @@ export function render(root, { arg }) {
   });
 
   if (MODEL_INFO.connected) {
-    checkModel().then(({ ok, name }) => {
+    checkModel().then(({ ok, name, scenarios }) => {
       const nameEl = q('[data-model-name]');
       const statusEl = q('[data-model-status]');
       if (!nameEl || !statusEl) return; // left Settings before the check finished
       nameEl.textContent = name;
-      statusEl.textContent = ok ? 'Online' : "Can't reach it. Colab may be off, or the link below may be old.";
+      statusEl.textContent = !ok ? "Can't reach it. Colab may be off, or the link below may be old."
+        : scenarios === false ? 'Online, café only. It runs an older version: restart Colab for the other conversations.'
+          : 'Online';
     });
   }
 

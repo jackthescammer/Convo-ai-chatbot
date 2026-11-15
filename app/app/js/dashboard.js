@@ -1,10 +1,10 @@
 import { esc, layered, bindLayerToggles, layerChips } from './ui.js';
 import { mountMascots, relativeDay, reasonLabels, APP_ICONS } from './kit.js';
-import { GOALS } from './model.js';
+import { SCENARIOS } from './model.js';
 import { getSettings, listReports, DIFFICULTY_LABEL } from './store.js';
 import { getPrefs } from './prefs.js';
 import { thisWeek, streak, totals, patterns } from './stats.js';
-import { hasActiveSession, sessionProgress, resetSession } from './talk.js';
+import { hasActiveSession, sessionProgress, resetSession, currentScenario } from './talk.js';
 
 const ARROW = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -17,20 +17,21 @@ function greeting(name) {
   return name ? `${part}, ${name}.` : `${part}.`;
 }
 
-function continueCard(s, resume, progress) {
+function continueCard(s, sc, resume, progress) {
   return `
-  <article class="card-continue" aria-labelledby="continue-title">
+  <article class="card-continue${sc.image ? ' has-scene' : ''}" aria-labelledby="continue-title">
+    ${sc.image ? `<img class="continue-scene" src="${esc(sc.image)}" alt="" width="1600" height="900" decoding="async">` : ''}
     <span class="continue-mascot" data-mascot="${resume ? 'listening' : 'idle'}" data-size="116"></span>
     <div class="continue-copy">
-      <h2 class="continue-title" id="continue-title">Ordering at a café</h2>
+      <h2 class="continue-title" id="continue-title">${esc(sc.title)}</h2>
       <ol class="continue-goals" aria-label="Goals">
-        ${GOALS.map((g) => {
+        ${sc.goals.map((g) => {
           const done = resume && progress.goals[g.id];
           return `<li class="${done ? 'is-done' : ''}"><span class="goal-mark">${APP_ICONS.check}</span>${esc(g.label)}<span class="sr-only">${done ? ', done' : ''}</span></li>`;
         }).join('')}
       </ol>
       <div class="continue-actions">
-        <a class="btn btn-primary" href="#/talk">${resume ? 'Resume conversation' : 'Start conversation'}</a>
+        <a class="btn btn-primary" href="${resume ? '#/talk' : `#/talk/${esc(sc.id)}`}">${resume ? 'Resume conversation' : 'Start conversation'}</a>
         ${resume ? '<button type="button" class="text-link link-btn" data-start-over>Start over</button>' : ''}
         <span class="continue-meta">
           <a class="meta-pill" href="#/settings/learning" aria-label="Level ${esc(s.level)}, change in settings">${esc(s.level)}</a>
@@ -40,6 +41,30 @@ function continueCard(s, resume, progress) {
       </div>
     </div>
   </article>`;
+}
+
+/* The other conversations. Each link starts that one (#/talk/<id>). */
+function scenesCard(current, resume) {
+  const others = SCENARIOS.filter((x) => x.id !== current.id);
+  return `
+  <section class="panel" aria-labelledby="scenes-title">
+    <h2 class="panel-title" id="scenes-title">More conversations</h2>
+    <ul class="scenes">
+      ${others.map((x) => `<li>
+        <a class="scene" href="#/talk/${esc(x.id)}">
+          ${x.image
+            ? `<img class="scene-thumb" src="${esc(x.image)}" alt="" width="160" height="160" loading="lazy" decoding="async">`
+            : `<span class="scene-word" lang="zh-Hans" aria-hidden="true">${esc(x.word)}</span>`}
+          <span class="scene-copy">
+            <span class="scene-title">${esc(x.title)}</span>
+            <span class="scene-blurb">${esc(x.blurb)}</span>
+          </span>
+          <span class="scene-go" aria-hidden="true">${ARROW}</span>
+        </a>
+      </li>`).join('')}
+    </ul>
+    ${resume ? '<p class="panel-foot">Starting one of these ends the conversation in progress, without a report.</p>' : ''}
+  </section>`;
 }
 
 function weekCard(goal) {
@@ -148,6 +173,7 @@ export function render(root) {
   const reports = listReports();
   const resume = hasActiveSession();
   const progress = sessionProgress();
+  const sc = currentScenario();
 
   root.innerHTML = `
   <div class="page dash">
@@ -161,7 +187,8 @@ export function render(root) {
 
     <div class="dash-grid">
       <div class="dash-main">
-        ${continueCard(s, resume, progress)}
+        ${continueCard(s, sc, resume, progress)}
+        ${scenesCard(sc, resume)}
         ${lastReportCard(reports)}
         ${patternsCard(patterns(reports))}
       </div>
@@ -172,14 +199,14 @@ export function render(root) {
       </div>
     </div>
 
-    <p class="soon"><span class="soon-mascot" data-mascot="listening" data-size="40"></span>Coming next: say it out loud. Voice input and spoken replies are on the way, then more everyday conversations.</p>
+    <p class="soon"><span class="soon-mascot" data-mascot="listening" data-size="40"></span>Coming next: spoken replies, so you hear Convo say every line out loud.</p>
   </div>`;
 
   const mascots = mountMascots(root);
   const unbind = bindLayerToggles(root);
   root.querySelector('[data-start-over]')?.addEventListener('click', () => {
     resetSession();
-    location.hash = '#/talk';
+    location.hash = `#/talk/${sc.id}`;
   });
   return () => { unbind(); mascots.destroy(); };
 }
