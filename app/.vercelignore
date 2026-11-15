@@ -9,3 +9,4 @@
 /app/README.md
 /mascot/*
 !/mascot/convo-mascot.js
+!/mascot/cosmetics.js
