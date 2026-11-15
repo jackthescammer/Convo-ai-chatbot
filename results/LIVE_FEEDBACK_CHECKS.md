@@ -68,3 +68,15 @@ Words that aren't pinyin (or only split oddly, like yeao → ye + ao) get a sugg
 **Bug found and fixed:** "kafie" (letters swapped) was first matched to the single syllable kai, because suggestions only looked at single syllables and a swap counted as two typos. Now a swap counts as one typo and whole café words can be suggested. After a restart the live model gave kafei 咖啡, and the other two rows above gave the same results as before.
 
 The spelling and "Try saying" sections were also checked visually on the live website (tryconvo.vercel.app) with "wo yeao yir ge bing cha".
+
+## Turn check: not answering or going off-topic (prompts v10)
+
+The barista asked what the customer wanted, the learner only said "Ni hao", and the barista replied "hot or iced?" as if a drink had been ordered. The v10 turn check sorts each message into answer / no answer / off-topic / not appropriate, gives the character a one-off instruction when it isn't an answer, and shows a warning in live feedback. Café conversations, A2 Easy, through the live API:
+
+| Barista asked | Learner | Barista replied | Warning | Right? |
+|---|---|---|---|---|
+| 你今天想喝点什么？ | ni hao | 您好，你今天想喝点什么？ (asks again) | didn't answer | ✅ |
+| 需要点些什么吗？ | 我喜欢踢足球 ("I like playing football") | 那你平时喜欢做什么呢？ (followed the new topic) | off-topic | ❌ barista |
+| 有什么可以帮到您吗？ | 我要一杯咖啡 | 好的，您要加糖吗？ | none | ✅ |
+
+Detection was right 3/3, but the barista ignored the steer-back note for the off-topic message. The note was at the end of the learner's message; it now goes into the system prompt for that one reply and is firmer ("do NOT talk about it… ask again what you asked before"). Re-test results below once that is live.
