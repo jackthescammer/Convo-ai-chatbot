@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass, field
 
 from .prompts import build_assessment_prompt, build_review_prompt, build_verify_prompt
 from .render import to_pinyin
+from .scenarios import CAFE, get_scenario
 from .structured import HAN, extract_json, validate_review
 
 CATEGORY_LABELS = {
@@ -35,6 +36,8 @@ CATEGORY_TIPS = {
     "unnatural": "Listen for how real café staff and customers speak, then copy short natural phrases like 我要…, 请给我…, 多少钱？",
     "other": "Ask a Chinese speaker to look at these sentences and tell you the rule behind each fix.",
 }
+
+# Scenarios can replace some of these with tips that fit them (Scenario.tips).
 
 # Categories grouped into the report sections CLAUDE.md asks for.
 _VOCAB = {"vocabulary"}
@@ -64,6 +67,7 @@ class Report:
     assessment: str
     recurring: list       # [(category, count)] for categories seen 2+ times
     suggestions: list
+    scenario: str = "cafe"
 
     def to_dict(self):
         return asdict(self)
@@ -77,7 +81,7 @@ class Report:
                f"{len(checked)} sentence(s) checked, {len(errors)} with a correction", ""]
         if not self.reviews:
             out += ["You didn't write any Chinese sentences this time, so there is nothing to review. "
-                    "Try again and answer the waiter in Chinese.", ""]
+                    f"Try again and answer {get_scenario(self.scenario).reply_to} in Chinese.", ""]
             return "\n".join(out)
 
         out += ["## Overall", self.assessment, ""]
@@ -121,17 +125,20 @@ class Report:
         return "\n".join(out)
 
 
-def review_sentence(backend, sentence, level="A2", *, temperature=0.0, max_retries=1,
+def review_sentence(backend, sentence, level="A2", *, scenario=CAFE.id, temperature=0.0, max_retries=1,
                     max_new_tokens=300):
-    """Check one learner sentence. Returns a SentenceReview (valid=False if unusable)."""
-    messages = [{"role": "system", "content": build_review_prompt(level)},
+    """Check one learner sentence. Returns a SentenceReview (valid=False if unusable).
+
+    `scenario` tells the checker where the sentence was said (the café by default)."""
+    messages = [{"role": "system", "content": build_review_prompt(level, scenario)},
                 {"role": "user", "content": sentence}]
     problems = []
     for _ in range(max_retries + 1):
         raw = backend.generate(messages, max_new_tokens=max_new_tokens, temperature=temperature)
         payload, problems = validate_review(extract_json(raw), sentence)
         if payload:
-            if payload.has_error and _verified_correct(backend, sentence, payload.corrected, max_new_tokens):
+            if payload.has_error and _verified_correct(backend, sentence, payload.corrected, max_new_tokens,
+                                                       scenario=scenario):
                 # A separate yes/no check says the original was already fine: keep it unchanged.
                 return SentenceReview(original=sentence, corrected=sentence, english=payload.english,
                                       guard="verified_correct")
@@ -147,12 +154,12 @@ def review_sentence(backend, sentence, level="A2", *, temperature=0.0, max_retri
     return SentenceReview(original=sentence, corrected=sentence, valid=False, problems=problems)
 
 
-def _verified_correct(backend, sentence, corrected, max_new_tokens=60):
+def _verified_correct(backend, sentence, corrected, max_new_tokens=60, *, scenario=CAFE.id):
     """True only if the model clearly prefers the learner's original (A) over the fix (B).
 
     Any unclear or invalid answer keeps the checker's original decision.
     """
-    raw = backend.generate([{"role": "system", "content": build_verify_prompt()},
+    raw = backend.generate([{"role": "system", "content": build_verify_prompt(scenario)},
                             {"role": "user", "content": f"A: {sentence}\nB: {corrected}"}],
                            max_new_tokens=min(max_new_tokens, 60), temperature=0.0)
     obj = extract_json(raw)
@@ -185,8 +192,8 @@ def _fallback_assessment(reviews):
             "Look at the corrections below and try using the better versions in your next conversation.")
 
 
-def _assessment(backend, level, reviews):
-    prompt = build_assessment_prompt(level, _stats_text(reviews))
+def _assessment(backend, level, reviews, scenario=CAFE.id):
+    prompt = build_assessment_prompt(level, _stats_text(reviews), scenario)
     raw = backend.generate([{"role": "user", "content": prompt}], max_new_tokens=200, temperature=0.3)
     obj = extract_json(raw)
     text = obj.get("assessment") if isinstance(obj, dict) else None
@@ -199,7 +206,8 @@ def build_report(backend, learner_sentences, settings, *, pinyin_fn=to_pinyin):
     """Review every Chinese sentence the learner wrote and assemble the report."""
     chinese = [s for s in learner_sentences if HAN.search(s)]
     skipped = len(learner_sentences) - len(chinese)
-    reviews = [review_sentence(backend, s, settings.level) for s in chinese]
+    scenario = get_scenario(settings.scenario)
+    reviews = [review_sentence(backend, s, settings.level, scenario=scenario.id) for s in chinese]
     for r in reviews:
         if r.valid and r.has_error:
             r.pinyin = pinyin_fn(r.corrected)
@@ -207,9 +215,9 @@ def build_report(backend, learner_sentences, settings, *, pinyin_fn=to_pinyin):
     counts = Counter(r.category for r in reviews if r.valid and r.has_error)
     recurring = [(c, n) for c, n in counts.most_common() if n >= 2]
     tip_categories = [c for c, _ in counts.most_common(3)]
-    suggestions = [CATEGORY_TIPS[c] for c in tip_categories]
+    suggestions = [scenario.tips.get(c, CATEGORY_TIPS[c]) for c in tip_categories]
 
-    assessment = _assessment(backend, settings.level, reviews) if reviews else ""
+    assessment = _assessment(backend, settings.level, reviews, scenario.id) if reviews else ""
     return Report(level=settings.level, difficulty=settings.difficulty, reviews=reviews,
                   skipped=skipped, assessment=assessment, recurring=recurring,
-                  suggestions=suggestions)
+                  suggestions=suggestions, scenario=scenario.id)

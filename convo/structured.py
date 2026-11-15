@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from .prompts import CATEGORIES
 
 HAN = re.compile(r"[一-鿿]")
-STAGES = ("greeting", "ordering", "customising", "payment", "done")
+STAGES = ("greeting", "ordering", "customising", "payment", "done")  # the café's (scenarios.py)
 MAX_REPLY_CHARS = 120
 META_PHRASES = (
     "作为ai", "作为一个ai", "作为人工智能", "语言模型", "人工智能", "ai助手",
@@ -43,7 +43,7 @@ def extract_json(text):
     return None
 
 
-# ---------------------------------------------------------------- waiter turns
+# ------------------------------------------------------------- character turns
 
 @dataclass
 class TurnPayload:
@@ -54,7 +54,7 @@ class TurnPayload:
 
 
 def reply_problems(reply):
-    """Reasons a waiter reply is not acceptable (empty list = fine)."""
+    """Reasons a character reply is not acceptable (empty list = fine)."""
     problems = []
     if not HAN.search(reply):
         problems.append("the reply must be in Chinese")
@@ -70,8 +70,11 @@ def reply_problems(reply):
     return problems
 
 
-def validate_turn(obj, prev_stage="greeting", prev_order=None):
-    """Return (TurnPayload, []) if `obj` is a good waiter turn, else (None, problems)."""
+def validate_turn(obj, prev_stage="greeting", prev_order=None, *, stages=STAGES, list_key="order"):
+    """Return (TurnPayload, []) if `obj` is a good character turn, else (None, problems).
+
+    `stages` and `list_key` come from the scenario: the state list is called "order" in the café,
+    "basket" in the shop, "facts" in the interview, and so on. It is kept as `order` here."""
     prev_order = list(prev_order or [])
     if not isinstance(obj, dict):
         return None, ["the answer was not a JSON object"]
@@ -87,8 +90,8 @@ def validate_turn(obj, prev_stage="greeting", prev_order=None):
     english = english.strip() if isinstance(english, str) else ""
 
     state = obj.get("state") if isinstance(obj.get("state"), dict) else {}
-    stage = state.get("stage") if state.get("stage") in STAGES else prev_stage
-    order = state.get("order")
+    stage = state.get("stage") if state.get("stage") in stages else prev_stage
+    order = state.get(list_key)
     if isinstance(order, list) and all(isinstance(i, str) for i in order):
         order = [i.strip() for i in order if i.strip()]
     else:

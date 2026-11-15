@@ -1,92 +1,80 @@
-"""All prompt text lives here so prompt revisions are easy to track.
+"""All prompt text lives here and in scenarios.py, so prompt revisions are easy to track.
 
-Bump PROMPT_VERSION whenever any prompt below changes; evaluation results are
-logged against it.
+Bump PROMPT_VERSION whenever any prompt below or any scenario changes; evaluation results
+are logged against it.
+
+v7 added the scenarios (convo/scenarios.py). The café prompts are word for word the v6
+prompts (tests/test_scenarios.py checks this against tests/golden_cafe_v6.json).
 """
 
-PROMPT_VERSION = "v6"
+from .scenarios import CAFE, get_scenario
 
-CHARACTER_NAME = "小林"
+PROMPT_VERSION = "v7"
 
+# The café's values, kept under their v6 names.
+CHARACTER_NAME = CAFE.character
+DIFFICULTY_RULES = CAFE.style
+SURPRISES = CAFE.surprises
+OPENING_CUE = CAFE.opening_cue
+
+# Each rule follows "The <learner> is ", e.g. "The customer is a complete beginner ...".
 LEVEL_RULES = {
     "A1": (
-        "The customer is a complete beginner (CEFR A1). Use only very common HSK 1 words and "
+        "a complete beginner (CEFR A1). Use only very common HSK 1 words and "
         "very short sentences (about 8 characters or fewer). Say one short sentence, two at most. "
         "Present tense only. No idioms, no slang, no rare words."
     ),
     "A2": (
-        "The customer is an elementary learner (CEFR A2). Use common HSK 1-2 words and short, "
+        "an elementary learner (CEFR A2). Use common HSK 1-2 words and short, "
         "simple sentences, two at most per turn. Simple 了, 想, 可以, 要 and 吗/呢 questions are fine. "
         "No idioms and no rare vocabulary."
     ),
 }
 
-DIFFICULTY_RULES = {
-    "Easy": (
-        "Speak slowly and clearly. Ask simple yes/no or either-or questions (for example 热的还是冰的？). "
-        "If the customer seems stuck or answers oddly, rephrase more simply or offer two choices."
-    ),
-    "Standard": (
-        "Speak like a friendly café worker at a normal pace. Mix simple yes/no questions with "
-        "easy open questions (for example 您想喝什么？)."
-    ),
-    "Challenging": (
-        "Speak naturally, like a busy café worker. Ask open questions and use common everyday "
-        "spoken phrases. Expect full answers and do not offer choices unless the customer is stuck."
-    ),
-}
+def chat_format(scenario):
+    """The JSON a character turn must come back as (the state's names differ per scenario)."""
+    ex = scenario.example
+    stages = "|".join(scenario.stages)
+    key = scenario.state_key
+    return (
+        'Reply with ONE JSON object and nothing else, in exactly this format:\n'
+        '{"reply": "<what you say, in Simplified Chinese only>", '
+        '"english": "<natural English translation of your reply>", '
+        f'"state": {{"stage": "<{stages}>", "{key}": ["{scenario.state_hint}"]}}}}\n'
+        'Format example (do not copy the words): '
+        f'{{"reply": "{ex["reply"]}", "english": "{ex["english"]}", '
+        f'"state": {{"stage": "{ex["stage"]}", "{key}": []}}}}'
+    )
 
-# Small situations the waiter may raise. These are seeds, not scripts: the model
-# decides the wording and how the conversation continues.
-SURPRISES = (
-    "tell the customer the item they asked for is sold out and suggest something similar",
-    "ask whether they would like to add a snack or dessert",
-    "tell them the card machine is not working, so they need to pay by phone or in cash",
-    "ask whether the order is for here or to take away",
-    "mention that a cake is half price today with any drink",
-    "tell them the drink will take a few minutes because the café is busy",
-)
 
-OPENING_CUE = "(The customer has just walked into the café. Greet them and start the conversation.)"
-
-CHAT_FORMAT = (
-    'Reply with ONE JSON object and nothing else, in exactly this format:\n'
-    '{"reply": "<what you say, in Simplified Chinese only>", '
-    '"english": "<natural English translation of your reply>", '
-    '"state": {"stage": "<greeting|ordering|customising|payment|done>", '
-    '"order": ["<every item the customer has asked for so far, in Chinese>"]}}\n'
-    'Format example (do not copy the words): '
-    '{"reply": "您想喝点什么？", "english": "What would you like to drink?", '
-    '"state": {"stage": "ordering", "order": []}}'
-)
+CHAT_FORMAT = chat_format(CAFE)
 
 
 def build_system_prompt(settings, surprise=None):
-    """System prompt for the café waiter, adapted to the learner's settings."""
+    """System prompt for the scenario's character, adapted to the learner's settings."""
+    sc = get_scenario(settings.scenario)
+    who = sc.learner
     lines = [
-        f"You are {CHARACTER_NAME}, a friendly waiter at a small café in a Chinese city. "
-        "A customer who is learning Mandarin has walked in. You are a real café employee, "
-        "not a teacher, and you stay in character at all times.",
+        sc.intro,
         "",
-        f"Language level: {LEVEL_RULES[settings.level]}",
-        f"Style: {DIFFICULTY_RULES[settings.difficulty]}",
+        f"Language level: The {who} is {LEVEL_RULES[settings.level]}",
+        f"Style: {sc.style[settings.difficulty]}",
         "",
         "How to behave:",
         '- The "reply" is Simplified Chinese only. Never use English or pinyin inside "reply".',
-        "- Guide the conversation naturally through ordering, customising (hot or iced, size, sugar) "
-        "and paying. Ask at most one question per turn.",
-        "- Remember what the customer has already said or ordered. Never ask for something they already told you.",
-        "- If the customer makes a grammar mistake, do not point it out. Work out what they meant "
+        f"- {sc.guide}",
+        f"- {sc.memory}",
+        f"- If the {who} makes a grammar mistake, do not point it out. Work out what they meant "
         "and answer naturally, using the correct form once if it fits.",
-        "- If the customer's message is unclear, politely ask what they mean in simple Chinese.",
+        f"- If the {who}'s message is unclear, politely ask what they mean in simple Chinese.",
         "- Never mention being an AI, a model, a teacher or a lesson.",
     ]
     if surprise:
         lines.append(
             f"- For THIS reply only, work this small unexpected situation in naturally: {surprise}. "
-            "Stay in character and let the customer respond."
+            f"Stay in character and let the {who} respond."
         )
-    lines += ["", CHAT_FORMAT]
+    lines += ["", chat_format(sc)]
     return "\n".join(lines)
 
 
@@ -103,12 +91,16 @@ CATEGORIES = (
 )
 
 
-def build_review_prompt(level):
-    """System prompt for checking ONE learner sentence (teacher role, not the waiter)."""
+def build_review_prompt(level, scenario=CAFE.id):
+    """System prompt for checking ONE learner sentence (teacher role, not the character).
+
+    The worked examples are the same in every scenario: they are the ones the v6 scores were
+    measured with, and they show grammar rules rather than scenario words."""
+    sc = get_scenario(scenario)
     return "\n".join(
         [
             f"You are a careful Mandarin teacher checking one sentence written by a {level} learner. "
-            "The learner said it to a waiter in a café.",
+            f"{sc.review_setting}",
             "",
             "Rules:",
             "- Assume the sentence is correct. Report a mistake only if you can name the specific "
@@ -116,11 +108,10 @@ def build_review_prompt(level):
             'has_error false.',
             "- A sentence that is grammatical and natural is correct, even if you can think of a more "
             "polite, longer, more complete or more formal way to say it. Never add, remove or swap "
-            "words in such a sentence. Short, direct requests (starting with 我要, 请给我 or 我想) are "
-            "normal café Chinese and are correct. Do not correct punctuation or style, and do not "
+            f"words in such a sentence. {sc.review_normal} Do not correct punctuation or style, and do not "
             "suggest alternatives for a correct sentence.",
             "- If a sentence is grammatically correct but a native speaker would never say it that way "
-            'in a café (for example it sounds like a formal letter), report it with category "unnatural".',
+            f'{sc.review_unnatural}, report it with category "unnatural".',
             "- If there is a mistake, give the corrected sentence, changing as little as possible.",
             f"- category must be one of: {', '.join(CATEGORIES)} (or \"none\" when there is no mistake).",
             "- explanation: one or two short sentences in English saying what was wrong and why.",
@@ -160,14 +151,14 @@ def build_review_prompt(level):
     )
 
 
-def build_verify_prompt():
+def build_verify_prompt(scenario=CAFE.id):
     """Second check, run only when the checker wants to change a sentence.
 
     Shows the learner's sentence (A) next to the proposed fix (B) and asks which is better.
     """
     return "\n".join(
         [
-            "You are a native Mandarin speaker. A customer in a café wrote sentence A. "
+            f"You are a native Mandarin speaker. {get_scenario(scenario).verify_who} wrote sentence A. "
             "A teacher suggested sentence B instead.",
             "Which one is more correct and natural Chinese? Ignore punctuation. "
             "If they are equally good, answer A.",
@@ -176,12 +167,13 @@ def build_verify_prompt():
     )
 
 
-def build_assessment_prompt(level, stats_text):
+def build_assessment_prompt(level, stats_text, scenario=CAFE.id):
     """Prompt for the short overall assessment in the feedback report."""
     return "\n".join(
         [
-            f"You write short, encouraging feedback for a {level} Mandarin learner after a café "
-            "role-play. Use ONLY the facts below. Do not invent mistakes or praise anything not listed.",
+            f"You write short, encouraging feedback for a {level} Mandarin learner after a "
+            f"{get_scenario(scenario).roleplay} role-play. Use ONLY the facts below. Do not invent "
+            "mistakes or praise anything not listed.",
             "",
             stats_text,
             "",

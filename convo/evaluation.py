@@ -10,7 +10,9 @@ Run from the repo root:
     python -m convo.evaluation corrections --split tune
     python -m convo.evaluation corrections --split test      # final score, don't tune after
     python -m convo.evaluation conversation
+    python -m convo.evaluation conversation --scenario interview   # shop, restaurant, interview, chat
 
+The correction dataset is café sentences, so `corrections` always checks them as said in the café.
 Where a sentence has more than one right answer, data/test_cases.csv lists them all in the
 `correct` column separated by "|"; a correction matching ANY of them counts as exact.
 Strict automatic scores are still a LOWER BOUND: a correct fix we didn't list counts as a miss. Fill in the human_* columns of the exported CSV and run
@@ -27,6 +29,7 @@ from pathlib import Path
 from .chat import Conversation
 from .prompts import PROMPT_VERSION
 from .review import review_sentence
+from .scenarios import SCENARIOS
 from .settings import Settings
 from .structured import normalise
 
@@ -148,10 +151,48 @@ CONVERSATION_SCRIPTS = [
 ]
 PROBE = "我刚才点了什么？"
 
+# The other scenarios: `items` must be in the character's state list after the turns, and in its
+# answer to `probe`, a question about something the learner said earlier.
+SCENARIO_SCRIPTS = {
+    "cafe": CONVERSATION_SCRIPTS,
+    "shop": [
+        {"name": "water_umbrella", "turns": ["你好！", "我想买两瓶水。", "还要一把雨伞。"],
+         "items": ["水", "雨伞"], "probe": "我刚才要买什么？"},
+        {"name": "apples", "turns": ["你好。", "有苹果吗？", "我要三个苹果。"],
+         "items": ["苹果"], "probe": "我刚才要买什么？"},
+        {"name": "charger", "turns": ["你好！", "我想买一个手机充电器。", "多少钱？"],
+         "items": ["充电器"], "probe": "我刚才要买什么？"},
+    ],
+    "restaurant": [
+        {"name": "noodles", "turns": ["你好，一位。", "我要一碗牛肉面。", "不要太辣。"],
+         "items": ["牛肉面"], "probe": PROBE},
+        {"name": "chicken_rice", "turns": ["你好，我们两位。", "我们要一个宫保鸡丁。", "还要两碗米饭。"],
+         "items": ["宫保鸡丁", "米饭"], "probe": PROBE},
+        {"name": "dumplings_tea", "turns": ["你好！", "我想吃饺子。", "再来一壶茶。"],
+         "items": ["饺子", "茶"], "probe": PROBE},
+    ],
+    "interview": [
+        {"name": "name", "turns": ["您好，我叫安娜。", "我是大学生。", "我会说英语和中文。"],
+         "items": ["安娜"], "probe": "您还记得我的名字吗？"},
+        {"name": "languages", "turns": ["您好。", "我会说英语和法语。", "我以前在咖啡店工作过。"],
+         "items": ["法语"], "probe": "我会说什么语言？"},
+        {"name": "weekends", "turns": ["您好，我叫马克。", "我周末可以工作。", "我喜欢看书。"],
+         "items": ["周末"], "probe": "我什么时候可以工作？"},
+    ],
+    "chat": [
+        {"name": "cats", "turns": ["你好！", "我喜欢猫。", "我有两只猫。"],
+         "items": ["猫"], "probe": "你还记得我喜欢什么动物吗？"},
+        {"name": "hometown", "turns": ["你好，我是英国人。", "我住在伦敦。", "我喜欢吃饺子。"],
+         "items": ["伦敦"], "probe": "你还记得我住在哪儿吗？"},
+        {"name": "swimming", "turns": ["你好！", "我周末喜欢游泳。", "你呢？"],
+         "items": ["游泳"], "probe": "我周末喜欢做什么？"},
+    ],
+}
+
 
 def run_conversation_eval(backend, settings=None, scripts=None):
     settings = settings or Settings(level="A2", difficulty="Standard")
-    scripts = scripts or CONVERSATION_SCRIPTS
+    scripts = scripts or SCENARIO_SCRIPTS[settings.scenario]
     transcripts, all_turns = [], []
     retained, tracked = 0, 0
     for s in scripts:
@@ -160,7 +201,8 @@ def run_conversation_eval(backend, settings=None, scripts=None):
         for t in s["turns"]:
             waiter.append(conv.send(t))
         state_ok = all(any(item in o for o in conv.order) for item in s["items"])
-        probe_turn = conv.send(PROBE)
+        probe = s.get("probe", PROBE)
+        probe_turn = conv.send(probe)
         waiter.append(probe_turn)
         haystack = probe_turn.reply + " ".join(probe_turn.order)
         recalled = all(item in haystack for item in s["items"])
@@ -171,10 +213,11 @@ def run_conversation_eval(backend, settings=None, scripts=None):
             "script": s["name"], "items": s["items"], "state_after_order": conv.order,
             "state_tracking_ok": state_ok, "context_retained": recalled,
             "dialogue": [{"learner": u, "waiter": t.reply, "valid": t.valid}
-                         for u, t in zip(["(enters)"] + s["turns"] + [PROBE], waiter)],
+                         for u, t in zip(["(enters)"] + s["turns"] + [probe], waiter)],
         })
     n = len(all_turns)
     metrics = {
+        "scenario": settings.scenario,
         "n_scripts": len(scripts), "n_waiter_turns": n,
         "character_consistency": _rate(sum(t.valid for t in all_turns), n),
         "first_try_valid_rate": _rate(sum(t.valid and t.retries == 0 for t in all_turns), n),
@@ -225,6 +268,8 @@ def main(argv=None):
     p.add_argument("kind", choices=["corrections", "conversation"])
     p.add_argument("--split", default="tune", choices=["tune", "test", "all"])
     p.add_argument("--level", default="A2", choices=["A1", "A2"])
+    p.add_argument("--scenario", default="cafe", choices=list(SCENARIOS),
+                   help="conversation only (the correction dataset is café sentences)")
     p.add_argument("--model", default=None, help="Hugging Face model id (default: Qwen2.5-3B-Instruct)")
     args = p.parse_args(argv)
 
@@ -242,8 +287,10 @@ def main(argv=None):
         result = run_correction_eval(backend, cases, args.level)
         export_for_human_review(result, RESULTS_DIR / f"human_review_{args.split}.csv")
     else:
-        result = run_conversation_eval(backend, Settings(level=args.level))
-    path = log_result(args.kind, backend.name, args.split if args.kind == "corrections" else None, result)
+        result = run_conversation_eval(backend, Settings(level=args.level, scenario=args.scenario))
+    # Conversation results are named after their scenario; the café keeps the old "na".
+    label = args.split if args.kind == "corrections" else (None if args.scenario == "cafe" else args.scenario)
+    path = log_result(args.kind, backend.name, label, result)
     print(format_metrics(result["metrics"]))
     print("saved", path)
 

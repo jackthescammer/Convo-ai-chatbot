@@ -1,7 +1,16 @@
-"""Convo AI web app (Gradio): onboarding -> café conversation -> learning report.
+"""Convo AI web app (Gradio): onboarding -> conversation (café, shop, restaurant, job interview
+or open chat) -> learning report.
 
     from app import build_app
     build_app(backend).launch(share=True)
+
+API used by the website (app/js/model.js), all under one session_hash per conversation:
+    /start_scenario  [level, difficulty, display, scenario]   opens a conversation
+    /send            [message, chat]                          one learner message
+    /finish          []                                       the report (Markdown)
+    /check_scenario  [text, level, scenario]                  live feedback on one message
+/start and /check are the same without the scenario (always the café). They stay so that a
+website from before scenarios keeps working: Gradio rejects calls with a missing input.
 """
 
 import re
@@ -12,10 +21,12 @@ from convo.chat import Conversation
 from convo.prompts import PROMPT_VERSION
 from convo.render import format_turn, to_pinyin
 from convo.review import CATEGORY_LABELS, build_report, review_sentence
+from convo.scenarios import DEFAULT_SCENARIO, SCENARIOS
 from convo.settings import DIFFICULTIES, LEVELS, Settings
 from convo.structured import HAN
 
 DISPLAY_CHOICES = [("Chinese characters", "chinese"), ("Pinyin", "pinyin"), ("English", "english")]
+SCENARIO_CHOICES = [(sc.title, sc.id) for sc in SCENARIOS.values()]
 
 CSS = """
 #chat .message, #chat .prose { font-size: 1.15rem; line-height: 1.7; }
@@ -72,12 +83,13 @@ def english_explanation(backend, explanation, sentence, corrected):
     return raw if raw and not mostly_chinese(raw) else explanation
 
 
-def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
+def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenario=DEFAULT_SCENARIO):
     """Live feedback on one message, from the same checker as the report and the scored tests
     (convo/review.py is unchanged). Pinyin is read as its best character candidate first, so a
     learner typing pinyin gets checked too. Speech can use this as well once it is transcribed."""
     text = (text or "").strip()
     level = level if level in LEVELS else "A2"
+    scenario = scenario if scenario in SCENARIOS else DEFAULT_SCENARIO
     out = {"original": text, "checked": "", "from_pinyin": False, "skipped": ""}
     if HAN.search(text):
         sentence = text
@@ -91,7 +103,7 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
     else:
         out["skipped"] = "Write in Chinese characters or pinyin to get feedback."
         return out
-    r = review_sentence(backend, sentence, level)
+    r = review_sentence(backend, sentence, level, scenario=scenario)
     out.update(checked=sentence, valid=r.valid, has_error=bool(r.valid and r.has_error),
                corrected=r.corrected if r.valid and r.has_error else "",
                corrected_pinyin=pinyin_fn(r.corrected) if r.valid and r.has_error and r.corrected else "",
@@ -123,14 +135,23 @@ def build_app(backend, pinyin="auto"):
     def clear_pinyin():
         return gr.Textbox(value=""), gr.Radio(choices=[], value=None, visible=False), ""
 
-    def start(level, difficulty, display):
+    def start(level, difficulty, display, scenario=DEFAULT_SCENARIO):
         if not display:
             gr.Warning("Pick at least one display option; showing Chinese characters.")
             display = ["chinese"]
-        conv = Conversation(backend, Settings(level=level, difficulty=difficulty, display=tuple(display)))
+        if scenario not in SCENARIOS:
+            raise gr.Error(f"Unknown scenario {scenario!r}. Choose one of: {', '.join(SCENARIOS)}.")
+        conv = Conversation(backend, Settings(level=level, difficulty=difficulty, display=tuple(display),
+                                              scenario=scenario))
         turn = conv.start()
         chat = [{"role": "assistant", "content": format_turn(turn.reply, turn.english, conv.settings.display)}]
-        return (conv, chat, _hidden(False), _hidden(True), _hidden(False))
+        sc = conv.scenario
+        title = f"### {sc.title}\n{sc.character} · {sc.role}"
+        return (conv, chat, _hidden(False), _hidden(True), _hidden(False), title)
+
+    def start_cafe(level, difficulty, display):
+        """/start, as before scenarios existed (always the café)."""
+        return start(level, difficulty, display, DEFAULT_SCENARIO)
 
     def send(message, chat, conv):
         message = (message or "").strip()
@@ -158,7 +179,8 @@ def build_app(backend, pinyin="auto"):
         gr.Markdown("# Convo AI\nLearn Mandarin by having a conversation, not by memorising.")
 
         with gr.Column(visible=True) as onboarding:
-            gr.Markdown("### Set up your practice\n**Scenario:** ordering at a Chinese café (more coming soon)")
+            gr.Markdown("### Set up your practice")
+            scenario = gr.Radio(SCENARIO_CHOICES, value=DEFAULT_SCENARIO, label="Conversation")
             level = gr.Radio(list(LEVELS), value="A2", label="Your level")
             difficulty = gr.Radio(list(DIFFICULTIES), value="Standard", label="Conversation difficulty")
             display = gr.CheckboxGroup(DISPLAY_CHOICES, value=["chinese", "pinyin"],
@@ -166,7 +188,8 @@ def build_app(backend, pinyin="auto"):
             start_btn = gr.Button("Start conversation", variant="primary")
 
         with gr.Column(visible=False) as chat_view:
-            chatbot = _make_chatbot(height=420, elem_id="chat", label="小林 · café waiter")
+            chat_title = gr.Markdown()
+            chatbot = _make_chatbot(height=420, elem_id="chat", label="Conversation")
             msg = gr.Textbox(placeholder="Type your reply in Chinese, then press Enter",
                              show_label=False, autofocus=True)
             # Windows voice typing is an OS feature: it types into the box above like a keyboard.
@@ -191,16 +214,22 @@ def build_app(backend, pinyin="auto"):
         with gr.Column(visible=False):
             check_text = gr.Textbox()
             check_level = gr.Textbox(value="A2")
+            check_scenario = gr.Textbox(value=DEFAULT_SCENARIO)
             check_out = gr.JSON()
             check_btn = gr.Button()
+            check_scenario_btn = gr.Button()
+            start_cafe_btn = gr.Button()
         check_btn.click(lambda text, lvl: check_message(backend, pinyin, text, lvl),
                         [check_text, check_level], check_out, api_name="check")
+        check_scenario_btn.click(lambda text, lvl, sc: check_message(backend, pinyin, text, lvl, scenario=sc),
+                                 [check_text, check_level, check_scenario], check_out, api_name="check_scenario")
 
         gr.Markdown(f"<small>Model: {backend.name} · prompts {PROMPT_VERSION} · "
                     "Prototype: answers can be wrong.</small>")
 
-        start_btn.click(start, [level, difficulty, display],
-                        [conv_state, chatbot, onboarding, chat_view, report_view])
+        start_outputs = [conv_state, chatbot, onboarding, chat_view, report_view, chat_title]
+        start_btn.click(start, [level, difficulty, display, scenario], start_outputs, api_name="start_scenario")
+        start_cafe_btn.click(start_cafe, [level, difficulty, display], start_outputs, api_name="start")
         sent = msg.submit(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state])
         if pinyin is not None:
             # always_last: keystrokes typed while a lookup runs are not dropped (default "once" drops them)

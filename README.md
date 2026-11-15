@@ -17,6 +17,10 @@ A web app where you practise ordering at a café with an AI waiter, 小林.
 
 The long-term vision is a full platform with many scenarios, voice and grading (see [Convo-AI.md](Convo-AI.md)). This weekend we built and tested the first slice: **one scenario, one language, text input.**
 
+**More conversations (prompts v7, not evaluated yet).** Besides the café you can now pick buying things at a shop (小王), ordering at a restaurant (小李), a job interview (刘经理, hiring for a bookshop) or an open conversation (小雨, who picks the topics and leads). All five share the same engine, checker and report; each one's character, flow, surprises and checker context live in [`convo/scenarios.py`](convo/scenarios.py). The café prompts are word for word the v6 ones (a test checks this), so the results below still describe the café. The other four have not been scored: run `python -m convo.evaluation conversation --scenario <id>` and review the transcripts before trusting them.
+
+The website calls `/start_scenario` and `/check_scenario` (they add a scenario input). `/start` and `/check` are unchanged and always mean the café, so a website from before scenarios keeps working.
+
 ## What we added
 Our own idea, not a suggested project.
 - **Our own user:** an A2-level immigrant practising one real situation.
@@ -66,7 +70,7 @@ TODO: who checked Convo's corrections by hand, and what a real learner said afte
 
 ## Limitations
 - Small quiz (10 tune, 32 test), so one sentence moves a score a lot.
-- Text only on the main version; one scenario.
+- Text only on the main version. Five conversations, but only the café has been evaluated, and the correction test set is café sentences.
 - The live chat link only works while our model is running in Colab.
 
 ## What we'd do next

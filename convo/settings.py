@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from .scenarios import DEFAULT_SCENARIO, SCENARIOS
+
 LEVELS = ("A1", "A2")
 DIFFICULTIES = ("Easy", "Standard", "Challenging")
 DISPLAY_OPTIONS = ("chinese", "pinyin", "english")
@@ -12,12 +14,15 @@ class Settings:
     level: str = "A2"
     difficulty: str = "Standard"
     display: tuple = ("chinese", "pinyin")
+    scenario: str = DEFAULT_SCENARIO
 
     def __post_init__(self):
         if self.level not in LEVELS:
             raise ValueError(f"level must be one of {LEVELS}, got {self.level!r}")
         if self.difficulty not in DIFFICULTIES:
             raise ValueError(f"difficulty must be one of {DIFFICULTIES}, got {self.difficulty!r}")
+        if self.scenario not in SCENARIOS:
+            raise ValueError(f"scenario must be one of {tuple(SCENARIOS)}, got {self.scenario!r}")
         requested = set(self.display)
         unknown = requested - set(DISPLAY_OPTIONS)
         if unknown:
