@@ -43,11 +43,11 @@ class CheckMessage(unittest.TestCase):
     def test_chinese_explanation_is_rewritten_in_english(self):
         def handler(m):
             if m[0]["content"].startswith("You explain Chinese grammar"):
-                return "Use 喝 (drink) for drinks; 吃 (eat) is for food."
+                return "Use 喝 (drink) for drinks; 吃 (eat) is for food. Say 我想喝一杯咖啡."
             return review_json(True, "我想喝一杯咖啡。", "vocabulary", "吃用于食物，喝用于饮料。", "A coffee.")
         out = check_message(FakeBackend(handler, verify='{"better": "B"}'), None, "我想吃一杯咖啡。", "A2",
                             pinyin_fn=FAKE_PY)
-        self.assertEqual(out["explanation"], "Use 喝 (drink) for drinks; 吃 (eat) is for food.")
+        self.assertEqual(out["explanation"], "Use 喝 (drink) for drinks; 吃 (eat) is for food. Say 我想喝一杯咖啡.")
         self.assertEqual(out["corrected"], "我想喝一杯咖啡。")  # the correction itself is untouched
 
     def test_english_explanation_is_kept_without_an_extra_call(self):

@@ -48,13 +48,19 @@ def _make_chatbot(**kwargs):
         return gr.Chatbot(**kwargs)
 
 
-MOSTLY_CHINESE = re.compile(r"[\u4e00-\u9fff]{4,}")
+_HAN_CHAR = re.compile(r"[\u4e00-\u9fff]")
+_LATIN = re.compile(r"[A-Za-z]")
+
+
+def mostly_chinese(text):
+    """More Chinese than English. An English explanation may still quote a Chinese sentence."""
+    return len(_HAN_CHAR.findall(text or "")) * 2 > len(_LATIN.findall(text or ""))
 
 
 def english_explanation(backend, explanation, sentence, corrected):
     """The checker sometimes explains in Chinese, which an A2 learner can't read. Ask for a short
     English version for display only; the correction itself and the scored checker don't change."""
-    if not explanation or not MOSTLY_CHINESE.search(explanation):
+    if not explanation or not mostly_chinese(explanation):
         return explanation
     raw = backend.generate([
         {"role": "system", "content": "You explain Chinese grammar to beginners. Rewrite the explanation "
@@ -63,7 +69,7 @@ def english_explanation(backend, explanation, sentence, corrected):
         {"role": "user", "content": f"Learner wrote: {sentence}\nCorrected: {corrected}\nExplanation: {explanation}"},
     ], max_new_tokens=120, temperature=0.0).strip()
     # keep the original if the rewrite is empty or still mostly Chinese
-    return raw if raw and not MOSTLY_CHINESE.search(raw) else explanation
+    return raw if raw and not mostly_chinese(raw) else explanation
 
 
 def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
