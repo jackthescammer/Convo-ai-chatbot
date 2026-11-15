@@ -92,3 +92,18 @@ Detection was right 3/3, but the barista ignored the steer-back note for the off
 On v10 the same off-topic message was followed twice (那你平时喜欢做什么呢？ and 足球听起来很有趣，您喜欢哪个队？); on v11 the barista steered back. One more problem seen: the "didn't answer" tip came back in Chinese (请询问菜单或点餐). The server now drops a Chinese tip, and the website shows its own English one (from the next restart).
 
 **Known limitation:** one off-topic try per version is very little. "Not appropriate" was not tested, and we don't know how often the check misjudges a real answer.
+
+## English replies (prompts v12)
+
+Found in our own testing (TEAM_TESTS.md): "Thank you, I will leave now." was treated as misspelt pinyin and turned into 糖有，一唟略耨. v12 detects English with a word-based rule (no model call). Live results, café, A1:
+
+| Typed | Live feedback | Warning | Right? |
+|---|---|---|---|
+| Thank you, I will leave now. | "That's English, so there's nothing to correct. Reply in Mandarin…" | That wasn't in Mandarin | ✅ |
+| hello | same | That wasn't in Mandarin | ✅ |
+| can I have a coffee please | same | That wasn't in Mandarin | ✅ |
+| ni hao | read as 你好 (still pinyin) | didn't answer (tip in English now) | ✅ |
+| wo yao yi bei kafei | read as 我要一杯咖啡 | none | ✅ |
+| wo yeao kafie | read as 我要咖啡, spelling yeao → yao, kafie → kafei | none | ✅ |
+
+Detection 6/6. After "Thank you, I will leave now." the barista replied 好的，慢慢来。 ("OK, take your time"): in Chinese and in character, but it did not encourage the learner to say it in Chinese or ask again, so the steer-back for English only partly works.
