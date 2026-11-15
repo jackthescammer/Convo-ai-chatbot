@@ -52,3 +52,11 @@ def test_swapped_letters_suggest_the_whole_cafe_word():
     r = spelling_feedback("wo yao kafie", Conv())
     assert [(i["typed"], i["suggest"], i["char"]) for i in r["issues"]] == [("kafie", "kafei", "咖啡")]
     assert r["fixed"] == "wo yao kafei"
+
+
+def test_english_is_not_mistaken_for_pinyin():
+    from convo.pinyin_spelling import looks_like_english
+    for text in ("Thank you, I will leave now.", "hello", "can I have a coffee please"):
+        assert looks_like_english(text, Conv()), text
+    for text in ("ni hao", "wo yao yi bei kafei", "wo yeao yir ge bing cha", "wo yao kafie"):
+        assert not looks_like_english(text, Conv()), text

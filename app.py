@@ -20,7 +20,7 @@ import gradio as gr
 from convo.chat import Conversation
 from convo.prompts import PROMPT_VERSION
 from convo.pinyin_feedback import tone_feedback
-from convo.pinyin_spelling import spelling_feedback
+from convo.pinyin_spelling import looks_like_english, spelling_feedback
 from convo.render import format_turn, to_pinyin
 from convo.review import CATEGORY_LABELS, build_report, review_sentence
 from convo.scenarios import DEFAULT_SCENARIO, SCENARIOS
@@ -86,10 +86,17 @@ def english_explanation(backend, explanation, sentence, corrected):
     return raw if raw and not mostly_chinese(raw) else explanation
 
 
+def is_english(pinyin, text):
+    """True for a message written in English (no Chinese characters, and it doesn't read as pinyin)."""
+    text = (text or "").strip()
+    return (bool(text) and pinyin is not None and not HAN.search(text)
+            and looks_like_english(text, pinyin))
+
+
 def as_characters(pinyin, text):
     """The message as Chinese characters if it was typed in pinyin (spelling fixed first), else as is."""
     text = (text or "").strip()
-    if HAN.search(text) or pinyin is None or not text:
+    if HAN.search(text) or pinyin is None or not text or is_english(pinyin, text):
         return text
     try:
         fixed = spelling_feedback(text, pinyin)["fixed"] if getattr(pinyin, "valid", None) else text
@@ -104,6 +111,10 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenar
     """Live feedback on one message, plus (with `context`, the character's last line) whether it
     answered that line. See _check_message for the language feedback."""
     out = _check_message(backend, pinyin, text, level, pinyin_fn, scenario)
+    if out.get("language") == "english":
+        # no model call needed: a reply in English is off script whatever it says
+        out["turn"] = {"kind": "not_mandarin", "note": "Try saying it in Mandarin, in Chinese characters or pinyin."}
+        return out
     if context:
         try:
             sc = SCENARIOS.get(scenario) or SCENARIOS[DEFAULT_SCENARIO]
@@ -123,6 +134,11 @@ def _check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scena
     level = level if level in LEVELS else "A2"
     scenario = scenario if scenario in SCENARIOS else DEFAULT_SCENARIO
     out = {"original": text, "checked": "", "from_pinyin": False, "skipped": ""}
+    if is_english(pinyin, text):
+        # English isn't misspelt pinyin: don't "correct" it into random characters
+        out["language"] = "english"
+        out["skipped"] = "That's English, so there's nothing to correct. Reply in Mandarin: Chinese characters or pinyin."
+        return out
     if HAN.search(text):
         sentence = text
     elif pinyin is not None and text:
@@ -212,7 +228,8 @@ def build_app(backend, pinyin="auto"):
         if conv is None or not message:
             return "", chat, conv
         chat = chat + [{"role": "user", "content": message}]
-        turn = conv.send(message, judge_text=as_characters(pinyin, message))
+        turn = conv.send(message, judge_text=as_characters(pinyin, message),
+                         not_mandarin=is_english(pinyin, message))
         chat = chat + [{"role": "assistant",
                         "content": format_turn(turn.reply, turn.english, conv.settings.display)}]
         return "", chat, conv

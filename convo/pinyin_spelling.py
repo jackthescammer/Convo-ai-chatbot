@@ -36,6 +36,7 @@ def cafe_syllables(cafe_index):
 
 def suggest(word, valid, weights):
     """The most likely intended syllable, or None if nothing is close."""
+    valid = [s for s in valid if s not in NOT_SYLLABLES]
     if not valid:
         return None
     best = min(valid, key=lambda s: (_dist(word, s), -weights.get(s, 0), abs(len(s) - len(word)), s))
@@ -51,6 +52,39 @@ def why_not_pinyin(word):
     if re.search(r"[aeiouv]{4,}", word):
         return "it has too many vowels in a row for pinyin"
     return f"no Mandarin syllable is spelled '{word}'"
+
+
+# Everyday English words a learner might type in a café-style chat. Only used to spot English;
+# 'a', 'an', 'you', 'he', 'me' etc. are also real pinyin, so English needs more than one clue.
+ENGLISH_WORDS = set("""
+i you he she it we they me my your our the a an is am are was were be will would can could do does
+did have has had not no yes ok okay please thank thanks thankyou hello hi hey bye goodbye sorry
+what how much many where when why which who want would like need get give take make leave now go
+going come here there this that these those and or but so with without for to of in on at from
+coffee tea water milk sugar ice iced hot cold cake bread menu bill pay cash card large small medium
+good great nice fine just very really too also more less some any one two three cup glass please
+""".split())
+# Entries in the syllable list that aren't syllables a learner should be offered.
+NOT_SYLLABLES = {"null"}
+_ALPHA_WORD = re.compile(r"[A-Za-z']+")
+
+
+def looks_like_english(text, converter):
+    """True when a message is English rather than pinyin (no Chinese characters).
+
+    English if most of its words are common English words, or if most words can't be read as
+    pinyin at all. Short real pinyin ('ni hao', 'wo yao yi bei kafei') reads as pinyin.
+    """
+    words = [w.lower().strip("'") for w in _ALPHA_WORD.findall(text or "")]
+    words = [w for w in words if w]
+    if not words:
+        return False
+    valid = getattr(converter, "valid", None) or set()
+    english = sum(w in ENGLISH_WORDS for w in words)
+    pinyin = sum(bool(valid) and split_syllables(strip_tones(w).strip(), valid) is not None for w in words)
+    if english * 2 >= len(words) and english > pinyin - english:
+        return True
+    return len(words) >= 2 and pinyin * 2 < len(words)
 
 
 def spelling_feedback(text, converter):

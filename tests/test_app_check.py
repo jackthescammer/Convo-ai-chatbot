@@ -69,5 +69,23 @@ class CheckMessage(unittest.TestCase):
         self.assertTrue(out["skipped"])
 
 
+class EnglishMessages(unittest.TestCase):
+    class Conv:
+        valid = {"ni", "hao", "you", "wo", "yao"}
+        cafe_index = {}
+
+        def candidates(self, text, n=5):
+            raise AssertionError("English should never be read as pinyin")
+
+    def test_english_is_skipped_with_a_warning_and_no_model_call(self):
+        b = FakeBackend(lambda m: self.fail("model should not be called"))
+        out = check_message(b, self.Conv(), "Thank you, I will leave now.", "A2", context="您想喝什么？")
+        self.assertEqual(out["language"], "english")
+        self.assertIn("English", out["skipped"])
+        self.assertEqual(out["turn"]["kind"], "not_mandarin")
+        self.assertNotIn("spelling", out)
+        self.assertEqual(b.calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()

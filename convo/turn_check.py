@@ -28,6 +28,10 @@ STEER = {
     "inappropriate": ("The {learner} said something rude or not appropriate. Do not repeat it or talk "
                       "about it. Stay calm and polite, and go straight back to the {roleplay}: ask "
                       "again what you asked before."),
+    # set by the app's English detector, never by the model's check
+    "not_mandarin": ("The {learner} replied in English, not Mandarin. Reply only in simple Chinese, stay "
+                     "in character, gently encourage them to say it in Chinese, and ask again what you "
+                     "asked before."),
 }
 
 ANSWER = {"kind": "answer", "note": ""}

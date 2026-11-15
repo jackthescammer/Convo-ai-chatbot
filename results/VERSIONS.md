@@ -123,3 +123,7 @@ The check is off by default in `Conversation`, so the scored evaluation runs exa
 ## v11 notes (live app only, not evaluated)
 
 2026-11-15. Turn check: the steer-back instruction now goes into the character's system prompt for that one reply (in v10 it was a note at the end of the learner's message, and the barista still followed an off-topic message twice: 那你平时喜欢做什么呢？ and 足球听起来很有趣，您喜欢哪个队？). It is also firmer: don't talk about the new topic, ask the last question again. No surprise is added on a steer-back turn. Café prompts and the checker are unchanged.
+
+## v12 notes (live app only, not evaluated)
+
+2026-11-15. Found in our own testing: a reply in English ("Thank you, I will leave now.") was treated as misspelt pinyin, "corrected" word by word (Thank → tang 糖, will → null ...) into nonsense characters (糖有，一唟略耨), and the turn check called it "not appropriate". v12 adds a rule-based English detector (common English words, and words that can't be read as pinyin; no model call). English replies now get no spelling, tone or grammar feedback, just "That's English … reply in Mandarin" and a "That wasn't in Mandarin" warning, and the character is told to answer in simple Chinese, encourage the learner to say it in Chinese and ask again. Also, "null" is no longer offered as a pinyin syllable. Café prompts and the checker are unchanged.

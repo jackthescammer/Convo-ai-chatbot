@@ -65,16 +65,20 @@ class Conversation:
         self.history.append({"role": "user", "content": cue})
         return self._respond()
 
-    def send(self, text, judge_text=None):
-        """`judge_text`: the message as characters, for the turn check (e.g. read from pinyin)."""
+    def send(self, text, judge_text=None, not_mandarin=False):
+        """`judge_text`: the message as characters, for the turn check (e.g. read from pinyin).
+        `not_mandarin`: the app found the message is English (no model call needed to judge it)."""
         text = (text or "").strip()
         if not text:
             raise ValueError("empty message")
         self.learner_sentences.append(text)
         note = ""
         if self.turn_check and self.turns:
-            self.last_verdict = judge_turn(self.backend, self.scenario, self.turns[-1].reply,
-                                           judge_text or text)
+            if not_mandarin:
+                self.last_verdict = {"kind": "not_mandarin", "note": ""}
+            else:
+                self.last_verdict = judge_turn(self.backend, self.scenario, self.turns[-1].reply,
+                                               judge_text or text)
             note = steer_note(self.last_verdict["kind"], self.scenario)
         self.history.append({"role": "user", "content": text})
         # The note goes into the system prompt for this one reply (a small model follows the system

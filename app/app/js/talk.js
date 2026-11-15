@@ -490,6 +490,7 @@ export function render(root, arg, { mode = 'text' } = {}) {
       no_answer: "You didn't answer the question.",
       off_topic: "That's off-topic here.",
       inappropriate: "That's not appropriate here.",
+      not_mandarin: "That wasn't in Mandarin.",
     };
     const warn = c.turn && TURN_TITLE[c.turn.kind]
       ? `<div class="check-part check-warn"><span class="tag tag-warn">Stay in the conversation</span>
