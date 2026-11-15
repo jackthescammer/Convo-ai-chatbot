@@ -3,3 +3,4 @@ transformers>=4.45
 accelerate
 gradio>=4.44
 pypinyin
+Pinyin2Hanzi
