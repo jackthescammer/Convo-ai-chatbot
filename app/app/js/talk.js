@@ -208,7 +208,8 @@ function template(s) {
       </div>
 
       <div class="talk-body">
-        <div class="talk-chat">
+        <div class="talk-chat${sc.image ? ' has-scene' : ''}">
+          ${sc.image ? `<img class="chat-scene" src="${esc(sc.image)}" alt="" decoding="async">` : ''}
           <div class="chat-log" data-log role="log" aria-live="polite" aria-label="Conversation with Convo">
             <p class="chat-context">${esc(sc.context)}</p>
           </div>
