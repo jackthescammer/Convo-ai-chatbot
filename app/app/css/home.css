@@ -636,3 +636,26 @@ html[data-hide-notes] .notes-hidden { display: block; }
   .pg-chart .pg-label, .pg-chart .pg-value { font-size: 24px; }
   .pg-sub { display: none; }
 }
+
+/* ---------- Live feedback in the conversation rail ---------- */
+.checks { display: flex; flex-direction: column; gap: 0.625rem; }
+.check {
+  background: var(--white); border: 1px solid var(--ink-08); border-radius: var(--r-md);
+  padding: 0.75rem 0.875rem; display: grid; gap: 0.375rem; justify-items: start;
+}
+.check.is-new { animation: note-in 420ms var(--ease-out) both; }
+.check-said { font-size: 0.875rem; color: var(--ink-72); }
+.check-you { font-weight: 700; color: var(--vast); margin-right: 0.25rem; }
+.check-read { font-size: 0.875rem; color: var(--ink-72); }
+.check-read [lang] { font-family: var(--font-zh); color: var(--vast); font-weight: 500; }
+.check .note-change { font-family: var(--font-zh); }
+.check-py { font-family: var(--font-pinyin); font-size: 0.875rem; color: var(--ink-72); }
+.check-why { font-size: 0.9375rem; line-height: 1.45; }
+.check-meaning { font-size: 0.875rem; color: var(--ink-72); font-style: italic; }
+.check-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--ink-72); }
+.check-dots { display: inline-flex; gap: 3px; }
+.check-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-50); animation: check-dot 1s ease-in-out infinite; }
+.check-dots span:nth-child(2) { animation-delay: 0.15s; }
+.check-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes check-dot { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .check-dots span, .check.is-new { animation: none; } }

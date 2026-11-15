@@ -61,11 +61,14 @@ async function runModel(s, kind) {
     }
     s.view?.mood('chatting');
     s.view?.typing(true);
+    const learner = kind === 'reply' ? [...s.history].reverse().find((h) => h.who === 'you') : null;
     const raw = kind === 'start'
       ? await model.start({ settings: s.settings })
       : await model.reply({ history: toModelHistory(s), settings: s.settings });
     const turn = validateTurn(raw);
     await applyTurn(s, turn);
+    // after the reply, so the check doesn't slow the conversation down (one GPU does both)
+    if (learner && !learner.check) liveCheck(s, learner);
   } catch (err) {
     console.warn('Convo model call failed:', err);
     s.pending = false;
@@ -103,10 +106,26 @@ async function applyTurn(s, turn) {
   else v.ready();
 }
 
+/* ---------- Live feedback: each message is checked after the barista answers ---------- */
+const LIVE_CHECKS = MODEL_INFO.connected && typeof model.check === 'function';
+
+async function liveCheck(s, entry) {
+  if (!LIVE_CHECKS) return;
+  entry.check = { pending: true };
+  s.view?.renderCheck(entry, true);
+  try {
+    entry.check = (await model.check({ text: entry.text, settings: s.settings })) || { valid: false };
+  } catch (err) {
+    console.warn('Live check failed:', err);
+    entry.check = { failed: err?.message || 'Something went wrong.' };
+  }
+  s.view?.renderCheck(entry, false);
+}
+
 function send(s, text) {
   const clean = text.trim();
   if (!clean || s.pending || s.ended) return false;
-  const entry = { who: 'you', text: clean, notes: [] };
+  const entry = { who: 'you', id: `m${Date.now().toString(36)}`, text: clean, notes: [] };
   s.history.push(entry);
   s.view?.addMessage(entry, true);
   runModel(s, 'reply');
@@ -212,6 +231,11 @@ function template(s) {
             <h2 class="rail-title" id="notes-title">Saved for your report</h2>
             <ol class="notes" data-notes></ol>
             <p class="notes-hidden">Notes are hidden until your report. <a class="text-link" href="#/settings/conversation">Show them while I talk</a></p>
+          </section>` : LIVE_CHECKS ? `<section class="rail-block" aria-labelledby="notes-title">
+            <h2 class="rail-title" id="notes-title">Live feedback</h2>
+            <p class="rail-note">After Convo replies, your message is checked here: what to fix and why. Pinyin is read as characters first. The full report comes when you end the conversation.</p>
+            <ol class="checks" data-checks aria-live="polite"></ol>
+            <ol class="notes" data-notes hidden></ol>
           </section>` : `<section class="rail-block" aria-labelledby="notes-title">
             <h2 class="rail-title" id="notes-title">Your report</h2>
             <p class="rail-note">Convo doesn't stop the conversation to correct you. When you end it, each sentence you wrote is checked, with a better version and why.</p>
@@ -291,6 +315,37 @@ export function render(root) {
     notesEl.append(li);
     noteCount.textContent = String(notesEl.children.length);
     if (note.tag === 'ok') poke(baristas[0], 'nod');
+  }
+
+  const checksEl = q('[data-checks]');
+  const TAG_FOR = { vocabulary: ['vocab', 'Vocabulary'], unnatural: ['natural', 'More natural'] };
+  function renderCheck(entry, animate) {
+    if (!checksEl || !entry.check) return;
+    const c = entry.check;
+    let li = checksEl.querySelector(`[data-check-for="${entry.id}"]`);
+    if (!li) {
+      li = el('li', `check${animate ? ' is-new' : ''}`);
+      li.dataset.checkFor = entry.id;
+      checksEl.prepend(li); // newest first, so it's visible without scrolling
+    }
+    const said = `<p class="check-said"><span class="check-you">You</span> <span${CJK.test(entry.text) ? ' lang="zh-Hans"' : ''}>${esc(entry.text)}</span></p>`;
+    const readAs = c.from_pinyin && c.checked
+      ? `<p class="check-read">Read as <span lang="zh-Hans">${esc(c.checked)}</span>${c.checked_pinyin ? ` <span class="check-py">${esc(c.checked_pinyin)}</span>` : ''}</p>` : '';
+    let body;
+    if (c.pending) body = '<p class="check-status"><span class="check-dots" aria-hidden="true"><span></span><span></span><span></span></span>Checking…</p>';
+    else if (c.failed) body = `<p class="check-status">Couldn't check this one. ${esc(c.failed)}</p>`;
+    else if (c.skipped) body = `<p class="check-status">${esc(c.skipped)}</p>`;
+    else if (c.valid === false) body = '<p class="check-status">Couldn\'t check this one.</p>';
+    else if (c.has_error && c.corrected) {
+      const [tag, label] = TAG_FOR[c.category] || ['grammar', c.label ? c.label[0].toUpperCase() + c.label.slice(1) : 'Grammar'];
+      body = `<span class="tag tag-${tag}">${esc(label)}</span>
+        <p class="note-change"><span class="from" lang="zh-Hans">${esc(c.checked || entry.text)}</span>${ARROW}<span class="to" lang="zh-Hans">${esc(c.corrected)}</span></p>
+        ${c.corrected_pinyin ? `<p class="check-py">${esc(c.corrected_pinyin)}</p>` : ''}
+        ${c.explanation ? `<p class="check-why">${esc(c.explanation)}</p>` : ''}
+        ${c.english ? `<p class="check-meaning">${esc(c.english)}</p>` : ''}`;
+    } else body = `<span class="tag tag-ok">Looks right</span>${c.english ? `<p class="check-meaning">${esc(c.english)}</p>` : ''}`;
+    li.innerHTML = said + readAs + body;
+    if (!c.pending && c.has_error === false && !c.skipped) poke(baristas[0], 'nod');
   }
 
   function goals(animate) {
@@ -460,9 +515,10 @@ export function render(root) {
   /* --- rebuild from the session (resuming) --- */
   s.history.forEach((h) => addMessage(h, false));
   s.notes.forEach((n) => addNote(n, false));
+  s.history.filter((h) => h.check).forEach((h) => renderCheck(h, false));
   goals(false);
   suggestions();
-  s.view = { addMessage, addNote, goals, mood, typing, suggestions, showError, busy, ready, finish, poke: (g) => baristas.forEach((m) => poke(m, g)) };
+  s.view = { addMessage, addNote, renderCheck, goals, mood, typing, suggestions, showError, busy, ready, finish, poke: (g) => baristas.forEach((m) => poke(m, g)) };
 
   if (s.ended) finish(false);
   else if (s.pending) { busy(); typing(true); mood('chatting'); }

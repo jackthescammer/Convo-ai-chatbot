@@ -554,6 +554,14 @@ function gradioModel(base) {
       return turnFrom(await call('send', [said, []], 90000));
     },
 
+    /** Live feedback on one message (the server's "check" API, same checker as the report).
+        Resolves the server's result object, or null if it sent nothing usable. */
+    async check({ text, settings }) {
+      const out = await call('check', [text, settings.level === 'A1' ? 'A1' : 'A2'], 120000);
+      const r = Array.isArray(out) ? out[0] : out;
+      return r && typeof r === 'object' ? r : null;
+    },
+
     async report() {
       if (!session) throw new Error(LOST);
       // The server checks every sentence one by one, so this takes a while.

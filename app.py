@@ -8,9 +8,10 @@ import gradio as gr
 
 from convo.chat import Conversation
 from convo.prompts import PROMPT_VERSION
-from convo.render import format_turn
-from convo.review import build_report
+from convo.render import format_turn, to_pinyin
+from convo.review import CATEGORY_LABELS, build_report, review_sentence
 from convo.settings import DIFFICULTIES, LEVELS, Settings
+from convo.structured import HAN
 
 DISPLAY_CHOICES = [("Chinese characters", "chinese"), ("Pinyin", "pinyin"), ("English", "english")]
 
@@ -43,6 +44,35 @@ def _make_chatbot(**kwargs):
         return gr.Chatbot(type="messages", **kwargs)
     except TypeError:
         return gr.Chatbot(**kwargs)
+
+
+def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
+    """Live feedback on one message, from the same checker as the report and the scored tests
+    (convo/review.py is unchanged). Pinyin is read as its best character candidate first, so a
+    learner typing pinyin gets checked too. Speech can use this as well once it is transcribed."""
+    text = (text or "").strip()
+    level = level if level in LEVELS else "A2"
+    out = {"original": text, "checked": "", "from_pinyin": False, "skipped": ""}
+    if HAN.search(text):
+        sentence = text
+    elif pinyin is not None and text:
+        cands, problem = pinyin.candidates(text)
+        if not cands:
+            out["skipped"] = f"'{problem}' doesn't look like pinyin." if problem else "Nothing to check."
+            return out
+        # shortcut: takes the top pinyin candidate; if it guesses the wrong characters, the check is of that guess
+        sentence, out["from_pinyin"] = cands[0], True
+    else:
+        out["skipped"] = "Write in Chinese characters or pinyin to get feedback."
+        return out
+    r = review_sentence(backend, sentence, level)
+    out.update(checked=sentence, valid=r.valid, has_error=bool(r.valid and r.has_error),
+               corrected=r.corrected if r.valid and r.has_error else "",
+               corrected_pinyin=pinyin_fn(r.corrected) if r.valid and r.has_error and r.corrected else "",
+               checked_pinyin=pinyin_fn(sentence) if out["from_pinyin"] else "",
+               category=r.category, label=CATEGORY_LABELS.get(r.category, ""),
+               explanation=r.explanation, english=r.english)
+    return out
 
 
 def build_app(backend, pinyin="auto"):
@@ -124,6 +154,15 @@ def build_app(backend, pinyin="auto"):
         with gr.Column(visible=False) as report_view:
             report_md = gr.Markdown(elem_id="report")
             again_btn = gr.Button("Start a new conversation", variant="primary")
+
+        # Hidden: the website calls this as the "check" API after every message it sends.
+        with gr.Column(visible=False):
+            check_text = gr.Textbox()
+            check_level = gr.Textbox(value="A2")
+            check_out = gr.JSON()
+            check_btn = gr.Button()
+        check_btn.click(lambda text, lvl: check_message(backend, pinyin, text, lvl),
+                        [check_text, check_level], check_out, api_name="check")
 
         gr.Markdown(f"<small>Model: {backend.name} · prompts {PROMPT_VERSION} · "
                     "Prototype: answers can be wrong.</small>")
