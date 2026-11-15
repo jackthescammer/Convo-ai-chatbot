@@ -12,7 +12,7 @@ still describe it; the other scenarios have not been evaluated.
 
 from .scenarios import CAFE, get_scenario
 
-PROMPT_VERSION = "v9"
+PROMPT_VERSION = "v10"
 
 # The café's values, kept under their v6 names.
 CHARACTER_NAME = CAFE.character

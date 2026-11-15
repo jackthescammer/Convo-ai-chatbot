@@ -8,6 +8,7 @@ from .prompts import build_system_prompt
 from .scenarios import get_scenario
 from .settings import Settings
 from .structured import extract_json, reply_problems, validate_turn
+from .turn_check import judge_turn, steer_note
 
 FALLBACK_REPLY = "不好意思，您能再说一遍吗？"
 FALLBACK_ENGLISH = "Sorry, could you say that again?"
@@ -34,7 +35,7 @@ class Turn:
 
 class Conversation:
     def __init__(self, backend, settings=None, *, seed=None, temperature=0.7,
-                 max_new_tokens=250, max_history_messages=24):
+                 max_new_tokens=250, max_history_messages=24, turn_check=False):
         self.backend = backend
         self.settings = settings or Settings()
         self.scenario = get_scenario(self.settings.scenario)
@@ -49,6 +50,10 @@ class Conversation:
         self.stage = self.scenario.stages[0]
         self.order = []
         self._surprises_used = 0
+        # Live app only: check each message against the character's last line (convo/turn_check.py).
+        # Off by default, so the scored evaluation runs exactly as before.
+        self.turn_check = turn_check
+        self.last_verdict = {"kind": "answer", "note": ""}
 
     # ------------------------------------------------------------------ public
 
@@ -60,13 +65,23 @@ class Conversation:
         self.history.append({"role": "user", "content": cue})
         return self._respond()
 
-    def send(self, text):
+    def send(self, text, judge_text=None):
+        """`judge_text`: the message as characters, for the turn check (e.g. read from pinyin)."""
         text = (text or "").strip()
         if not text:
             raise ValueError("empty message")
         self.learner_sentences.append(text)
-        self.history.append({"role": "user", "content": text})
-        return self._respond()
+        note = ""
+        if self.turn_check and self.turns:
+            self.last_verdict = judge_turn(self.backend, self.scenario, self.turns[-1].reply,
+                                           judge_text or text)
+            note = steer_note(self.last_verdict["kind"], self.scenario)
+        # The note is for this reply only: it is taken out of the history afterwards.
+        self.history.append({"role": "user", "content": f"{text}\n\n({note})" if note else text})
+        index = len(self.history) - 1
+        turn = self._respond()
+        self.history[index] = {"role": "user", "content": text}
+        return turn
 
     # ---------------------------------------------------------------- internal
 

@@ -26,6 +26,7 @@ from convo.review import CATEGORY_LABELS, build_report, review_sentence
 from convo.scenarios import DEFAULT_SCENARIO, SCENARIOS
 from convo.settings import DIFFICULTIES, LEVELS, Settings
 from convo.structured import HAN
+from convo.turn_check import judge_turn
 
 DISPLAY_CHOICES = [("Chinese characters", "chinese"), ("Pinyin", "pinyin"), ("English", "english")]
 SCENARIO_CHOICES = [(sc.title, sc.id) for sc in SCENARIOS.values()]
@@ -85,7 +86,36 @@ def english_explanation(backend, explanation, sentence, corrected):
     return raw if raw and not mostly_chinese(raw) else explanation
 
 
-def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenario=DEFAULT_SCENARIO):
+def as_characters(pinyin, text):
+    """The message as Chinese characters if it was typed in pinyin (spelling fixed first), else as is."""
+    text = (text or "").strip()
+    if HAN.search(text) or pinyin is None or not text:
+        return text
+    try:
+        fixed = spelling_feedback(text, pinyin)["fixed"] if getattr(pinyin, "valid", None) else text
+        cands, _ = pinyin.candidates(fixed)
+        return cands[0] if cands and HAN.search(cands[0]) else text
+    except Exception:
+        return text
+
+
+def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenario=DEFAULT_SCENARIO,
+                  context=""):
+    """Live feedback on one message, plus (with `context`, the character's last line) whether it
+    answered that line. See _check_message for the language feedback."""
+    out = _check_message(backend, pinyin, text, level, pinyin_fn, scenario)
+    if context:
+        try:
+            sc = SCENARIOS.get(scenario) or SCENARIOS[DEFAULT_SCENARIO]
+            verdict = judge_turn(backend, sc, context, out.get("checked") or as_characters(pinyin, text))
+            if verdict["kind"] != "answer":
+                out["turn"] = verdict
+        except Exception as exc:  # the turn check is extra; never lose the language feedback over it
+            print("[convo] turn check skipped:", exc)
+    return out
+
+
+def _check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenario=DEFAULT_SCENARIO):
     """Live feedback on one message, from the same checker as the report and the scored tests
     (convo/review.py is unchanged). Pinyin is read as its best character candidate first, so a
     learner typing pinyin gets checked too. Speech can use this as well once it is transcribed."""
@@ -166,7 +196,7 @@ def build_app(backend, pinyin="auto"):
         if scenario not in SCENARIOS:
             raise gr.Error(f"Unknown scenario {scenario!r}. Choose one of: {', '.join(SCENARIOS)}.")
         conv = Conversation(backend, Settings(level=level, difficulty=difficulty, display=tuple(display),
-                                              scenario=scenario))
+                                              scenario=scenario), turn_check=True)
         turn = conv.start()
         chat = [{"role": "assistant", "content": format_turn(turn.reply, turn.english, conv.settings.display)}]
         sc = conv.scenario
@@ -182,7 +212,7 @@ def build_app(backend, pinyin="auto"):
         if conv is None or not message:
             return "", chat, conv
         chat = chat + [{"role": "user", "content": message}]
-        turn = conv.send(message)
+        turn = conv.send(message, judge_text=as_characters(pinyin, message))
         chat = chat + [{"role": "assistant",
                         "content": format_turn(turn.reply, turn.english, conv.settings.display)}]
         return "", chat, conv
@@ -242,11 +272,18 @@ def build_app(backend, pinyin="auto"):
             check_out = gr.JSON()
             check_btn = gr.Button()
             check_scenario_btn = gr.Button()
+            check_context = gr.Textbox()
+            check_turn_btn = gr.Button()
             start_cafe_btn = gr.Button()
         check_btn.click(lambda text, lvl: check_message(backend, pinyin, text, lvl),
                         [check_text, check_level], check_out, api_name="check")
         check_scenario_btn.click(lambda text, lvl, sc: check_message(backend, pinyin, text, lvl, scenario=sc),
                                  [check_text, check_level, check_scenario], check_out, api_name="check_scenario")
+        # check_turn: also says whether the message answered the character's last line (context)
+        check_turn_btn.click(lambda text, lvl, sc, ctx: check_message(backend, pinyin, text, lvl, scenario=sc,
+                                                                      context=ctx),
+                             [check_text, check_level, check_scenario, check_context], check_out,
+                             api_name="check_turn")
 
         gr.Markdown(f"<small>Model: {backend.name} · prompts {PROMPT_VERSION} · "
                     "Prototype: answers can be wrong.</small>")

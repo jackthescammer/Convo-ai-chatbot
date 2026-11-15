@@ -132,7 +132,10 @@ async function liveCheck(s, entry) {
   entry.check = { pending: true };
   s.view?.renderCheck(entry, true);
   try {
-    entry.check = (await model.check({ text: entry.text, settings: s.settings })) || { valid: false };
+    // the character's line this message was answering, so the server can tell if it went off script
+    const at = s.history.indexOf(entry);
+    const context = [...s.history.slice(0, at)].reverse().find((h) => h.who === 'ai')?.line?.zh || '';
+    entry.check = (await model.check({ text: entry.text, settings: s.settings, context })) || { valid: false };
   } catch (err) {
     console.warn('Live check failed:', err);
     entry.check = { failed: err?.message || 'Something went wrong.' };
@@ -463,6 +466,15 @@ export function render(root, arg, { mode = 'text' } = {}) {
       ${c.example.py ? `<p class="check-py">${esc(c.example.py)}</p>` : ''}
       ${c.example.en ? `<p class="check-meaning">${esc(c.example.en)}</p>` : ''}</div>` : '';
     const goodJob = (text) => `<p class="check-good"><span class="check-good-mark">${ICONS.check}</span><strong>Good job!</strong> ${text}</p>`;
+    // Didn't answer / off-topic / not appropriate: a warning goes first, and there's no "Good job!"
+    const TURN_TITLE = {
+      no_answer: "You didn't answer the question.",
+      off_topic: "That's off-topic here.",
+      inappropriate: "That's not appropriate here.",
+    };
+    const warn = c.turn && TURN_TITLE[c.turn.kind]
+      ? `<div class="check-part check-warn"><span class="tag tag-warn">Stay in the conversation</span>
+        <p class="check-why"><strong>${TURN_TITLE[c.turn.kind]}</strong> ${esc(c.turn.note || 'Answer what you were asked, in Mandarin.')}</p></div>` : '';
     let html;
     if (c.pending) html = said + '<p class="check-status"><span class="check-dots" aria-hidden="true"><span></span><span></span><span></span></span>Checking…</p>';
     else if (c.failed) html = said + `<p class="check-status">Couldn't check this one. ${esc(c.failed)}</p>`;
@@ -476,14 +488,18 @@ export function render(root, arg, { mode = 'text' } = {}) {
     } else if (spelling) {
       // the words were misspelt, but once fixed the sentence is right
       html = said + spelling + readAs + `<p class="check-good"><span class="check-good-mark">${ICONS.check}</span>Once the spelling is fixed, the sentence is right.</p>` + tones + example;
+    } else if (warn) {
+      // the Chinese is fine, but it didn't fit the conversation
+      html = said + readAs + `<p class="check-status">Your Chinese itself was fine.</p>` + tones;
     } else if (tones) {
       // right sentence, but the pinyin's tones need work
       html = goodJob('The sentence is right.') + readAs + tones;
     } else {
       html = goodJob("That's correct.");
     }
+    if (warn && !c.pending) html = (html.startsWith(said) ? said + warn + html.slice(said.length) : warn + html);
     li.innerHTML = html;
-    if (!c.pending && c.has_error === false && !c.skipped) poke(baristas[0], 'nod');
+    if (!c.pending && c.has_error === false && !c.skipped && !warn) poke(baristas[0], 'nod');
   }
 
   function goals(animate) {

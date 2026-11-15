@@ -113,3 +113,9 @@ Raw files: `20261114-120403_…_v6_tune.json`, `20261114-120513_…_v6_na.json`.
 ## v9 notes (not evaluated yet)
 
 2026-11-15. Restaurant only: the server sometimes opened with the customer's line (您好，请问有空位吗？). The restaurant prompt now says the server never asks the customer about free tables, dishes or prices and never speaks the customer's lines, and the opening cue asks for 您好，几位？. Café prompts are unchanged (golden test), so the v6 café scores still hold.
+
+## v10 notes (live app only, not evaluated)
+
+2026-11-15. New turn check (`convo/turn_check.py`): in the live app, each learner message is compared with the character's last line and sorted into answer / no answer / off-topic / not appropriate by a short extra model call. If it isn't an answer, the character gets a hidden one-off note for that reply (ask again and don't assume, or steer back politely), and the live feedback card warns the learner. Example that prompted it: the barista asked what the customer wanted, the learner only said "Ni hao", and the barista replied "hot or iced?" as if a drink had been ordered.
+
+The check is off by default in `Conversation`, so the scored evaluation runs exactly as before; the café system prompts and the checker are unchanged (golden test). Unclear model answers count as "answer", so a shaky check doesn't interrupt normal conversations. Not yet measured: how often it misjudges a real answer.

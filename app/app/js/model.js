@@ -701,14 +701,17 @@ function gradioModel(base) {
 
     /** Live feedback on one message (the server's "check" API, same checker as the report).
         Resolves the server's result object, or null if it sent nothing usable. */
-    async check({ text, settings }) {
+    async check({ text, settings, context = '' }) {
       const level = settings.level === 'A1' ? 'A1' : 'A2';
       const scenario = scenarioById(settings.scenario).id;
       // The checker is told where the sentence was said. /check (older servers) assumes the café.
+      // /check_turn also says whether the message answered the character's last line (`context`).
       const withScenario = api ? api.has('check_scenario') : scenario !== 'cafe';
-      const out = withScenario
-        ? await call('check_scenario', [text, level, scenario], 120000)
-        : await call('check', [text, level], 120000);
+      const out = context && api?.has('check_turn')
+        ? await call('check_turn', [text, level, scenario, context], 120000)
+        : withScenario
+          ? await call('check_scenario', [text, level, scenario], 120000)
+          : await call('check', [text, level], 120000);
       const r = Array.isArray(out) ? out[0] : out;
       return r && typeof r === 'object' ? r : null;
     },

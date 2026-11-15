@@ -1,0 +1,64 @@
+"""Turn check: did the learner's message respond to the character, or go off script?
+
+Used by the live app only (not by the scored evaluation, which never turns it on):
+- the character gets a short hidden note, so it asks again instead of assuming an answer
+  ("hot or iced?" when no drink was named) and steers back after an off-topic or rude message;
+- the live feedback card warns the learner.
+
+Any unclear answer from the model counts as "answer", so a shaky check never interrupts a
+normal conversation.
+"""
+
+from .structured import extract_json
+
+KINDS = ("answer", "no_answer", "off_topic", "inappropriate")
+
+# Hidden notes added to the learner's message for the character (never shown to the learner).
+STEER = {
+    "no_answer": ("The {learner} did not answer what you just asked. Do not assume anything they did "
+                  "not say. Stay in character and ask again, simply."),
+    "off_topic": ("The {learner} said something that has nothing to do with this situation. Stay in "
+                  "character, do not follow the new topic, and politely bring the conversation back."),
+    "inappropriate": ("The {learner} said something rude or not appropriate. Stay calm and polite, do "
+                      "not repeat it, and bring the conversation back to the situation."),
+}
+
+ANSWER = {"kind": "answer", "note": ""}
+
+
+def build_turn_check_prompt(scenario):
+    s = scenario
+    return (
+        f"You check a language-learning role-play. {s.character} is a {s.role}; the learner plays the "
+        f"{s.learner}. Read the {s.role}'s last line and the learner's reply, and classify the reply:\n"
+        f'- "answer": it responds to the line or naturally moves the conversation on (any reasonable '
+        f"thing a {s.learner} would say here, including questions and short answers);\n"
+        f'- "no_answer": polite, but it ignores a question the {s.role} asked (for example only saying '
+        f"hello when asked what they would like);\n"
+        f'- "off_topic": it has nothing to do with this situation;\n'
+        f'- "inappropriate": rude, offensive or not okay to say to a {s.role}.\n'
+        "Grammar and spelling mistakes do not matter. The reply may be in Chinese characters or pinyin.\n"
+        'Reply with only a JSON object: {"kind": "answer|no_answer|off_topic|inappropriate", '
+        '"note": "<one short sentence in English telling the learner what to do next>"}'
+    )
+
+
+def judge_turn(backend, scenario, character_line, learner_text):
+    """{'kind': one of KINDS, 'note': str}. Unclear answers count as 'answer'."""
+    if not character_line or not (learner_text or "").strip():
+        return dict(ANSWER)
+    raw = backend.generate([
+        {"role": "system", "content": build_turn_check_prompt(scenario)},
+        {"role": "user", "content": f"{scenario.role}: {character_line}\nLearner: {learner_text}"},
+    ], max_new_tokens=80, temperature=0.0)
+    obj = extract_json(raw)
+    kind = obj.get("kind") if isinstance(obj, dict) else None
+    if kind not in KINDS or kind == "answer":
+        return dict(ANSWER)
+    return {"kind": kind, "note": str(obj.get("note") or "").strip()[:200]}
+
+
+def steer_note(kind, scenario):
+    """The hidden note for the character, or '' when the learner answered."""
+    note = STEER.get(kind, "")
+    return note.format(learner=scenario.learner) if note else ""

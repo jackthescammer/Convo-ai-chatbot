@@ -869,3 +869,8 @@ html[data-hide-notes] .notes-hidden { display: block; }
   .menu-panel { inset: 0; width: auto; border-radius: 0; border-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .menu-panel { animation: none; } }
+
+/* Live feedback: didn't answer / off-topic / not appropriate */
+.tag-warn { background: #FFE9CC; color: #6B3A00; }
+.check-warn { background: #FFF4E5; border-radius: var(--r-sm); padding: 0.625rem 0.75rem; border-top: 0; }
+.check-warn strong { color: #6B3A00; }
