@@ -79,4 +79,6 @@ The barista asked what the customer wanted, the learner only said "Ni hao", and 
 | 需要点些什么吗？ | 我喜欢踢足球 ("I like playing football") | 那你平时喜欢做什么呢？ (followed the new topic) | off-topic | ❌ barista |
 | 有什么可以帮到您吗？ | 我要一杯咖啡 | 好的，您要加糖吗？ | none | ✅ |
 
-Detection was right 3/3, but the barista ignored the steer-back note for the off-topic message. The note was at the end of the learner's message; it now goes into the system prompt for that one reply and is firmer ("do NOT talk about it… ask again what you asked before"). Re-test results below once that is live.
+Detection was right 3/3, but the barista ignored the steer-back note for the off-topic message. The note was at the end of the learner's message; it now goes into the system prompt for that one reply and is firmer ("do NOT talk about it… ask again what you asked before").
+
+**Known limitation:** this firmer version is in the code but **was not re-tested on the live model** before submission, so we don't know yet whether the barista now steers back after off-topic messages. Only 3 turn-check cases were tried in total (one of each kind except "not appropriate", which was not tested), so we don't know how often the check misjudges a real answer either.

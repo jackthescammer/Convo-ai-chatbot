@@ -73,6 +73,7 @@ TODO: who checked Convo's corrections by hand, and what a real learner said afte
 - Small quiz (10 tune, 32 test), so one sentence moves a score a lot.
 - Text only on the main version. Five conversations, but only the café has been evaluated, and the correction test set is café sentences.
 - The live chat link only works while our model is running in Colab.
+- Live feedback is backed by spot checks, not a scored test ([LIVE_FEEDBACK_CHECKS.md](results/LIVE_FEEDBACK_CHECKS.md)). The turn check (prompts v10) spotted a non-answer and an off-topic message correctly, and the barista re-asked after the non-answer, but it followed one off-topic message instead of steering back. A firmer fix is in the code but was not re-tested live.
 
 ## What we'd do next
 1. Make the second check less eager to undo real corrections, then force English explanations.
