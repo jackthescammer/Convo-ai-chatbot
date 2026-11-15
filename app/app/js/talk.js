@@ -10,6 +10,11 @@ import { voiceSupported, createDictation } from './speech.js';
 const CJK = /[㐀-鿿]/;
 const ARROW = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const MIC = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>';
+// Windows has its own voice typing (Win + H). It types into the reply box like a keyboard, in the
+// language of the current Windows keyboard, so the keyboard has to be Chinese first (Win + Space).
+// A web page can't start it; we can only say it's there.
+const ON_WINDOWS = /Windows/i.test(navigator.userAgent);
+const WIN_VOICE_TIP = 'To speak with Windows voice typing: switch the keyboard to Chinese (Win + Space), click the reply box, then press Win + H.';
 const LISTENING = 'Listening for Mandarin. Tap the mic again when you\'re done.';
 // Spoken text joins what's already typed; a space only goes between two Latin words.
 const joinText = (a, b) => (/[A-Za-z0-9]$/.test(a) && /^[A-Za-z0-9]/.test(b) ? `${a} ${b}` : a + b);
@@ -215,7 +220,7 @@ function template(s) {
               <button type="submit" class="send-btn" data-send aria-label="Send" disabled>${ICONS.send}</button>
             </form>
             <p class="voice-status" data-voice-status role="status" hidden></p>
-            <p class="composer-keys" id="talk-keys">${getPrefs().enterToSend ? 'Enter sends. Shift + Enter starts a new line.' : 'Enter starts a new line. Use the send button to send.'}</p>
+            <p class="composer-keys" id="talk-keys">${getPrefs().enterToSend ? 'Enter sends. Shift + Enter starts a new line.' : 'Enter starts a new line. Use the send button to send.'}${ON_WINDOWS ? ` <span class="win-voice">${WIN_VOICE_TIP}</span>` : ''}</p>
           </div>
         </div>
 

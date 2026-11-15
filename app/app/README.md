@@ -116,4 +116,5 @@ It uses the speech recognition built into the browser (Web Speech API, `zh-CN`),
 - It needs https (or localhost) and a microphone permission the first time.
 - Audio leaves the device for the browser maker's service. Nothing goes to Convo's model except the text the learner sends.
 - It's not Whisper, which CLAUDE.md names for Phase 2. Whisper needs a server: it could run next to the model on Colab, with a recorder in the browser. Any engine that keeps `createDictation`'s shape in `js/speech.js` can replace this one.
+- On Windows, the OS's own voice typing (Win + H) also works in the reply box, like any text field: switch the Windows keyboard to Chinese (Win + Space) first, or it types pinyin as English words. The composer shows this tip under the box on Windows. It's independent of the mic button and works in every browser, Firefox included.
 - Transcription isn't pronunciation assessment. The recogniser guesses the most likely words, so a wrong tone can come out as the right character.

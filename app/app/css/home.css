@@ -435,6 +435,7 @@ html.hide-hanzi .msg.is-revealed .layered .py { font-size: 0.875rem; color: var(
 .voice-status:not([data-tone="error"])::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--vast); transform: translateY(-0.05em); }
 .voice-status[data-tone="error"] { color: var(--pulse); font-weight: 500; }
 .composer[data-voice] .composer-keys { display: none; }
+.win-voice { display: block; margin-top: 0.125rem; }
 html[data-hide-help] .help-btn, html[data-hide-help] .suggest { display: none !important; }
 
 .suggest { display: grid; gap: 0.5rem; padding-top: 0.125rem; animation: msg-in 240ms var(--ease-out) both; }

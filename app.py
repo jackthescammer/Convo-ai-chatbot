@@ -163,6 +163,10 @@ def build_app(backend, pinyin="auto"):
             chatbot = _make_chatbot(height=420, elem_id="chat", label="小林 · café waiter")
             msg = gr.Textbox(placeholder="Type your reply in Chinese, then press Enter",
                              show_label=False, autofocus=True)
+            # Windows voice typing is an OS feature: it types into the box above like a keyboard.
+            gr.Markdown("<small>**Speak instead (Windows):** switch the keyboard to Chinese "
+                        "(Win + Space), click the reply box, press **Win + H** and talk. "
+                        "Check the characters, then send.</small>")
             if pinyin is not None:
                 send_btn = gr.Button("Send", variant="primary")
                 with gr.Accordion("No Chinese keyboard? Type in pinyin", open=True):
