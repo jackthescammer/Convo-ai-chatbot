@@ -62,6 +62,9 @@ Words that aren't pinyin (or only split oddly, like yeao → ye + ao) get a sugg
 |---|---|---|---|
 | wo yeao yir ge bing cha | yeao → yao 要 ("can only be read as ye + ao"); yir → yi 一 ("only 'er' ends in r") | Read as 我要一个冰茶 → measure words: 我要一杯冰茶。 Try saying: 我要一杯冰茶。 wǒ yào yī bēi bīng chá, "I would like a cup of iced tea." | ✅ |
 | nihao | none (real word left alone) | Read as 你好, no tone marks | ✅ |
-| wo yao kafie | kafie → **kai 开** | Read as 我要开 ("I want to open") | ❌ |
+| wo yao kafie (first version) | kafie → **kai 开** | Read as 我要开 ("I want to open") | ❌ |
+| wo yao kafie (after the fix) | kafie → **kafei 咖啡** | Read as 我要咖啡. Try saying: 我要咖啡 wǒ yào kā fēi, "I would like a cup of coffee." | ✅ |
 
-**Bug found and fixed:** "kafie" (letters swapped) was matched to the single syllable kai, because suggestions only looked at single syllables and a swap counted as two typos. Now a swap counts as one typo and whole café words can be suggested, so it should give kafei 咖啡. Live result to be added after the next restart.
+**Bug found and fixed:** "kafie" (letters swapped) was first matched to the single syllable kai, because suggestions only looked at single syllables and a swap counted as two typos. Now a swap counts as one typo and whole café words can be suggested. After a restart the live model gave kafei 咖啡, and the other two rows above gave the same results as before.
+
+The spelling and "Try saying" sections were also checked visually on the live website (tryconvo.vercel.app) with "wo yeao yir ge bing cha".
