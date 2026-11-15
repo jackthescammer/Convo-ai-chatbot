@@ -386,7 +386,7 @@ html.hide-hanzi .msg.is-revealed .layered .py { font-size: 0.875rem; color: var(
 }
 .chat-error p { font-size: 0.9375rem; }
 
-.composer { display: grid; gap: 0.5rem; padding: 0.75rem clamp(0.75rem, 1.6vw, 1rem) 0.625rem; border-top: 1px solid var(--ink-08); }
+.composer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem clamp(0.75rem, 1.6vw, 1rem) 0.625rem; border-top: 1px solid var(--ink-08); }
 .composer-row { display: flex; align-items: flex-end; gap: 0.5rem; }
 .help-btn {
   flex: none; display: inline-flex; align-items: center; gap: 0.5rem;
@@ -418,6 +418,23 @@ html.hide-hanzi .msg.is-revealed .layered .py { font-size: 0.875rem; color: var(
 .send-btn:active:not(:disabled) { background: var(--yellow-shade); transform: translateY(1px); }
 .send-btn:disabled { background: var(--lumen-dark); color: var(--ink-50); cursor: default; }
 .composer-keys { padding-left: 0.375rem; font-size: 0.75rem; color: var(--ink-72); }
+/* Voice input: pressed reads as Vast with Lumen, like a pressed chip; the live words in the box are the motion. */
+.mic-btn {
+  flex: none; width: 3rem; height: 3rem; border: 1px solid var(--ink-15); border-radius: 50%;
+  display: grid; place-items: center; background: var(--white); color: var(--vast); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms var(--ease-out);
+}
+.mic-btn .icon { width: 1.375rem; height: 1.375rem; }
+.mic-btn:hover { border-color: rgba(26, 26, 26, 0.32); }
+.mic-btn:active { transform: translateY(1px); }
+.mic-btn[aria-pressed="true"], .mic-btn[aria-pressed="true"]:hover { background: var(--vast); border-color: var(--vast); color: var(--lumen); }
+.mic-btn:focus-visible { border-radius: 50%; }
+.voice-status { display: flex; align-items: baseline; gap: 0.5rem; padding-left: 0.375rem; font-size: 0.8125rem; font-weight: 600; color: var(--violet-ink); }
+.voice-status[hidden] { display: none; }
+.voice-status:not([data-tone="error"])::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--vast); transform: translateY(-0.05em); }
+.voice-status[data-tone="error"] { color: var(--pulse); font-weight: 500; }
+.composer[data-voice] .composer-keys { display: none; }
 html[data-hide-help] .help-btn, html[data-hide-help] .suggest { display: none !important; }
 
 .suggest { display: grid; gap: 0.5rem; padding-top: 0.125rem; animation: msg-in 240ms var(--ease-out) both; }

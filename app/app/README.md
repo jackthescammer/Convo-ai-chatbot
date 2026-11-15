@@ -98,4 +98,22 @@ Open the app with `?model=placeholder` (or type `placeholder` in Settings › Ab
 - Learner messages show as typed: no pinyin or English for them until the model provides it.
 - Reports, settings and preferences live in this browser only; private windows may not keep them.
 - "Delete reports" reloads the page, because `store.js` keeps reports in memory and has no delete call of its own.
-- Text only. Voice input and spoken replies are later phases.
+- Voice input uses the browser's speech recognition, not Whisper (see below). Spoken replies are a later phase.
+
+## Voice input
+
+The mic button in the reply box (`js/speech.js`) turns Mandarin speech into text in the box. The learner checks or edits it and then sends it; nothing is sent by voice alone. While it listens, the button is pressed (Vast), a "Listening" line shows under the box, and the barista switches to listening. Typing, sending or leaving the screen stops it.
+
+It uses the speech recognition built into the browser (Web Speech API, `zh-CN`), so it works for every visitor with nothing to install, but it depends on their browser:
+
+| Browser | Voice input |
+| ------- | ----------- |
+| Chrome, Edge (desktop and Android) | Works. Audio goes to Google's or Microsoft's speech service. On Android it stops after each pause; tap again to add more. |
+| Safari (macOS, iOS 14.5+), any browser on iPhone | Works, through Apple's speech service. |
+| Firefox | No speech recognition, so the mic button isn't shown. |
+| Brave, Opera | The button shows, but their speech service refuses requests, so it says it couldn't reach it. |
+
+- It needs https (or localhost) and a microphone permission the first time.
+- Audio leaves the device for the browser maker's service. Nothing goes to Convo's model except the text the learner sends.
+- It's not Whisper, which CLAUDE.md names for Phase 2. Whisper needs a server: it could run next to the model on Colab, with a recorder in the browser. Any engine that keeps `createDictation`'s shape in `js/speech.js` can replace this one.
+- Transcription isn't pronunciation assessment. The recogniser guesses the most likely words, so a wrong tone can come out as the right character.

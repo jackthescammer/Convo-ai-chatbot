@@ -5,9 +5,14 @@ import { mountMascots } from './kit.js';
 import { getPrefs } from './prefs.js';
 import { model, MODEL_INFO, GOALS, validateTurn, validateReport } from './model.js';
 import { getSettings, addReport } from './store.js';
+import { voiceSupported, createDictation } from './speech.js';
 
 const CJK = /[㐀-鿿]/;
 const ARROW = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const MIC = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>';
+const LISTENING = 'Listening for Mandarin. Tap the mic again when you\'re done.';
+// Spoken text joins what's already typed; a space only goes between two Latin words.
+const joinText = (a, b) => (/[A-Za-z0-9]$/.test(a) && /^[A-Za-z0-9]/.test(b) ? `${a} ${b}` : a + b);
 const STATUS = {
   idle: 'Getting ready',
   listening: 'Listening',
@@ -205,9 +210,11 @@ function template(s) {
               </button>
               <label class="sr-only" for="talk-input">Your reply</label>
               <textarea id="talk-input" class="composer-input" rows="1" data-input autocomplete="off" spellcheck="false"
-                placeholder="Reply in Mandarin" aria-describedby="talk-keys"></textarea>
+                placeholder="${voiceSupported ? 'Reply in Mandarin, or tap the mic' : 'Reply in Mandarin'}" aria-describedby="talk-keys"></textarea>
+              ${voiceSupported ? `<button type="button" class="mic-btn" data-mic aria-pressed="false" aria-label="Speak your reply" title="Speak your reply">${MIC}</button>` : ''}
               <button type="submit" class="send-btn" data-send aria-label="Send" disabled>${ICONS.send}</button>
             </form>
+            <p class="voice-status" data-voice-status role="status" hidden></p>
             <p class="composer-keys" id="talk-keys">${getPrefs().enterToSend ? 'Enter sends. Shift + Enter starts a new line.' : 'Enter starts a new line. Use the send button to send.'}</p>
           </div>
         </div>
@@ -267,6 +274,8 @@ export function render(root) {
   const statusEl = q('[data-status]');
   const composer = q('[data-composer]');
   const railToggle = q('[data-rail-toggle]');
+  const micBtn = q('[data-mic]');
+  const voiceStatus = q('[data-voice-status]');
 
   const mascots = mountMascots(root);
   const baristas = [mascots.get('[data-barista]'), mascots.get('[data-barista-mini]')];
@@ -379,6 +388,7 @@ export function render(root) {
       const b = el('button', 'suggestion', layered(line, { cls: 'layered layered-sm' }));
       b.type = 'button';
       b.addEventListener('click', () => {
+        dictation?.abort();
         input.value = line.zh;
         syncInput();
         toggleHelp(false);
@@ -435,7 +445,42 @@ export function render(root) {
     sendBtn.disabled = s.pending || s.ended || !input.value.trim();
   }
 
+  /* --- voice input: speech fills the reply box, the learner checks it and sends --- */
+  function showVoice(message, tone) {
+    voiceStatus.textContent = message;
+    voiceStatus.hidden = !message;
+    voiceStatus.dataset.tone = tone || '';
+    composer.toggleAttribute('data-voice', Boolean(message));
+  }
+
+  let voiceBase = '';
+  const dictation = micBtn && createDictation({
+    onState(on) {
+      micBtn.setAttribute('aria-pressed', String(on));
+      if (on) {
+        voiceBase = input.value;
+        showVoice(LISTENING);
+        if (!s.pending && !s.ended) mood('listening');
+      } else if (voiceStatus.dataset.tone !== 'error') {
+        showVoice('');
+        // Back to the box to check the words and send (not on touch screens, where it would open the keyboard).
+        if (input.value && !s.ended && matchMedia('(pointer: fine)').matches) input.focus({ preventScroll: true });
+      }
+    },
+    onText(text) {
+      input.value = joinText(voiceBase, text.trim());
+      syncInput();
+      input.scrollTop = input.scrollHeight;
+    },
+    onError(message) { showVoice(message, 'error'); },
+  });
+  micBtn?.addEventListener('click', () => {
+    if (!dictation.listening) showVoice('');
+    dictation.toggle();
+  });
+
   function finish(animate) {
+    dictation?.abort();
     composer.hidden = true;
     q('[data-end]').hidden = true;
     q('[data-restart]').hidden = false;
@@ -481,6 +526,9 @@ export function render(root) {
 
   /* --- events --- */
   input.addEventListener('input', () => {
+    // Typing takes over from the mic; the words heard so far stay in the box.
+    if (dictation?.listening) dictation.abort();
+    else if (voiceStatus.dataset.tone === 'error') showVoice('');
     syncInput();
     if (!s.pending && !s.ended) mood('listening');
   });
@@ -493,6 +541,7 @@ export function render(root) {
   });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    dictation?.abort();
     if (send(s, input.value)) {
       input.value = '';
       syncInput();
@@ -530,6 +579,7 @@ export function render(root) {
   if (!s.ended && s.history.length) input.focus({ preventScroll: true });
 
   return () => {
+    dictation?.abort();
     s.view = null;
     unbindLayers();
     document.removeEventListener('keydown', onKey);
