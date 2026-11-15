@@ -40,6 +40,23 @@ class CheckMessage(unittest.TestCase):
         self.assertTrue(out["skipped"])
         self.assertEqual(b.calls, [])
 
+    def test_chinese_explanation_is_rewritten_in_english(self):
+        def handler(m):
+            if m[0]["content"].startswith("You explain Chinese grammar"):
+                return "Use 喝 (drink) for drinks; 吃 (eat) is for food."
+            return review_json(True, "我想喝一杯咖啡。", "vocabulary", "吃用于食物，喝用于饮料。", "A coffee.")
+        out = check_message(FakeBackend(handler, verify='{"better": "B"}'), None, "我想吃一杯咖啡。", "A2",
+                            pinyin_fn=FAKE_PY)
+        self.assertEqual(out["explanation"], "Use 喝 (drink) for drinks; 吃 (eat) is for food.")
+        self.assertEqual(out["corrected"], "我想喝一杯咖啡。")  # the correction itself is untouched
+
+    def test_english_explanation_is_kept_without_an_extra_call(self):
+        b = FakeBackend(lambda m: review_json(True, "我要一杯茶。", "measure_word", "Use 杯 for drinks.", "Tea."),
+                        verify='{"better": "B"}')
+        out = check_message(b, None, "我要一个杯茶。", "A2", pinyin_fn=FAKE_PY)
+        self.assertEqual(out["explanation"], "Use 杯 for drinks.")
+        self.assertEqual(len(b.calls), 2)  # checker + A/B check only
+
     def test_punctuation_only_is_skipped(self):
         class OnlyPunct:
             def candidates(self, text, n=5):

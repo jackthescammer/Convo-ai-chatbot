@@ -4,6 +4,8 @@
     build_app(backend).launch(share=True)
 """
 
+import re
+
 import gradio as gr
 
 from convo.chat import Conversation
@@ -46,6 +48,24 @@ def _make_chatbot(**kwargs):
         return gr.Chatbot(**kwargs)
 
 
+MOSTLY_CHINESE = re.compile(r"[\u4e00-\u9fff]{4,}")
+
+
+def english_explanation(backend, explanation, sentence, corrected):
+    """The checker sometimes explains in Chinese, which an A2 learner can't read. Ask for a short
+    English version for display only; the correction itself and the scored checker don't change."""
+    if not explanation or not MOSTLY_CHINESE.search(explanation):
+        return explanation
+    raw = backend.generate([
+        {"role": "system", "content": "You explain Chinese grammar to beginners. Rewrite the explanation "
+                                      "in simple English in one or two sentences. Keep Chinese words only "
+                                      "when quoting them. Reply with the English explanation only."},
+        {"role": "user", "content": f"Learner wrote: {sentence}\nCorrected: {corrected}\nExplanation: {explanation}"},
+    ], max_new_tokens=120, temperature=0.0).strip()
+    # keep the original if the rewrite is empty or still mostly Chinese
+    return raw if raw and not MOSTLY_CHINESE.search(raw) else explanation
+
+
 def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
     """Live feedback on one message, from the same checker as the report and the scored tests
     (convo/review.py is unchanged). Pinyin is read as its best character candidate first, so a
@@ -71,7 +91,9 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
                corrected_pinyin=pinyin_fn(r.corrected) if r.valid and r.has_error and r.corrected else "",
                checked_pinyin=pinyin_fn(sentence) if out["from_pinyin"] else "",
                category=r.category, label=CATEGORY_LABELS.get(r.category, ""),
-               explanation=r.explanation, english=r.english)
+               explanation=english_explanation(backend, r.explanation, sentence, r.corrected)
+               if r.valid and r.has_error else r.explanation,
+               english=r.english)
     return out
 
 
