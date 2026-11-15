@@ -64,4 +64,5 @@ def judge_turn(backend, scenario, character_line, learner_text):
 def steer_note(kind, scenario):
     """The hidden note for the character, or '' when the learner answered."""
     note = STEER.get(kind, "")
-    return note.format(learner=scenario.learner, roleplay=f"{scenario.roleplay} conversation") if note else ""
+    where = scenario.roleplay if "conversation" in scenario.roleplay else f"{scenario.roleplay} conversation"
+    return note.format(learner=scenario.learner, roleplay=where) if note else ""
