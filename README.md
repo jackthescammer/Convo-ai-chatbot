@@ -1,7 +1,7 @@
 # Convo AI: a Mandarin conversation partner for beginners
 
 **Track:** AI + Languages · **Team:** Nelson Wang, Ferrell Dong, Ethan Cao
-**Try it:** [tryconvo.vercel.app](https://tryconvo.vercel.app) (live chat works while our model is running) · **Demo video:** TODO
+**Try it:** [tryconvo.vercel.app](https://tryconvo.vercel.app) (live chat works while our model is running) · **Demo video:** [youtube.com/watch?v=Nn2zsZ2-YUQ](https://www.youtube.com/watch?v=Nn2zsZ2-YUQ)
 **Version:** prompts v12. The mistake checker was scored at v6; v7 to v12 added features without changing it.
 
 > **Main takeaway:** a free, small AI model (Qwen 2.5 3B) can start to coach beginner Chinese, but it isn't reliable yet. On 32 unseen sentences, our best checker fixed 7/21 mistakes correctly (first version: 3/21; a never-correct baseline: 0) and wrongly changed 2/11 correct sentences (first version: 6/11). Showing the model examples worked far better than giving it rules.
