@@ -35,7 +35,7 @@
    (Cell 6a's gradio.live links change every launch.) Put the link in DEFAULT_MODEL_URL, or change it without editing code: open the
    app once with ?model=<link> (or ?model=placeholder), or paste it in Settings › About.
    Both are remembered in this browser under 'convo-model-url'. */
-export const DEFAULT_MODEL_URL = 'https://9ab894f01db31f47b3.gradio.live';
+export const DEFAULT_MODEL_URL = 'https://upright-waking-lubricant.ngrok-free.dev';
 const MODEL_URL_KEY = 'convo-model-url';
 const PLACEHOLDER = 'placeholder';
 
