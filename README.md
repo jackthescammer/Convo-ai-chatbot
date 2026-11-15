@@ -74,11 +74,13 @@ TODO: who checked Convo's corrections by hand, and what a real learner said afte
 - Text only on the main version. Five conversations, but only the café has been evaluated, and the correction test set is café sentences.
 - The live chat link only works while our model is running in Colab.
 - Live feedback is backed by spot checks, not a scored test ([LIVE_FEEDBACK_CHECKS.md](results/LIVE_FEEDBACK_CHECKS.md)). The turn check (prompts v10) spotted a non-answer and an off-topic message correctly, and the barista re-asked after the non-answer, but in v10 it followed off-topic messages instead of steering back. With a firmer fix (v11) it steered back in our one re-test, which is too few tries to be sure.
+- The character doesn't always keep the conversation going. In our own testing ([TEAM_TESTS.md](results/TEAM_TESTS.md)), after 我想要一杯冰茶。 the barista only confirmed (好的，来一杯冰茶。) without asking anything next, such as sugar, ice, size or paying, so a beginner has to lead the conversation themselves.
 
 ## What we'd do next
 1. Make the second check less eager to undo real corrections, then force English explanations.
-2. Voice input with Whisper (in progress on the `phase2-whisper` branch), tested per speaker.
-3. More scenarios, then testing with real learners.
+2. Make the character always end with a short follow-up question (sugar, ice, size, anything else, paying), so beginners are never left wondering what to say.
+3. Voice input with Whisper (in progress on the `phase2-whisper` branch), tested per speaker.
+4. More scenarios, then testing with real learners.
 
 ## Sources
 - Qwen 2.5 3B Instruct: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct
