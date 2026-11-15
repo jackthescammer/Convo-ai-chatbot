@@ -76,12 +76,10 @@ class Conversation:
             self.last_verdict = judge_turn(self.backend, self.scenario, self.turns[-1].reply,
                                            judge_text or text)
             note = steer_note(self.last_verdict["kind"], self.scenario)
-        # The note is for this reply only: it is taken out of the history afterwards.
-        self.history.append({"role": "user", "content": f"{text}\n\n({note})" if note else text})
-        index = len(self.history) - 1
-        turn = self._respond()
-        self.history[index] = {"role": "user", "content": text}
-        return turn
+        self.history.append({"role": "user", "content": text})
+        # The note goes into the system prompt for this one reply (a small model follows the system
+        # prompt much more closely than a note at the end of the learner's message).
+        return self._respond(steer=note)
 
     # ---------------------------------------------------------------- internal
 
@@ -95,9 +93,11 @@ class Conversation:
         self._surprises_used += 1
         return self.rng.choice(self.scenario.surprises)
 
-    def _respond(self):
-        surprise = self._pick_surprise()
+    def _respond(self, steer=""):
+        surprise = "" if steer else self._pick_surprise()  # get back on track first, surprises later
         system = build_system_prompt(self.settings, surprise or None)
+        if steer:
+            system += "\n\nIMPORTANT, for this reply only: " + steer
         window = self.history[-self.max_history_messages:]
         turn = self._generate_validated([{"role": "system", "content": system}] + window)
         turn.surprise = surprise

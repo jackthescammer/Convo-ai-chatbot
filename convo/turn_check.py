@@ -13,14 +13,17 @@ from .structured import extract_json
 
 KINDS = ("answer", "no_answer", "off_topic", "inappropriate")
 
-# Hidden notes added to the learner's message for the character (never shown to the learner).
+# Hidden one-off instructions for the character's next reply (added to its system prompt for that
+# reply only; never shown to the learner).
 STEER = {
-    "no_answer": ("The {learner} did not answer what you just asked. Do not assume anything they did "
-                  "not say. Stay in character and ask again, simply."),
-    "off_topic": ("The {learner} said something that has nothing to do with this situation. Stay in "
-                  "character, do not follow the new topic, and politely bring the conversation back."),
-    "inappropriate": ("The {learner} said something rude or not appropriate. Stay calm and polite, do "
-                      "not repeat it, and bring the conversation back to the situation."),
+    "no_answer": ("The {learner} did not answer what you just asked. Do not assume any answer and do "
+                  "not move on. Ask the same question again, simply."),
+    "off_topic": ("The {learner} just changed the subject to something unrelated. Do NOT talk about "
+                  "it or ask about it. In one short sentence, politely go back to the {roleplay}: ask "
+                  "again what you asked before."),
+    "inappropriate": ("The {learner} said something rude or not appropriate. Do not repeat it or talk "
+                      "about it. Stay calm and polite, and go straight back to the {roleplay}: ask "
+                      "again what you asked before."),
 }
 
 ANSWER = {"kind": "answer", "note": ""}
@@ -61,4 +64,4 @@ def judge_turn(backend, scenario, character_line, learner_text):
 def steer_note(kind, scenario):
     """The hidden note for the character, or '' when the learner answered."""
     note = STEER.get(kind, "")
-    return note.format(learner=scenario.learner) if note else ""
+    return note.format(learner=scenario.learner, roleplay=f"{scenario.roleplay} conversation") if note else ""

@@ -27,8 +27,9 @@ class TurnCheck(unittest.TestCase):
         conv.start()
         conv.send("你好")
         reply_call = b.calls[-1]
-        self.assertIn("did not answer", reply_call[-1]["content"])      # the character saw the note
-        self.assertEqual(conv.history[-2], {"role": "user", "content": "你好"})  # and it's gone after
+        self.assertIn("did not answer", reply_call[0]["content"])        # in the system prompt, this reply
+        self.assertEqual(reply_call[-1], {"role": "user", "content": "你好"})  # the message itself is clean
+        self.assertFalse(any("did not answer" in m["content"] for m in conv.history))  # nothing kept
         self.assertEqual(conv.last_verdict["kind"], "no_answer")
 
     def test_answer_changes_nothing(self):
