@@ -54,6 +54,14 @@ Before v9 the restaurant server once opened with a customer's line (您好，请
 
 5/5 correct. This only checks the first line; later turns were not checked.
 
-## Pinyin spelling help (added after these checks)
+## Pinyin spelling help
 
-Words that aren't pinyin (or only split oddly, like yeao → ye + ao) get a suggested syllable, its character and a reason, and a "Try saying" example shows the whole sentence done right. Unit tests: `tests/test_pinyin_spelling.py`. Live results will be added here once it has been run on the live model.
+Words that aren't pinyin (or only split oddly, like yeao → ye + ao) get a suggested syllable, its character and a reason, and a "Try saying" example shows the whole sentence done right. The suggestions are rule-based (a syllable list, edit distance and the café word list), not the model. Unit tests: `tests/test_pinyin_spelling.py`.
+
+| Typed | Spelling help | Then | Right? |
+|---|---|---|---|
+| wo yeao yir ge bing cha | yeao → yao 要 ("can only be read as ye + ao"); yir → yi 一 ("only 'er' ends in r") | Read as 我要一个冰茶 → measure words: 我要一杯冰茶。 Try saying: 我要一杯冰茶。 wǒ yào yī bēi bīng chá, "I would like a cup of iced tea." | ✅ |
+| nihao | none (real word left alone) | Read as 你好, no tone marks | ✅ |
+| wo yao kafie | kafie → **kai 开** | Read as 我要开 ("I want to open") | ❌ |
+
+**Bug found and fixed:** "kafie" (letters swapped) was matched to the single syllable kai, because suggestions only looked at single syllables and a swap counted as two typos. Now a swap counts as one typo and whole café words can be suggested, so it should give kafei 咖啡. Live result to be added after the next restart.
