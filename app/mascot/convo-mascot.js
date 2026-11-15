@@ -926,6 +926,7 @@ function markup(id, c, props) {
     <g data-k="armR"><rect x="-10.5" y="-8" width="21" height="36" rx="10.5" fill="${u('limb')}"/></g>
   </g>
   <g data-k="front">${layer('front')}</g>
+  <g data-k="coshand"></g>
 </g>
 <g data-k="fx">${layer('fx')}</g>
 <g data-k="world">${layer('world')}</g>`;

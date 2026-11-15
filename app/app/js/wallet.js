@@ -21,9 +21,15 @@ export const PRICES = {
   cap: 35, shades: 40, party: 45,
   heart: 50, medal: 60, chef: 70,
   star: 80, crown: 120,
+  // Chinese-themed set
+  ribbon: 20, hairpin: 25, plum: 30, headband: 30, zhongshan: 35, pandahat: 45, lotus: 45,
+  newyear: 55, tang: 60, qing: 65, dragonhat: 90, chinacrown: 110,
+  rsun: 25, scholar: 30, cloud: 40, lanternglasses: 55, calligraphy: 60, dragonglasses: 75,
+  luckybell: 30, dragonscarf: 45, cheongsam: 60, hanfucape: 70,
+  brush: 40, umbrella: 65,
 };
 
-const blank = () => ({ coins: 0, earned: 0, owned: [], equipped: { hat: null, glasses: null, neck: null }, awarded: [] });
+const blank = () => ({ coins: 0, earned: 0, owned: [], equipped: Object.fromEntries(SLOTS.map((s) => [s, null])), awarded: [] });
 
 function load() {
   try {

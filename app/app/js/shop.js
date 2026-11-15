@@ -13,7 +13,7 @@ import {
 export const COIN = '<svg class="coin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10" fill="#FFC21A" stroke="#E9A300" stroke-width="2"/><circle cx="12" cy="12" r="6.2" fill="none" stroke="#E9A300" stroke-width="1.6"/><path d="M9.6 12.2l1.7 1.7 3.3-3.6" fill="none" stroke="#B97F00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 /* Each slot is shown in a crop of the mascot's own coordinate space. */
-const CROP = { hat: '-62 -184 124 86', glasses: '-48 -108 96 50', neck: '-62 -70 124 66' };
+const CROP = { hat: '-72 -184 144 90', glasses: '-48 -112 96 56', neck: '-64 -70 128 66', hand: '-30 -180 100 170' };
 const thumb = (item) => `<svg class="shop-thumb" viewBox="${CROP[item.slot]}" aria-hidden="true" focusable="false">${item.svg}</svg>`;
 
 export function render(root) {

@@ -109,6 +109,6 @@ Suggested mapping for a conversation turn: `listening` while the learner types o
 
 ## Cosmetics
 
-`cosmetics.js` holds the hats, glasses and neckwear (plain SVG in the mascot's own coordinates). Pass
+`cosmetics.js` holds the hats, glasses, neckwear and held items (plain SVG in the mascot's own coordinates). Pass
 `cosmetics: { hat, glasses, neck }` (item ids) to `createConvoMascot`, or call `handle.setCosmetics(...)`
 later. Glasses sit on the face group, so they follow its turn and tilt; hats and neckwear sit on the body.

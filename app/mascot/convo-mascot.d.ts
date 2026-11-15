@@ -63,8 +63,8 @@ export interface MascotOptions {
   ariaLabel?: string;
   /** Colour overrides. Read once: create the mascot again to change them. */
   character?: Partial<MascotCharacter>;
-  /** Items worn, by slot: hat, glasses, neck (ids from cosmetics.js). Missing or unknown means none. */
-  cosmetics?: { hat?: string | null; glasses?: string | null; neck?: string | null } | null;
+  /** Items worn, by slot: hat, glasses, neck, hand (ids from cosmetics.js). Missing or unknown means none. */
+  cosmetics?: { hat?: string | null; glasses?: string | null; neck?: string | null; hand?: string | null } | null;
   /** Receives the new state name. */
   onStateChange?: ((state: MascotState) => void) | null;
 }
