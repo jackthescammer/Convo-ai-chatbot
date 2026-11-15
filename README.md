@@ -86,7 +86,11 @@ TODO: who checked Convo's corrections by hand, and what a real learner said afte
 - Qwen 2.5 3B Instruct: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct
 - Hugging Face Transformers: https://huggingface.co/docs/transformers
 - Gradio (chat app): https://www.gradio.app
-- pypinyin (pinyin display): https://github.com/mozillazg/python-pinyin
-- Google Colab: https://colab.research.google.com
+- pypinyin (pinyin display and tone checks): https://github.com/mozillazg/python-pinyin
+- Pinyin2Hanzi (reading typed pinyin as characters): https://github.com/letiantian/Pinyin2Hanzi
+- Google Colab (free GPU for the model): https://colab.research.google.com
+- ngrok (a fixed web address for the model running in Colab): https://ngrok.com
 - Vercel (website hosting): https://vercel.com
-- AI tools: Claude (Anthropic), for planning, code, drafting the test sentences and analysis
+- ElevenLabs (the characters' spoken voices, with the browser's own voice as a fallback): https://elevenlabs.io
+- Web Speech API (the website's mic button turns speech into text in the browser): https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
+- AI tools: Claude (Anthropic), used a lot: for planning, writing and fixing code, drafting the test sentences (then checked by Nelson and Ferrell), the website, and the analysis. We tested every feature on the live model ourselves.
