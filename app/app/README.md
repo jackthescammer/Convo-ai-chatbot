@@ -168,3 +168,12 @@ report: 10 coins if you said at least 3 things, plus 5 per goal reached. `js/sho
 page: try items on the mascot, buy them, wear or take them off. Prices are in `wallet.js`; the items
 themselves are in `mascot/cosmetics.js`. Every mascot in the app wears what you've equipped. Coins are
 not synced anywhere, so they're per browser and can be cleared by the browser.
+
+## Spoken replies (ElevenLabs)
+
+`app/api/tts.js` is a Vercel function that turns a reply into speech with ElevenLabs. The API key is
+never in the repo: set `ELEVENLABS_API_KEY` in the Vercel project (Settings, Environment Variables)
+and redeploy. Voices: Jenny speaks for the restaurant server and the open-chat friend, Jin for the
+café, shop and interview (see `SPEAKER` in `js/voice-tts.js`; voice ids are in `api/tts.js`). Replies have a
+Listen button in typed conversations, and the voice conversation speaks them. If the function or key is
+missing, or a request fails, the browser's own Mandarin voice is used instead.

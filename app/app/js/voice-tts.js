@@ -79,6 +79,83 @@ export function unlockSpeech() {
 
 let current = null; // keeps the utterance referenced: Chrome drops events of collected utterances
 
+/* ---------- Server voices (ElevenLabs through /api/tts) ----------
+   Convo's characters speak with Jenny or Jin when the site's server has a key (api/tts.js). If the
+   request fails for any reason (no key, no such function on this host, offline, a refused play) the
+   browser voice above says the line instead, so a conversation never depends on it. */
+const SPEAKER = { cafe: 'jin', shop: 'jin', restaurant: 'jenny', interview: 'jin', chat: 'jenny' };
+let speaker = null;       // 'jenny' | 'jin' for the conversation on screen
+let serverDown = false;   // set after a hard failure (no key, no function), so lines don't wait on it
+const clips = new Map();  // `${voice}|${text}` -> object URL of the audio, so replays cost nothing
+
+/** Which character is speaking now (call when a conversation opens). */
+export function setSpeaker(scenarioId) { speaker = SPEAKER[scenarioId] || null; }
+export const speakerName = () => speaker;
+
+async function clipFor(voice, text) {
+  const key = `${voice}|${text}`;
+  if (clips.has(key)) return clips.get(key);
+  const r = await fetch('/api/tts', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, voice }),
+  });
+  if (!r.ok) throw Object.assign(new Error('tts'), { status: r.status });
+  const url = URL.createObjectURL(await r.blob());
+  clips.set(key, url);
+  if (clips.size > 40) { const [old] = clips.keys(); URL.revokeObjectURL(clips.get(old)); clips.delete(old); }
+  return url;
+}
+
+function speakServer(text, voice, { rate = 1, onStart } = {}) {
+  let finish;
+  const done = new Promise((resolve) => { finish = resolve; });
+  let settled = false;
+  let audio = null;
+  let started = 0;
+  const me = {
+    finish(result) {
+      if (settled) return;
+      settled = true;
+      try { audio?.pause(); } catch { /* ignore */ }
+      if (current === me) current = null;
+      finish({ ...result, seconds: started ? (performance.now() - started) / 1000 : 0 });
+    },
+  };
+  current = me;
+  clipFor(voice, text).then((url) => {
+    if (settled) return;
+    audio = new Audio(url);
+    audio.playbackRate = Math.min(1.1, Math.max(0.7, rate));
+    audio.onplaying = () => { if (!started) { started = performance.now(); onStart?.(); } };
+    audio.onended = () => me.finish({ ok: true });
+    audio.onerror = () => me.finish({ ok: false, code: 'server-unavailable' });
+    return audio.play();
+  }).catch((err) => {
+    // 404 / 501 / 401: no function or no key here; stop asking. 429 or a network blip: ask again next time.
+    if (err?.status === 404 || err?.status === 501 || err?.status === 401) serverDown = true;
+    me.finish({ ok: false, code: 'server-unavailable' });
+  });
+  return { done, cancel: () => me.finish({ ok: false, code: 'cancelled' }) };
+}
+
+/**
+ * Speak one Mandarin line: in the character's ElevenLabs voice when there is one, else the browser's.
+ * @returns {{ done: Promise<{ ok: boolean, code?: string, seconds?: number }>, cancel: () => void }}
+ */
+export function speak(text, opts = {}) {
+  if (!speaker || serverDown) return speakBrowser(text, opts);
+  stopSpeaking();
+  let inner = speakServer(text, speaker, opts);
+  let cancelled = false;
+  const done = inner.done.then((r) => {
+    if (r.code === 'server-unavailable' && !cancelled) {
+      inner = speakBrowser(text, opts);
+      return inner.done;
+    }
+    return r;
+  });
+  return { done, cancel: () => { cancelled = true; inner.cancel(); } };
+}
+
 export function stopSpeaking() {
   const c = current;
   current = null;
@@ -90,7 +167,7 @@ export function stopSpeaking() {
  * Speak one Mandarin line.
  * @returns {{ done: Promise<{ ok: boolean, code?: string, seconds?: number }>, cancel: () => void }}
  */
-export function speak(text, { rate = 1, onStart } = {}) {
+function speakBrowser(text, { rate = 1, onStart } = {}) {
   let finish;
   const done = new Promise((resolve) => { finish = resolve; });
   if (!ttsSupported) {

@@ -3,6 +3,7 @@ import {
 } from './ui.js';
 import { mountMascots } from './kit.js';
 import { getPrefs, savePrefs } from './prefs.js';
+import { setSpeaker, speak, stopSpeaking, RATE } from './voice-tts.js';
 import { hasMenu, menuButtonHTML, menuPanelHTML, bindMenu } from './menu.js';
 import { model, MODEL_INFO, SCENARIOS, scenarioById, validateTurn, validateReport } from './model.js';
 import { getSettings, addReport } from './store.js';
@@ -332,6 +333,7 @@ export function render(root, arg, { mode = 'text' } = {}) {
   // The restaurant's menu opens with a new conversation, and stays as you leave it after that.
   if (s.menu === undefined) s.menu = { open: !s.history.length };
   const unbindMenu = bindMenu(root, s.menu);
+  setSpeaker(s.settings.scenario); // Jenny or Jin for this character
 
   const scrollLog = () => log.scrollTo({ top: log.scrollHeight, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
 
@@ -391,6 +393,23 @@ export function render(root, arg, { mode = 'text' } = {}) {
         });
         msg.append(reveal);
       }
+      // Hear it said (typed conversations; the voice conversation speaks on its own).
+      const listen = el('button', 'reveal listen', 'Listen');
+      listen.type = 'button';
+      listen.setAttribute('aria-label', 'Listen to this reply');
+      let playing = null;
+      listen.addEventListener('click', () => {
+        if (playing) { playing.cancel(); stopSpeaking(); return; }
+        listen.textContent = 'Stop';
+        const h = speak(entry.line.zh, { rate: RATE[s.settings.difficulty] ?? 0.9 });
+        playing = h;
+        h.done.then((r) => {
+          playing = null;
+          listen.textContent = r.ok || r.code === 'cancelled' ? 'Listen' : 'No voice here';
+          if (!r.ok && r.code !== 'cancelled') setTimeout(() => { listen.textContent = 'Listen'; }, 2500);
+        });
+      });
+      msg.append(listen);
     } else {
       msg.append(el('p', 'msg-who', 'You'));
       const p = el('p', 'plain', esc(entry.text));
