@@ -5,11 +5,14 @@ are logged against it.
 
 v7 added the scenarios (convo/scenarios.py). The café prompts are word for word the v6
 prompts (tests/test_scenarios.py checks this against tests/golden_cafe_v6.json).
+v8 made the shop, restaurant and interview scenarios specifically Chinese (real dishes and phrases,
+yuan prices, paying by code or cash). The café is still byte-identical to v6, so the v6 café scores
+still describe it; the other scenarios have not been evaluated.
 """
 
 from .scenarios import CAFE, get_scenario
 
-PROMPT_VERSION = "v7"
+PROMPT_VERSION = "v8"
 
 # The café's values, kept under their v6 names.
 CHARACTER_NAME = CAFE.character
