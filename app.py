@@ -19,6 +19,7 @@ import gradio as gr
 
 from convo.chat import Conversation
 from convo.prompts import PROMPT_VERSION
+from convo.pinyin_feedback import tone_feedback
 from convo.render import format_turn, to_pinyin
 from convo.review import CATEGORY_LABELS, build_report, review_sentence
 from convo.scenarios import DEFAULT_SCENARIO, SCENARIOS
@@ -112,6 +113,11 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin, scenar
                explanation=english_explanation(backend, r.explanation, sentence, r.corrected)
                if r.valid and r.has_error else r.explanation,
                english=r.english)
+    if out["from_pinyin"] and getattr(pinyin, "valid", None):
+        try:  # tone marks the learner typed vs the right ones; display only, never blocks the check
+            out["tones"] = tone_feedback(text, sentence, pinyin.valid)
+        except Exception as exc:  # e.g. pypinyin missing
+            print("[convo] tone feedback skipped:", exc)
     return out
 
 

@@ -348,6 +348,23 @@ export function render(root, arg) {
 
   const checksEl = q('[data-checks]');
   const TAG_FOR = { vocabulary: ['vocab', 'Vocabulary'], unnatural: ['natural', 'More natural'] };
+  function toneBlock(t) {
+    if (!t || t.status === 'ok' || !t.expected) return '';
+    const right = `<p class="check-py check-py-right">${esc(t.expected)}</p>`;
+    let msg;
+    if (t.status === 'none') msg = 'You left out the tone marks. Pinyin needs them, because the tone changes the meaning. With tones:';
+    else if (t.status === 'check') msg = 'Check your tones against the right pinyin:';
+    else {
+      const bits = [];
+      if (t.wrong?.length) bits.push(`${t.wrong.length} wrong`);
+      if (t.missing) bits.push(`${t.missing} missing`);
+      msg = `Some tones need fixing (${bits.join(', ')}). The right pinyin:`;
+    }
+    const wrong = (t.wrong || []).map((w) => `<li><span class="from">${esc(w.typed)}</span>${ARROW}<span class="to">${esc(w.expected)}</span> <span lang="zh-Hans">${esc(w.char)}</span></li>`).join('');
+    return `<div class="check-part"><span class="tag tag-tone">Tones</span>
+      <p class="check-why">${msg}</p>${right}${wrong ? `<ul class="check-tones">${wrong}</ul>` : ''}</div>`;
+  }
+
   function renderCheck(entry, animate) {
     if (!checksEl || !entry.check) return;
     const c = entry.check;
@@ -357,23 +374,29 @@ export function render(root, arg) {
       li.dataset.checkFor = entry.id;
       checksEl.prepend(li); // newest first, so it's visible without scrolling
     }
-    const said = `<p class="check-said"><span class="check-you">You</span> <span${CJK.test(entry.text) ? ' lang="zh-Hans"' : ''}>${esc(entry.text)}</span></p>`;
+    const said = `<p class="check-said"><span class="check-you">You wrote</span> <span${CJK.test(entry.text) ? ' lang="zh-Hans"' : ''}>${esc(entry.text)}</span></p>`;
     const readAs = c.from_pinyin && c.checked
-      ? `<p class="check-read">Read as <span lang="zh-Hans">${esc(c.checked)}</span>${c.checked_pinyin ? ` <span class="check-py">${esc(c.checked_pinyin)}</span>` : ''}</p>` : '';
-    let body;
-    if (c.pending) body = '<p class="check-status"><span class="check-dots" aria-hidden="true"><span></span><span></span><span></span></span>Checking…</p>';
-    else if (c.failed) body = `<p class="check-status">Couldn't check this one. ${esc(c.failed)}</p>`;
-    else if (c.skipped) body = `<p class="check-status">${esc(c.skipped)}</p>`;
-    else if (c.valid === false) body = '<p class="check-status">Couldn\'t check this one.</p>';
+      ? `<p class="check-read">We read it as <span lang="zh-Hans">${esc(c.checked)}</span></p>` : '';
+    const tones = toneBlock(c.tones);
+    const goodJob = (text) => `<p class="check-good"><span class="check-good-mark">${ICONS.check}</span><strong>Good job!</strong> ${text}</p>`;
+    let html;
+    if (c.pending) html = said + '<p class="check-status"><span class="check-dots" aria-hidden="true"><span></span><span></span><span></span></span>Checking…</p>';
+    else if (c.failed) html = said + `<p class="check-status">Couldn't check this one. ${esc(c.failed)}</p>`;
+    else if (c.skipped) html = said + `<p class="check-status">${esc(c.skipped)}</p>`;
+    else if (c.valid === false) html = said + '<p class="check-status">Couldn\'t check this one.</p>';
     else if (c.has_error && c.corrected) {
       const [tag, label] = TAG_FOR[c.category] || ['grammar', c.label ? c.label[0].toUpperCase() + c.label.slice(1) : 'Grammar'];
-      body = `<span class="tag tag-${tag}">${esc(label)}</span>
+      html = said + readAs + `<div class="check-part"><span class="tag tag-${tag}">${esc(label)}</span>
         <p class="note-change"><span class="from" lang="zh-Hans">${esc(c.checked || entry.text)}</span>${ARROW}<span class="to" lang="zh-Hans">${esc(c.corrected)}</span></p>
         ${c.corrected_pinyin ? `<p class="check-py">${esc(c.corrected_pinyin)}</p>` : ''}
-        ${c.explanation ? `<p class="check-why">${esc(c.explanation)}</p>` : ''}
-        ${c.english ? `<p class="check-meaning">${esc(c.english)}</p>` : ''}`;
-    } else body = `<span class="tag tag-ok">Looks right</span>${c.english ? `<p class="check-meaning">${esc(c.english)}</p>` : ''}`;
-    li.innerHTML = said + readAs + body;
+        ${c.explanation ? `<p class="check-why">${esc(c.explanation)}</p>` : ''}</div>` + tones;
+    } else if (tones) {
+      // right sentence, but the pinyin's tones need work
+      html = goodJob('The sentence is right.') + readAs + tones;
+    } else {
+      html = goodJob("That's correct.");
+    }
+    li.innerHTML = html;
     if (!c.pending && c.has_error === false && !c.skipped) poke(baristas[0], 'nod');
   }
 
