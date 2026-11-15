@@ -3,6 +3,7 @@ import {
 } from './ui.js';
 import { mountMascots } from './kit.js';
 import { getPrefs, savePrefs } from './prefs.js';
+import { hasMenu, menuButtonHTML, menuPanelHTML, bindMenu } from './menu.js';
 import { model, MODEL_INFO, SCENARIOS, scenarioById, validateTurn, validateReport } from './model.js';
 import { getSettings, addReport } from './store.js';
 import { awardReport } from './wallet.js';
@@ -209,6 +210,7 @@ function template(s, voice) {
           <p class="talk-sub">${esc(meta)}</p>
         </div>
         <div class="talk-controls">
+          ${hasMenu(sc.id) ? menuButtonHTML() : ''}
           ${modeSwitch(sc, voice)}
           ${voice ? `<button type="button" class="chip voice-text-chip" data-voice-text-toggle aria-pressed="${showText}">Text</button>` : ''}
           ${layerChips('Show in conversation')}
@@ -226,6 +228,7 @@ function template(s, voice) {
       <div class="talk-body">
         <div class="talk-chat${sc.image ? ' has-scene' : ''}">
           ${sc.image ? `<img class="chat-scene" src="${esc(sc.image)}" alt="" decoding="async">` : ''}
+          ${hasMenu(sc.id) ? menuPanelHTML() : ''}
           <div class="chat-log" data-log role="log" aria-live="polite" aria-label="Conversation with Convo">
             <p class="chat-context">${esc(sc.context)}</p>
             ${voice ? '<p class="chat-context chat-context-voice">Hands-free: when Convo finishes speaking, the mic opens. Stop talking and your voice message sends itself.</p>' : ''}
@@ -323,6 +326,9 @@ export function render(root, arg, { mode = 'text' } = {}) {
   const mascots = mountMascots(root);
   const baristas = [mascots.get('[data-barista]'), mascots.get('[data-barista-mini]')];
   const unbindLayers = bindLayerToggles(root);
+  // The restaurant's menu opens with a new conversation, and stays as you leave it after that.
+  if (s.menu === undefined) s.menu = { open: !s.history.length };
+  const unbindMenu = bindMenu(root, s.menu);
 
   const scrollLog = () => log.scrollTo({ top: log.scrollHeight, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
 
@@ -713,6 +719,7 @@ export function render(root, arg, { mode = 'text' } = {}) {
     dictation?.abort();
     s.view = null;
     unbindLayers();
+    unbindMenu();
     document.removeEventListener('keydown', onKey);
     mascots.destroy();
   };
