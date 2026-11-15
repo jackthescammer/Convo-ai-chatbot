@@ -31,8 +31,8 @@
 */
 
 /* ---------- Which model ----------
-   Colab gives the live app a new public link every time it is relaunched. Put the newest
-   "Running on public URL" in DEFAULT_MODEL_URL, or change it without editing code: open the
+   With notebook cell 6b the live app keeps one fixed ngrok address; put it in DEFAULT_MODEL_URL.
+   (Cell 6a's gradio.live links change every launch.) Put the link in DEFAULT_MODEL_URL, or change it without editing code: open the
    app once with ?model=<link> (or ?model=placeholder), or paste it in Settings › About.
    Both are remembered in this browser under 'convo-model-url'. */
 export const DEFAULT_MODEL_URL = 'https://9ab894f01db31f47b3.gradio.live';
@@ -75,6 +75,10 @@ function chosenModelUrl() {
 
 const MODEL_URL = chosenModelUrl();
 const LIVE = MODEL_URL !== PLACEHOLDER;
+/* ngrok's free plan shows a "you are about to visit" page instead of the API unless this header is sent. */
+const TUNNEL_HEADERS = (() => {
+  try { return /\.ngrok(-free)?\.(app|dev)$/.test(new URL(MODEL_URL).hostname) ? { 'ngrok-skip-browser-warning': '1' } : {}; } catch { return {}; }
+})();
 
 /* `connected` means "a real model, not the placeholder": it removes the Placeholder labels.
    Whether the live model is reachable is only known when a call is made.
@@ -490,7 +494,7 @@ export async function checkModel() {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 10000);
   try {
-    const res = await fetch(`${MODEL_URL}/config`, { signal: ctrl.signal });
+    const res = await fetch(`${MODEL_URL}/config`, { headers: TUNNEL_HEADERS, signal: ctrl.signal });
     if (!res.ok) return { ok: false, name: MODEL_INFO.name };
     const cfg = await res.json();
     for (const c of cfg.components || []) {
@@ -514,13 +518,13 @@ function gradioModel(base) {
     try {
       const res = await fetch(`${base}/gradio_api/call/${api}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...TUNNEL_HEADERS },
         body: JSON.stringify({ data, session_hash: session }),
         signal: ctrl.signal,
       });
       if (!res.ok) throw new Error(res.status === 404 ? OFFLINE : `The live model answered with an error (HTTP ${res.status}).`);
       const { event_id: eventId } = await res.json();
-      const stream = await fetch(`${base}/gradio_api/call/${api}/${eventId}`, { signal: ctrl.signal });
+      const stream = await fetch(`${base}/gradio_api/call/${api}/${eventId}`, { headers: TUNNEL_HEADERS, signal: ctrl.signal });
       if (!stream.ok || !stream.body) throw new Error(`The live model answered with an error (HTTP ${stream.status}).`);
       return await readResult(stream);
     } catch (err) {
