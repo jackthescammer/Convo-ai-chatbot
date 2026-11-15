@@ -14,6 +14,7 @@ A web app where you practise ordering at a café with an AI waiter, 小林.
 - **Set up:** choose your level (A1 or A2), the difficulty, and whether to see Chinese characters, pinyin and/or English.
 - **Chat:** type in Chinese. 小林 replies in character, keeps track of your order and asks follow-up questions.
 - **Report:** at the end, Convo checks every sentence you wrote and shows corrections, explanations and an overall assessment.
+- **Live feedback:** after each reply, your message is checked straight away by the same checker: the fix and why (in English), or "Good job!" if it's right. If you type **pinyin**, Convo reads it as characters first, tells you about missing or wrong **tone marks**, flags **misspelt** words with what you probably meant and why, and shows a "Try saying" example. The tone and spelling help is rule-based (pypinyin and a syllable list), not the model, and the checker itself is unchanged, so the scores below still apply. Spot checks against the live model: [LIVE_FEEDBACK_CHECKS.md](results/LIVE_FEEDBACK_CHECKS.md).
 
 The long-term vision is a full platform with many scenarios, voice and grading (see [Convo-AI.md](Convo-AI.md)). This weekend we built and tested the first slice: **one scenario, one language, text input.**
 
