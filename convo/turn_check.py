@@ -9,7 +9,11 @@ Any unclear answer from the model counts as "answer", so a shaky check never int
 normal conversation.
 """
 
+import re
+
 from .structured import extract_json
+
+_CJK = re.compile(r"[一-鿿]")
 
 KINDS = ("answer", "no_answer", "off_topic", "inappropriate")
 
@@ -58,7 +62,10 @@ def judge_turn(backend, scenario, character_line, learner_text):
     kind = obj.get("kind") if isinstance(obj, dict) else None
     if kind not in KINDS or kind == "answer":
         return dict(ANSWER)
-    return {"kind": kind, "note": str(obj.get("note") or "").strip()[:200]}
+    note = str(obj.get("note") or "").strip()[:200]
+    if _CJK.search(note):  # the tip is for an A2 learner: if it came back in Chinese, the website shows its own
+        note = ""
+    return {"kind": kind, "note": note}
 
 
 def steer_note(kind, scenario):

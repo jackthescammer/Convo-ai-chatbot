@@ -81,4 +81,14 @@ The barista asked what the customer wanted, the learner only said "Ni hao", and 
 
 Detection was right 3/3, but the barista ignored the steer-back note for the off-topic message. The note was at the end of the learner's message; it now goes into the system prompt for that one reply and is firmer ("do NOT talk about it… ask again what you asked before").
 
-**Known limitation:** this firmer version is in the code but **was not re-tested on the live model** before submission, so we don't know yet whether the barista now steers back after off-topic messages. Only 3 turn-check cases were tried in total (one of each kind except "not appropriate", which was not tested), so we don't know how often the check misjudges a real answer either.
+**Re-test on prompts v11** (the firmer steer-back is live):
+
+| Barista asked | Learner | Barista replied | Warning | Right? |
+|---|---|---|---|---|
+| 请问需要点些什么吗？ | ni hao | 你好，请问需要点些什么吗？ (asks again) | didn't answer | ✅ |
+| 需要点什么吗？ | 我喜欢踢足球 | 我们这儿不卖球类，你想喝点什么？热的还是冰的？ (steers back) | off-topic | ✅ |
+| 想喝点什么？ | 我要一杯咖啡 | 好的，来一杯咖啡。是热的还是冰的？ | none | ✅ |
+
+On v10 the same off-topic message was followed twice (那你平时喜欢做什么呢？ and 足球听起来很有趣，您喜欢哪个队？); on v11 the barista steered back. One more problem seen: the "didn't answer" tip came back in Chinese (请询问菜单或点餐). The server now drops a Chinese tip, and the website shows its own English one (from the next restart).
+
+**Known limitation:** one off-topic try per version is very little. "Not appropriate" was not tested, and we don't know how often the check misjudges a real answer.
