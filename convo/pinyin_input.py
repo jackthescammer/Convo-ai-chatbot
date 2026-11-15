@@ -81,15 +81,46 @@ def rerank(alts, words=CAFE_WORDS):
     return sorted(dict.fromkeys(alts), key=lambda a: (-cafe_coverage(a, words), order[a]))
 
 
+def _word_pinyin(word):
+    from pypinyin import lazy_pinyin  # toneless, ü written as v (lv for 绿)
+    return lazy_pinyin(word)
+
+
+def build_cafe_index(word_pinyin, words=CAFE_WORDS):
+    """{('re','na','tie'): '热拿铁', ...}: café words by their toneless syllables."""
+    index = {}
+    for w in sorted(words, key=lambda w: (-len(w), w)):
+        index.setdefault(tuple(word_pinyin(w)), w)
+    return index
+
+
+def cafe_segment(sylls, index):
+    """Cover all syllables with café words (fewest words); the string, or None if impossible."""
+    n = len(sylls)
+    best = [None] * (n + 1)
+    best[0] = []
+    for i in range(1, n + 1):
+        for j in range(max(0, i - 5), i):
+            word = index.get(tuple(sylls[j:i]))
+            if best[j] is not None and word:
+                cand = best[j] + [word]
+                if best[i] is None or len(cand) < len(best[i]):
+                    best[i] = cand
+    return "".join(best[n]) if best[n] is not None else None
+
+
 class PinyinConverter:
     """Pinyin -> list of candidate Chinese strings (best first)."""
 
-    def __init__(self, lookup=None, syllables=None):
+    def __init__(self, lookup=None, syllables=None, word_pinyin=_word_pinyin):
         # lookup(syllables, n) -> list of candidate strings for one pinyin run
         if lookup is None or syllables is None:
             lookup, syllables = _pinyin2hanzi()
         self.lookup = lookup
         self.valid = set(syllables)
+        # café words straight from their pinyin: catches 冰 for 'bing' when the general
+        # dictionary ranks rarer characters (宾, 滨...) first
+        self.cafe_index = build_cafe_index(word_pinyin) if word_pinyin else {}
 
     def syllables(self, run):
         """All syllables in a run of pinyin text, or raise ValueError naming the bad part."""
@@ -119,7 +150,11 @@ class PinyinConverter:
                 except ValueError as bad:
                     return [], str(bad)
                 if sylls:
-                    alts = rerank([a for a in self.lookup(sylls, max(n, 10)) if a])
+                    alts = [a for a in self.lookup(sylls, max(n, 10)) if a]
+                    cafe = cafe_segment(sylls, self.cafe_index)
+                    if cafe:
+                        alts.append(cafe)
+                    alts = rerank(alts)
                     if not alts:
                         return [], " ".join(sylls)
                     pieces.append(alts)

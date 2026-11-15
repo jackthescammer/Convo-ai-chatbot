@@ -19,6 +19,8 @@ SAMPLES = [
     "duo shao qian?",
     "wo xiang chi yi kuai dangao",
     "bu yao bing",
+    "bing",
+    "wo yao mai dan",
     "keyi shua ka ma?",
     "wǒ yào dài zǒu",
     "wo3 men2 yao4 jie2 zhang4",

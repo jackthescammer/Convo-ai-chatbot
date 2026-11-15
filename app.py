@@ -56,9 +56,9 @@ def build_app(backend, pinyin="auto"):
         cands, problem = pinyin.candidates(text)
         if problem:
             note = f"*'{problem}' isn't pinyin yet: keep typing, or check the spelling.*"
-            return gr.Radio(choices=[], value=None, visible=False), gr.Textbox(), note
+            return gr.Radio(choices=[], value=None, visible=False), gr.Textbox(value=""), note
         if not cands:
-            return gr.Radio(choices=[], value=None, visible=False), gr.Textbox(), ""
+            return gr.Radio(choices=[], value=None, visible=False), gr.Textbox(value=""), ""
         return (gr.Radio(choices=cands, value=cands[0], visible=True), gr.Textbox(value=cands[0]),
                 "*Check the characters, then press **Send**.*")
 
@@ -132,7 +132,8 @@ def build_app(backend, pinyin="auto"):
                         [conv_state, chatbot, onboarding, chat_view, report_view])
         sent = msg.submit(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state])
         if pinyin is not None:
-            pin_in.input(convert_pinyin, [pin_in], [pin_pick, msg, pin_note])
+            # always_last: keystrokes typed while a lookup runs are not dropped (default "once" drops them)
+            pin_in.input(convert_pinyin, [pin_in], [pin_pick, msg, pin_note], trigger_mode="always_last")
             pin_pick.input(lambda choice: choice or "", [pin_pick], [msg])
             sent.then(clear_pinyin, None, [pin_in, pin_pick, pin_note])
             send_btn.click(send, [msg, chatbot, conv_state], [msg, chatbot, conv_state]).then(

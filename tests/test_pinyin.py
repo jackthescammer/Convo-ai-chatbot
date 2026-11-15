@@ -3,7 +3,7 @@
 from convo.pinyin_input import PinyinConverter, split_syllables, strip_tones
 
 SYLLABLES = ["wo", "yao", "yi", "bei", "ka", "fei", "ni", "hao", "xi", "an", "xian", "re", "na",
-             "tie", "lv", "cha", "ma", "zhuang", "a", "e", "ou"]
+             "tie", "lv", "cha", "ma", "bing", "zhuang", "a", "e", "ou"]
 WORDS = {
     ("wo", "yao", "yi", "bei", "ka", "fei"): ["我要一杯咖啡", "我要一被咖啡"],
     ("ni", "hao"): ["你好", "拟好"],
@@ -19,8 +19,17 @@ def fake_lookup(sylls, n):
     return WORDS.get(tuple(sylls), [])[:n]
 
 
-def conv():
-    return PinyinConverter(lookup=fake_lookup, syllables=SYLLABLES)
+# toneless pinyin for the few café words these tests use (pypinyin does this in the app)
+FAKE_PY = {"冰": ["bing"], "一杯": ["yi", "bei"], "咖啡": ["ka", "fei"], "我": ["wo"], "要": ["yao"],
+           "热": ["re"], "拿铁": ["na", "tie"], "绿茶": ["lv", "cha"], "吗": ["ma"], "你好": ["ni", "hao"]}
+
+
+def fake_word_pinyin(word):
+    return FAKE_PY.get(word, ["?" + word])
+
+
+def conv(lookup=fake_lookup):
+    return PinyinConverter(lookup=lookup, syllables=SYLLABLES, word_pinyin=fake_word_pinyin)
 
 
 def test_strip_tones_marks_numbers_and_umlaut():
@@ -75,8 +84,8 @@ def test_empty_input():
 
 
 def test_candidate_k_mixes_alternatives_without_duplicates():
-    cands, problem = conv().candidates("ni hao ma")  # dictionary has nothing for this run
-    assert cands == [] and problem == "ni hao ma"
+    cands, problem = conv(lambda s, n: []).candidates("xian")  # dictionary has nothing, not a café word
+    assert cands == [] and problem == "xian"
     cands, _ = conv().candidates("ni hao? ma")
     assert cands[0] == "你好？吗"
     assert len(cands) == len(set(cands))
@@ -94,10 +103,18 @@ def test_cafe_words_reorder_homophones():
 def test_rerank_only_chooses_between_homophones_so_mistakes_survive():
     # 'chi' is still 吃 even though 喝 is the right verb for coffee: the learner's mistake reaches the report
     lookup = lambda sylls, n: ["我想吃一杯咖啡", "我想持一杯咖啡"]
-    c = PinyinConverter(lookup=lookup, syllables=["wo", "xiang", "chi", "yi", "bei", "ka", "fei"])
+    c = PinyinConverter(lookup=lookup, syllables=["wo", "xiang", "chi", "yi", "bei", "ka", "fei"],
+                        word_pinyin=fake_word_pinyin)
     assert c.candidates("wo xiang chi yi bei kafei")[0][0] == "我想吃一杯咖啡"
 
 
 def test_one_stretch_varies_at_a_time():
     cands, _ = conv().candidates("ni hao, xian")
     assert cands == ["你好，先", "拟好，先", "你好，现"]
+
+
+def test_cafe_word_is_offered_even_if_dictionary_misses_it():
+    # the general dictionary ranks 宾/滨 for 'bing' and may not list 冰 at all
+    c = conv(lambda sylls, n: ["宾", "滨", "缤"] if sylls == ["bing"] else fake_lookup(sylls, n))
+    assert c.candidates("bing")[0][:2] == ["冰", "宾"]
+    assert c.candidates("wo yao bing")[0][0] == "我要冰"
