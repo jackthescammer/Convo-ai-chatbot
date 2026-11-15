@@ -24,7 +24,7 @@ We tested Convo ourselves on [tryconvo.vercel.app](https://tryconvo.vercel.app) 
 
 | # | Tester | Scenario, level | Prompts | You typed | Character replied | Live feedback said | Right? | Notes |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | | | | | | | |
+| 1 |Ethan|Cafe,A1|v11 pinyin|Ni Hao|Nín hǎo, qǐng wèn yào hē diǎn shén me?|You wrote Ni Hao Stay in the conversation You didn't answer the question. 请询问您想要点的饮品 We read it as 你好 Your Chinese itself was fine. Tones You left out the tone marks. Pinyin needs them, because the tone changes the meaning. With tones: nǐ hǎo|Correct| |
 | 2 | | | | | | | | |
 | 3 | | | | | | | | |
 
