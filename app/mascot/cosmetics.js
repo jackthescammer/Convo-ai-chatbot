@@ -30,7 +30,7 @@ function star(R, r, n = 5) {
 export const COSMETICS = [
   /* ---------------- Hats ---------------- */
   {
-    id: 'beanie', slot: 'hat', name: 'Red beanie',
+    id: 'beanie', slot: 'hat', hideAntenna: true, name: 'Red beanie',
     svg: `<path d="M-44 -106 C-46 -142 46 -142 44 -106 Z" fill="#E5484D"/>
       <path d="M-30 -126 L-28 -108 M-12 -134 L-11 -108 M8 -134 L8 -108 M26 -126 L24 -108" stroke="#C1363B" stroke-width="3" stroke-linecap="round" fill="none"/>
       <rect x="-47" y="-114" width="94" height="13" rx="6.5" fill="#F0696D"/>
@@ -44,7 +44,7 @@ export const COSMETICS = [
       <circle cx="0" cy="-137" r="3.6" fill="#2F63C4"/>`,
   },
   {
-    id: 'party', slot: 'hat', name: 'Party hat',
+    id: 'party', slot: 'hat', hideAntenna: true, name: 'Party hat',
     svg: `<g transform="rotate(-9 0 -112)">
       <path d="M-24 -112 L0 -172 L24 -112 Z" fill="#7C5CF5"/>
       <path d="M-15 -134 L11 -128 M-20 -122 L18 -116" stroke="#FFD83D" stroke-width="4" stroke-linecap="round"/>
@@ -53,14 +53,14 @@ export const COSMETICS = [
       <circle cx="0" cy="-174" r="7" fill="#FFD83D"/></g>`,
   },
   {
-    id: 'crown', slot: 'hat', name: 'Gold crown',
+    id: 'crown', slot: 'hat', hideAntenna: true, name: 'Gold crown',
     svg: `<path d="M-32 -110 L-37 -146 L-18 -128 L0 -152 L18 -128 L37 -146 L32 -110 Z" fill="#FFC21A" stroke="#E9A300" stroke-width="2" stroke-linejoin="round"/>
       <rect x="-32" y="-117" width="64" height="7" fill="#E9A300"/>
       <circle cx="0" cy="-129" r="4" fill="#E5484D"/><circle cx="-18" cy="-123" r="3" fill="#3E7BEA"/><circle cx="18" cy="-123" r="3" fill="#2EB67D"/>
       <circle cx="-37" cy="-147" r="3.4" fill="#FFEC8A"/><circle cx="0" cy="-153" r="3.4" fill="#FFEC8A"/><circle cx="37" cy="-147" r="3.4" fill="#FFEC8A"/>`,
   },
   {
-    id: 'chef', slot: 'hat', name: 'Chef hat',
+    id: 'chef', slot: 'hat', hideAntenna: true, name: 'Chef hat',
     svg: `<circle cx="-24" cy="-136" r="17" fill="#fff"/><circle cx="24" cy="-136" r="17" fill="#fff"/><circle cx="0" cy="-146" r="20" fill="#fff"/>
       <path d="M-34 -138 Q-24 -126 -14 -136 M14 -138 Q24 -126 34 -136" stroke="#E7E4D8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
       <rect x="-33" y="-128" width="66" height="22" rx="4" fill="#fff"/>
@@ -139,14 +139,14 @@ const DGOLD = '#C98F00';
 const tassel = (x, y, len = 22, color = RED) => `<g><path d="M${x} ${y} L${x} ${y + len * 0.5}" stroke="${DGOLD}" stroke-width="1.6"/><circle cx="${x}" cy="${y + len * 0.5}" r="2.6" fill="${GOLD}"/><path d="M${x - 3.4} ${y + len * 0.5} L${x - 4.4} ${y + len} M${x} ${y + len * 0.5} L${x} ${y + len + 1} M${x + 3.4} ${y + len * 0.5} L${x + 4.4} ${y + len}" stroke="${color}" stroke-width="2.4" stroke-linecap="round"/></g>`;
 const fur = (y, w = 46) => Array.from({ length: 9 }, (_, i) => `<circle cx="${-w + (i * 2 * w) / 8}" cy="${y}" r="7.5" fill="#fff"/>`).join('');
 const blossom = (x, y, r = 8, c = '#E94560', center = '#FFD83D') => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map((a) => `<circle cx="0" cy="${-r * 0.8}" r="${r * 0.62}" fill="${c}" transform="rotate(${a})"/>`).join('')}<circle r="${r * 0.38}" fill="${center}"/></g>`;
-const bow = (x, flip) => `<g transform="translate(${x} -116) scale(${flip * 1.3} 1.3)">
+const bow = (x, flip) => `<g transform="translate(${x} -116) scale(${flip * 1.1} 1.1)">
   <path d="M0 0 L22 -12 L24 12 Z" fill="${RED}"/><path d="M0 0 L-2 14 L-6 38 L6 34 L8 12 Z" fill="${DRED}"/><path d="M4 8 L14 30 L22 26 L12 6 Z" fill="${RED}"/>
   <rect x="-5" y="-6" width="10" height="12" rx="4" fill="${DRED}"/><path d="M9 -3 L18 -6 M10 4 L19 4" stroke="${GOLD}" stroke-width="1.8" stroke-linecap="round"/></g>`;
 const lens = (cx, shape, stroke, w = 3.2, fill = '#fff', op = 0.14) => `<g transform="translate(${cx} -83)">${shape(stroke, w, fill, op)}</g>`;
 
 COSMETICS.push(
   /* Hats */
-  { id: 'qing', slot: 'hat', name: 'Qing dynasty hat',
+  { id: 'qing', slot: 'hat', hideAntenna: true, name: 'Qing dynasty hat',
     svg: `<path d="M-54 -102 Q0 -118 54 -102 Q44 -93 0 -93 Q-44 -93 -54 -102 Z" fill="#1A1A1A" stroke="${RED}" stroke-width="3"/>
       <path d="M-40 -102 C-42 -138 42 -138 40 -102 Z" fill="#232323"/><path d="M-41 -108 Q0 -100 41 -108 L41 -102 Q0 -94 -41 -102 Z" fill="${RED}"/>
       <circle cx="0" cy="-112" r="8" fill="${GOLD}" stroke="${DGOLD}" stroke-width="1.6"/><circle cx="0" cy="-112" r="3" fill="${RED}"/>
@@ -176,13 +176,13 @@ COSMETICS.push(
       <ellipse cx="-18" cy="-118" rx="9" ry="11" fill="#1A1A1A" transform="rotate(20 -18 -118)"/><ellipse cx="18" cy="-118" rx="9" ry="11" fill="#1A1A1A" transform="rotate(-20 18 -118)"/>
       <circle cx="-17" cy="-119" r="2.6" fill="#fff"/><circle cx="17" cy="-119" r="2.6" fill="#fff"/>
       <ellipse cx="0" cy="-108" rx="5" ry="3.4" fill="#1A1A1A"/>` },
-  { id: 'lotus', slot: 'hat', name: 'Lotus hat',
+  { id: 'lotus', slot: 'hat', hideAntenna: true, name: 'Lotus hat',
     svg: `<ellipse cx="0" cy="-104" rx="62" ry="15" fill="#6FA23A"/><ellipse cx="0" cy="-106" rx="52" ry="10" fill="#8FC24D"/>
       <path d="M0 -106 L0 -98 M-30 -106 L-40 -99 M30 -106 L40 -99" stroke="#6FA23A" stroke-width="1.6"/>
       ${[-52, -26, 0, 26, 52].map((a) => `<ellipse cx="0" cy="-12" rx="9" ry="22" fill="${Math.abs(a) > 30 ? '#F7A8C4' : '#FFC1D6'}" transform="translate(0 -118) rotate(${a})"/>`).join('')}
       <ellipse cx="0" cy="-126" rx="6" ry="7" fill="#FFD83D"/>
       ${tassel(-52, -100, 24)}${tassel(52, -100, 24)}` },
-  { id: 'newyear', slot: 'hat', name: 'New Year hat',
+  { id: 'newyear', slot: 'hat', hideAntenna: true, name: 'New Year hat',
     svg: `<circle cx="-50" cy="-112" r="13" fill="${RED}" stroke="${GOLD}" stroke-width="2.4"/><circle cx="50" cy="-112" r="13" fill="${RED}" stroke="${GOLD}" stroke-width="2.4"/>
       <circle cx="-56" cy="-100" r="6.5" fill="#fff"/><circle cx="56" cy="-100" r="6.5" fill="#fff"/>
       <path d="M-46 -104 C-48 -142 48 -142 46 -104 Z" fill="${RED}"/><g>${fur(-104, 40)}</g>
@@ -192,13 +192,13 @@ COSMETICS.push(
     svg: `<path d="M-44 -104 C-48 -142 48 -142 44 -104 Z" fill="#2E4A8E"/><path d="M-45 -112 Q0 -100 45 -112 L45 -102 Q0 -92 -45 -102 Z" fill="#243B73"/>
       <path d="M-30 -102 Q0 -92 30 -102 L30 -96 Q0 -88 -30 -96 Z" fill="#1A2B57"/>
       <g transform="translate(0 -122)"><path d="${star(10, 4.4)}" fill="${RED}" stroke="${GOLD}" stroke-width="1.2" stroke-linejoin="round"/></g>
-      <path d="M-40 -126 Q0 -140 40 -126" stroke="#3C5CAB" stroke-width="2" fill="none"/>` },
-  { id: 'chinacrown', slot: 'hat', name: 'Chinese crown',
+` },
+  { id: 'chinacrown', slot: 'hat', hideAntenna: true, name: 'Chinese crown',
     svg: `<path d="M-50 -106 C-62 -124 -56 -140 -38 -136 C-34 -150 -14 -154 0 -146 C14 -154 34 -150 38 -136 C56 -140 62 -124 50 -106 Z" fill="${GOLD}" stroke="${DGOLD}" stroke-width="2"/>
       <rect x="-50" y="-112" width="100" height="9" rx="4" fill="${DGOLD}"/>
       <circle cx="0" cy="-151" r="5.5" fill="${RED}"/>${blossom(-30, -126, 7)}${blossom(30, -126, 7)}${blossom(0, -128, 8)}
       <circle cx="-44" cy="-113" r="3" fill="${RED}"/><circle cx="44" cy="-113" r="3" fill="${RED}"/>
-      ${tassel(-48, -104, 30)}${tassel(48, -104, 30)}${tassel(-40, -104, 22)}${tassel(40, -104, 22)}` },
+      ${tassel(-52, -104, 30)}${tassel(52, -104, 30)}${tassel(-45, -106, 22)}${tassel(45, -106, 22)}` },
   { id: 'plum', slot: 'hat', name: 'Plum blossom clip',
     svg: `<path d="M20 -122 Q34 -130 44 -122" stroke="#6B8E3A" stroke-width="3" fill="none"/><ellipse cx="24" cy="-128" rx="5" ry="2.6" fill="#6B8E3A" transform="rotate(-30 24 -128)"/>
       ${blossom(32, -118, 8)}${blossom(46, -128, 7, '#F0657B')}${blossom(40, -108, 6, '#FF8FA5')}
@@ -207,7 +207,7 @@ COSMETICS.push(
     svg: `<path d="M-4 -118 L48 -134" stroke="${GOLD}" stroke-width="3.4" stroke-linecap="round"/><path d="M-4 -118 L48 -134" stroke="${DGOLD}" stroke-width="1" stroke-linecap="round"/>
       ${blossom(48, -135, 8, GOLD, RED)}<circle cx="60" cy="-132" r="2.6" fill="${GOLD}"/>${tassel(56, -128, 30)}` },
   { id: 'ribbon', slot: 'hat', name: 'Red ribbon',
-    svg: `${bow(-38, -1)}${bow(38, 1)}` },
+    svg: `${bow(-42, -1)}${bow(42, 1)}` },
 
   /* Glasses */
   { id: 'rsun', slot: 'glasses', name: 'Round sunglasses',
@@ -225,9 +225,11 @@ COSMETICS.push(
       <path d="M-28 -86 q-6 -3 -10 -1 M28 -86 q6 -3 10 -1" stroke="${GOLD}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
       <circle cx="-16" cy="-95.5" r="3" fill="none" stroke="${GOLD}" stroke-width="2"/><circle cx="16" cy="-95.5" r="3" fill="none" stroke="${GOLD}" stroke-width="2"/>` },
   { id: 'dragonglasses', slot: 'glasses', name: 'Dragon glasses',
-    svg: `${[-1, 1].map((d) => `<g transform="translate(${d * 16} -83) scale(${d} 1)"><path d="M-12 -4 Q-20 -14 -16 -22 Q-9 -14 -4 -12 Q-2 -22 2 -26 Q4 -16 8 -12 Q14 -14 18 -6 Q22 4 8 11 Q-6 14 -12 5 Z" fill="${RED}"/>
-      <ellipse cx="2" cy="-1" rx="9.5" ry="7.5" fill="#fff" fill-opacity=".9"/><path d="M-8 -5 Q2 -12 14 -4" stroke="${GOLD}" stroke-width="2" fill="none" stroke-linecap="round"/></g>`).join('')}
-      <path d="M-4 -86 Q0 -89 4 -86" stroke="${DRED}" stroke-width="3" fill="none" stroke-linecap="round"/>` },
+    svg: `${[-1, 1].map((d) => `<g transform="translate(${d * 16} -83) scale(${-d} 1)">
+      <path d="M-4 -9 Q-10 -16 -9 -24 Q-4 -19 -1 -13 Z M-12 -7 Q-21 -10 -24 -18 Q-17 -17 -11 -13 Z M-17 0 Q-26 0 -29 -6 Q-22 -7 -17 -4 Z" fill="${RED}"/>
+      <ellipse cx="0" cy="0" rx="12.5" ry="10.5" fill="#fff" fill-opacity=".92" stroke="${RED}" stroke-width="4"/>
+      <path d="M-6 -3 Q0 -7 6 -3" stroke="${GOLD}" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>`).join('')}
+      <path d="M-4 -86 Q0 -89 4 -86" stroke="${RED}" stroke-width="3.2" fill="none" stroke-linecap="round"/>` },
   { id: 'calligraphy', slot: 'glasses', name: 'Calligraphy glasses',
     svg: `<circle cx="-16" cy="-83" r="13.5" fill="#FFFDF4" stroke="#14141C" stroke-width="3.4"/><circle cx="16" cy="-83" r="13.5" fill="#FFFDF4" stroke="#14141C" stroke-width="3.4"/>
       <path d="M-3 -86 Q0 -89 3 -86" stroke="#14141C" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M-29 -86 L-38 -90 M29 -86 L38 -90" stroke="#14141C" stroke-width="3" stroke-linecap="round"/>
@@ -272,6 +274,11 @@ COSMETICS.push(
 export const COSMETIC_BY_ID = Object.fromEntries(COSMETICS.map((c) => [c.id, c]));
 
 /** Markup for an item id, or '' for none or an unknown id (or one from the wrong slot). */
+/** Some hats cover the antenna, or draw their own top: the antenna is hidden while they are worn. */
+export function hidesAntenna(id) {
+  return Boolean(id && COSMETIC_BY_ID[id]?.hideAntenna);
+}
+
 export function cosmeticSvg(slot, id) {
   const item = id ? COSMETIC_BY_ID[id] : null;
   return item && item.slot === slot ? item.svg : '';

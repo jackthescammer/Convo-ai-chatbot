@@ -13,7 +13,7 @@
  *   'loop' — everything, including the idle hop and the bobs. Off-brand for the product.
  * No dependencies. Works in any browser, and in React through ConvoMascot.tsx.
  */
-import { SLOTS, cosmeticSvg } from './cosmetics.js';
+import { SLOTS, cosmeticSvg, hidesAntenna } from './cosmetics.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const TAU = Math.PI * 2;
@@ -918,8 +918,8 @@ function markup(id, c, props) {
       <rect data-k="shL" x="-8.5" y="-6" width="21" height="36" rx="10.5" fill="${c.bodyShade}"/>
       <rect data-k="shR" x="-8.5" y="-6" width="21" height="36" rx="10.5" fill="${c.bodyShade}"/>
     </g>
+    <g data-k="coshat"></g>
   </g>
-  <g data-k="coshat"></g>
   <g data-k="mid">${layer('mid')}</g>
   <g data-k="armsS">
     <g data-k="armL"><rect x="-10.5" y="-8" width="21" height="36" rx="10.5" fill="${u('limb')}"/></g>
@@ -1169,6 +1169,7 @@ export function createConvoMascot(target, options = {}) {
     const fx = 40 * Math.sin(yr);
     setT(k.face, `translate(${r2(fx)} ${r2(-p.headY * 7)}) rotate(${r2(p.tilt)} 0 -82) translate(0 -82) scale(${r2(Math.max(cy, 0.001))} 1) translate(0 82)`);
     setO(k.face, clamp(cy * 6, 0, 1) * p.face);
+    setT(k.coshat, `translate(${r2(fx * 0.45)} ${r2(-p.headY * 7)}) rotate(${r2(p.tilt * 0.6)} 0 -100)`);
 
     const sh = 47 * Math.max(Math.abs(cy), 0.3);
     setT(k.armL, `translate(${r2(-sh)} -58) rotate(${r2(p.armL)})`);
@@ -1342,6 +1343,7 @@ export function createConvoMascot(target, options = {}) {
           k[`cos${slot}`].innerHTML = cosmeticSvg(slot, key);
         }
       }
+      k.ant.setAttribute('visibility', hidesAntenna(worn.hat) ? 'hidden' : 'visible');
     }
     if ('freezeAt' in next && next.freezeAt != null) stateStart = clock - next.freezeAt;
     svg.style.filter = o.muted ? 'grayscale(1)' : '';
