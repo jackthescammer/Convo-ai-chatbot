@@ -57,8 +57,8 @@ def check_message(backend, pinyin, text, level="A2", pinyin_fn=to_pinyin):
         sentence = text
     elif pinyin is not None and text:
         cands, problem = pinyin.candidates(text)
-        if not cands:
-            out["skipped"] = f"'{problem}' doesn't look like pinyin." if problem else "Nothing to check."
+        if not cands or not HAN.search(cands[0]):  # e.g. only punctuation: nothing to check
+            out["skipped"] = f"'{problem}' doesn't look like pinyin." if problem else "Write in Chinese characters or pinyin to get feedback."
             return out
         # shortcut: takes the top pinyin candidate; if it guesses the wrong characters, the check is of that guess
         sentence, out["from_pinyin"] = cands[0], True

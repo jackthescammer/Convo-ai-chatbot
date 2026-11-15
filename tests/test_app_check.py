@@ -40,6 +40,13 @@ class CheckMessage(unittest.TestCase):
         self.assertTrue(out["skipped"])
         self.assertEqual(b.calls, [])
 
+    def test_punctuation_only_is_skipped(self):
+        class OnlyPunct:
+            def candidates(self, text, n=5):
+                return ["？？？"], ""
+        b = FakeBackend(lambda m: self.fail("model should not be called"))
+        self.assertTrue(check_message(b, OnlyPunct(), "???", "A2")["skipped"])
+
     def test_no_pinyin_converter_and_no_characters(self):
         out = check_message(FakeBackend(lambda m: ""), None, "ni hao", "A2")
         self.assertTrue(out["skipped"])
